@@ -1,8 +1,8 @@
 import { db } from "../db";
-import { user, account } from "../auth-schema";
+import { user, account } from "../schema/auth-schema";
 
-async function seedAuth() {
-  console.log("Starting auth seed...");
+export async function seedAuth() {
+  console.log("Seeding auth data...");
 
   // Create user
   await db.insert(user).values({
@@ -11,19 +11,10 @@ async function seedAuth() {
     email: "test@example.com",
     emailVerified: true,
     image: null,
+    password: "password123",
     createdAt: new Date(),
     updatedAt: new Date(),
   });
 
-  console.log("Created user!");
+  console.log("✓ Created test user (test@example.com)");
 }
-
-seedAuth()
-  .then(() => {
-    console.log("\n✓ Auth seed completed successfully");
-    process.exit(0);
-  })
-  .catch((error) => {
-    console.error("\n✗ Auth seed failed:", error);
-    process.exit(1);
-  });
