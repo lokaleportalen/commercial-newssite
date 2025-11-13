@@ -8,6 +8,13 @@
       "when": 1762953845673,
       "tag": "0000_unique_mattie_franklin",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1763066936427,
+      "tag": "0001_solid_ser_duncan",
+      "breakpoints": true
     }
   ]
 }
