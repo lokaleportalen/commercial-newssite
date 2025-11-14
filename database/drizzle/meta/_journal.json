@@ -5,15 +5,8 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1762960016263,
-      "tag": "0000_oval_leper_queen",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1763066936427,
-      "tag": "0001_solid_ser_duncan",
+      "when": 1763117178718,
+      "tag": "0000_fearless_mandroid",
       "breakpoints": true
     }
   ]

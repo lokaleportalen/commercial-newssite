@@ -23,10 +23,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (authHeader !== `Bearer ${cronSecret}`) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     // Check if OpenAI API key is configured
@@ -54,7 +51,7 @@ export async function POST(request: NextRequest) {
 
 Title: ${newsItem.title}
 Summary: ${newsItem.summary}
-${newsItem.source ? `Source: ${newsItem.source}` : ""}
+${newsItem.sourceUrl ? `Source URL: ${newsItem.sourceUrl}` : ""}
 ${newsItem.date ? `Date: ${newsItem.date}` : ""}
 
 Please search the web for additional details, context, and related information about this news story. Provide:
@@ -68,22 +65,15 @@ Format your research findings clearly with headings and bullet points.`;
 
     console.log("Researching news story with OpenAI...");
 
-    const researchCompletion = await openai.chat.completions.create({
-      model: "gpt-4o",
-      messages: [
-        {
-          role: "system",
-          content: "You are a commercial real estate journalist researching news stories in Denmark. Provide thorough, accurate research with proper context and details.",
-        },
-        {
-          role: "user",
-          content: researchPrompt,
-        },
+    const researchResponse = await openai.responses.create({
+      model: "gpt-5-mini",
+      tools: [
+        { type: "web_search" },
       ],
-      temperature: 0.7,
+      input: researchPrompt,
     });
 
-    const researchFindings = researchCompletion.choices[0]?.message?.content;
+    const researchFindings = researchResponse.output_text;
 
     if (!researchFindings) {
       return NextResponse.json(
@@ -114,22 +104,12 @@ Write a well-structured article with:
 
 Format the article in markdown with proper headings (##, ###).`;
 
-    const articleCompletion = await openai.chat.completions.create({
-      model: "gpt-4o",
-      messages: [
-        {
-          role: "system",
-          content: "You are a professional commercial real estate journalist writing articles for a Danish news publication. Write clear, engaging, and informative articles.",
-        },
-        {
-          role: "user",
-          content: articlePrompt,
-        },
-      ],
-      temperature: 0.7,
+    const articleResponse = await openai.responses.create({
+      model: "gpt-5-mini",
+      input: articlePrompt,
     });
 
-    const articleContent = articleCompletion.choices[0]?.message?.content;
+    const articleContent = articleResponse.output_text;
 
     if (!articleContent) {
       return NextResponse.json(
@@ -141,36 +121,31 @@ Format the article in markdown with proper headings (##, ###).`;
     console.log("Article written, generating metadata...");
 
     // Step 3: Generate metadata (slug, meta description, summary)
-    const metadataPrompt = `Based on this article, generate the following metadata:
+    const metadataPrompt = `Based on this article, generate the following metadata in JSON format:
 
 Article:
 ${articleContent}
 
-Provide (in JSON format):
+Provide:
 1. slug: URL-friendly slug (lowercase, hyphens, no special chars)
 2. metaDescription: SEO meta description (150-160 chars)
 3. summary: Brief summary for article preview (2-3 sentences)
 4. categories: Comma-separated relevant categories (e.g., "Investment, Office Space, Copenhagen")
 
-Respond ONLY with valid JSON.`;
+Respond ONLY with valid JSON in this exact structure:
+{
+  "slug": "example-slug",
+  "metaDescription": "Description here",
+  "summary": "Summary here",
+  "categories": "Category1, Category2"
+}`;
 
-    const metadataCompletion = await openai.chat.completions.create({
-      model: "gpt-4o",
-      messages: [
-        {
-          role: "system",
-          content: "You are an SEO specialist. Generate metadata in valid JSON format only.",
-        },
-        {
-          role: "user",
-          content: metadataPrompt,
-        },
-      ],
-      temperature: 0.5,
-      response_format: { type: "json_object" },
+    const metadataResponse = await openai.responses.create({
+      model: "gpt-5-mini",
+      input: metadataPrompt,
     });
 
-    const metadataText = metadataCompletion.choices[0]?.message?.content;
+    const metadataText = metadataResponse.output_text;
     let metadata: {
       slug: string;
       metaDescription: string;
@@ -205,7 +180,7 @@ Respond ONLY with valid JSON.`;
         content: articleContent,
         summary: metadata.summary,
         metaDescription: metadata.metaDescription,
-        sourceUrl: newsItem.source || null,
+        sourceUrl: newsItem.sourceUrl || null,
         categories: metadata.categories,
         status: "published",
         publishedDate: new Date(),
@@ -220,13 +195,12 @@ Respond ONLY with valid JSON.`;
       articleId: insertedArticle.id,
       slug: insertedArticle.slug,
     });
-
   } catch (error) {
     console.error("Error processing article:", error);
     return NextResponse.json(
       {
         error: "Failed to process article",
-        details: error instanceof Error ? error.message : "Unknown error"
+        details: error instanceof Error ? error.message : "Unknown error",
       },
       { status: 500 }
     );

@@ -7,15 +7,23 @@ const openai = new OpenAI({
 });
 
 // Fixed prompt for fetching commercial real estate news in Denmark
-const NEWS_PROMPT = `Please provide a list of the most important commercial real estate news stories in Denmark from the past week.
+const NEWS_PROMPT = `Find 10 nyheder fra ejendomsbranchen som har fået meget omtale den seneste uge - rank med de mest spændende, unikke og aktuelle først. Det skal være relevant for ejere af erhvervsejendomme (målgruppen er udlejere som bruger Lokaleportalen).
 
-Format your response as a markdown list with the following structure for each news item:
-- **Title**: [Brief title of the news story]
-  - **Summary**: [2-3 sentence summary]
-  - **Source**: [Expected source or where this news would typically be found]
-  - **Date**: [Approximate date or timeframe]
+Returner resultaterne i JSON format med følgende struktur:
+{
+  "newsItems": [
+    {
+      "title": "Nyhedstitel",
+      "summary": "2-3 sætninger som opsummerer historien",
+      "sourceUrl": "Den fulde URL til den originale nyhedsartikel (f.eks. https://estatemedia.dk/article/...)",
+      "date": "Dato eller tidsramme"
+    }
+  ]
+}
 
-Provide 5-10 significant news items.`;
+VIGTIGT: "sourceUrl" skal være den faktiske URL hvor du fandt nyheden, IKKE bare navnet på kilden. Inkluder altid den fulde URL.
+
+Sørg for at returnere præcis 10 nyhedshistorier.`;
 
 export async function GET(request: NextRequest) {
   try {
@@ -48,25 +56,18 @@ export async function GET(request: NextRequest) {
 
     console.log("Fetching weekly commercial real estate news from OpenAI...");
 
-    // Call OpenAI API with the fixed prompt
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4o", // Using GPT-4 with web search capabilities
-      messages: [
-        {
-          role: "system",
-          content: "You are a commercial real estate news analyst focused on Denmark. Provide current, accurate news about the Danish commercial real estate market.",
-        },
-        {
-          role: "user",
-          content: NEWS_PROMPT,
-        },
+    // Call OpenAI API with the fixed prompt using web search
+    const response = await openai.responses.create({
+      model: "gpt-5-nano",
+      tools: [
+        { type: "web_search" },
       ],
-      temperature: 0.7,
+      input: NEWS_PROMPT,
     });
 
-    const newsListMarkdown = completion.choices[0]?.message?.content;
+    const newsListJson = response.output_text;
 
-    if (!newsListMarkdown) {
+    if (!newsListJson) {
       return NextResponse.json(
         { error: "No response from OpenAI" },
         { status: 500 }
@@ -75,8 +76,24 @@ export async function GET(request: NextRequest) {
 
     console.log("Received news list from OpenAI");
 
-    // Parse the markdown list into individual news items
-    const newsItems = parseMarkdownNewsList(newsListMarkdown);
+    // Parse the JSON response into individual news items
+    let newsItems: Array<{
+      title: string;
+      summary: string;
+      sourceUrl?: string;
+      date?: string;
+    }> = [];
+
+    try {
+      const parsedResponse = JSON.parse(newsListJson);
+      newsItems = parsedResponse.newsItems || [];
+    } catch (error) {
+      console.error("Failed to parse news list JSON:", error);
+      return NextResponse.json(
+        { error: "Failed to parse OpenAI response" },
+        { status: 500 }
+      );
+    }
 
     console.log(`Parsed ${newsItems.length} news items`);
 
@@ -128,7 +145,7 @@ export async function GET(request: NextRequest) {
       message: "Weekly news processing completed",
       totalItems: newsItems.length,
       processedArticles,
-      rawNewsList: newsListMarkdown,
+      rawNewsList: newsListJson,
     });
 
   } catch (error) {
@@ -141,70 +158,4 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
-}
-
-// Helper function to parse markdown news list into structured objects
-function parseMarkdownNewsList(markdown: string): Array<{
-  title: string;
-  summary: string;
-  source?: string;
-  date?: string;
-}> {
-  const newsItems: Array<{
-    title: string;
-    summary: string;
-    source?: string;
-    date?: string;
-  }> = [];
-
-  // Split by list items (lines starting with -)
-  const lines = markdown.split("\n");
-  let currentItem: { title: string; summary: string; source?: string; date?: string } | null = null;
-
-  for (const line of lines) {
-    const trimmedLine = line.trim();
-
-    // Match title line: - **Title**: [content]
-    const titleMatch = trimmedLine.match(/^-\s*\*\*Title\*\*:\s*(.+)$/);
-    if (titleMatch) {
-      // Save previous item if exists
-      if (currentItem && currentItem.title && currentItem.summary) {
-        newsItems.push(currentItem);
-      }
-      // Start new item
-      currentItem = {
-        title: titleMatch[1].trim(),
-        summary: "",
-      };
-      continue;
-    }
-
-    // Match summary line: - **Summary**: [content]
-    const summaryMatch = trimmedLine.match(/^-?\s*\*\*Summary\*\*:\s*(.+)$/);
-    if (summaryMatch && currentItem) {
-      currentItem.summary = summaryMatch[1].trim();
-      continue;
-    }
-
-    // Match source line: - **Source**: [content]
-    const sourceMatch = trimmedLine.match(/^-?\s*\*\*Source\*\*:\s*(.+)$/);
-    if (sourceMatch && currentItem) {
-      currentItem.source = sourceMatch[1].trim();
-      continue;
-    }
-
-    // Match date line: - **Date**: [content]
-    const dateMatch = trimmedLine.match(/^-?\s*\*\*Date\*\*:\s*(.+)$/);
-    if (dateMatch && currentItem) {
-      currentItem.date = dateMatch[1].trim();
-      continue;
-    }
-  }
-
-  // Don't forget the last item
-  if (currentItem && currentItem.title && currentItem.summary) {
-    newsItems.push(currentItem);
-  }
-
-  return newsItems;
 }

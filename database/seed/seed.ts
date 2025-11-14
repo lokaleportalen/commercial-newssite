@@ -2,21 +2,22 @@ import { config } from "dotenv";
 import { resolve } from "path";
 import { seedAuth } from "./auth-seed";
 
-// Load .env from root directory
 config({ path: resolve(__dirname, "../../.env") });
 
-async function seed() {
+export async function seed() {
   console.log("Starting database seed...\n");
 
-  try {
-    await seedAuth();
+  await seedAuth();
 
-    console.log("\n✓ All seeds completed successfully!");
-    process.exit(0);
-  } catch (error) {
-    console.error("\n✗ Seed failed:", error);
-    process.exit(1);
-  }
+  console.log("\n✓ All seeds completed successfully!");
 }
 
-seed();
+// Only run if this file is executed directly
+if (require.main === module) {
+  seed()
+    .then(() => process.exit(0))
+    .catch((error) => {
+      console.error("\n✗ Seed failed:", error);
+      process.exit(1);
+    });
+}
