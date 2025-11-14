@@ -8,6 +8,13 @@
       "when": 1763117178718,
       "tag": "0000_fearless_mandroid",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1763127327894,
+      "tag": "0001_spooky_korg",
+      "breakpoints": true
     }
   ]
 }

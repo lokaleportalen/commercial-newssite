@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
 import { db } from "@/database/db";
-import { article } from "@/database/schema";
+import { article, category, articleCategory } from "@/database/schema";
+import { eq, or, ilike, inArray } from "drizzle-orm";
 
 // Initialize OpenAI client
 const openai = new OpenAI({
@@ -46,22 +47,52 @@ export async function POST(request: NextRequest) {
 
     console.log(`Processing news item: ${newsItem.title}`);
 
+    // Check for duplicate articles before processing
+    const duplicateConditions = [];
+
+    // Check by sourceUrl if provided
+    if (newsItem.sourceUrl) {
+      duplicateConditions.push(eq(article.sourceUrl, newsItem.sourceUrl));
+    }
+
+    // Check by similar title (case-insensitive)
+    duplicateConditions.push(ilike(article.title, newsItem.title));
+
+    if (duplicateConditions.length > 0) {
+      const existingArticles = await db
+        .select()
+        .from(article)
+        .where(or(...duplicateConditions))
+        .limit(1);
+
+      if (existingArticles.length > 0) {
+        console.log(`Duplicate article found: ${existingArticles[0].title} (ID: ${existingArticles[0].id})`);
+        return NextResponse.json({
+          success: false,
+          message: "Duplicate article detected",
+          duplicate: true,
+          existingArticleId: existingArticles[0].id,
+          existingArticleTitle: existingArticles[0].title,
+        }, { status: 200 }); // Return 200 to not break the cron job flow
+      }
+    }
+
     // Step 1: Research the news story using OpenAI with web search
-    const researchPrompt = `Research and gather detailed information about the following commercial real estate news story in Denmark:
+    const researchPrompt = `Researche og indsaml detaljeret information om følgende nyhedshistorie fra ejendomsbranchen i Danmark:
 
-Title: ${newsItem.title}
-Summary: ${newsItem.summary}
-${newsItem.sourceUrl ? `Source URL: ${newsItem.sourceUrl}` : ""}
-${newsItem.date ? `Date: ${newsItem.date}` : ""}
+Titel: ${newsItem.title}
+Resumé: ${newsItem.summary}
+${newsItem.sourceUrl ? `Kilde URL: ${newsItem.sourceUrl}` : ""}
+${newsItem.date ? `Dato: ${newsItem.date}` : ""}
 
-Please search the web for additional details, context, and related information about this news story. Provide:
-1. Key facts and details
-2. Background context
-3. Quotes from relevant sources (if available)
-4. Impact on the Danish commercial real estate market
-5. Related developments or trends
+Søg på nettet efter yderligere detaljer, kontekst og relateret information om denne nyhedshistorie. Levér:
+1. Nøglefakta og detaljer
+2. Baggrundskontekst
+3. Citater fra relevante kilder (hvis tilgængelige)
+4. Indvirkning på det danske erhvervsejendomsmarked
+5. Relaterede udviklinger eller tendenser
 
-Format your research findings clearly with headings and bullet points.`;
+Formatér dine research-resultater tydeligt med overskrifter og punkter.`;
 
     console.log("Researching news story with OpenAI...");
 
@@ -85,24 +116,32 @@ Format your research findings clearly with headings and bullet points.`;
     console.log("Research completed, writing article...");
 
     // Step 2: Write a structured article based on the research
-    const articlePrompt = `Based on the following research, write a comprehensive, professional news article about this Danish commercial real estate story:
+    const articlePrompt = `Baseret på følgende research, skriv en omfattende, professionel nyhedsartikel på DANSK om denne erhvervsejendomshistorie:
 
-Original News Item:
-Title: ${newsItem.title}
-Summary: ${newsItem.summary}
+Original nyhed:
+Titel: ${newsItem.title}
+Resumé: ${newsItem.summary}
 
-Research Findings:
+Research-resultater:
 ${researchFindings}
 
-Write a well-structured article with:
-1. An engaging headline (if the original title needs improvement)
-2. A compelling lead paragraph
-3. Clear body sections with subheadings
-4. Quotes and specific details from the research
-5. Context about the Danish commercial real estate market
-6. Professional, journalistic tone
+Skriv en velstruktureret artikel med:
+1. En engagerende overskrift (# heading) - kun én h1
+2. Et overbevisende indledende afsnit
+3. Klare brødtekst-sektioner med 2-3 underoverskrifter (## heading) - maksimalt 3
+4. Brug kun ### overskrifter hvis det er absolut nødvendigt
+5. Citater og specifikke detaljer fra research
+6. Kontekst om det danske erhvervsejendomsmarked
+7. Professionel, journalistisk tone
 
-Format the article in markdown with proper headings (##, ###).`;
+VIGTIGT:
+- Artiklen skal være på DANSK
+- Inkludér IKKE "Kilde:" eller kildehenvisninger i bunden af artiklen
+- Returner KUN artikelindholdet i markdown format
+- Inkludér IKKE opfølgende spørgsmål eller meta-kommentarer
+- Artiklen skal slutte med det faktiske indhold, ikke med spørgsmål til læseren
+
+Formatér artiklen i markdown med korrekte overskrifter (#, ##, ###).`;
 
     const articleResponse = await openai.responses.create({
       model: "gpt-5-mini",
@@ -121,23 +160,33 @@ Format the article in markdown with proper headings (##, ###).`;
     console.log("Article written, generating metadata...");
 
     // Step 3: Generate metadata (slug, meta description, summary)
-    const metadataPrompt = `Based on this article, generate the following metadata in JSON format:
+    const metadataPrompt = `Baseret på denne artikel, generer følgende metadata i JSON format:
 
-Article:
+Artikel:
 ${articleContent}
 
-Provide:
-1. slug: URL-friendly slug (lowercase, hyphens, no special chars)
-2. metaDescription: SEO meta description (150-160 chars)
-3. summary: Brief summary for article preview (2-3 sentences)
-4. categories: Comma-separated relevant categories (e.g., "Investment, Office Space, Copenhagen")
+Levér:
+1. slug: URL-venlig slug (små bogstaver, bindestreger, ingen specialtegn)
+2. metaDescription: SEO meta beskrivelse på DANSK (150-160 tegn)
+3. summary: Kort resumé til artikelforhåndsvisning på DANSK (2-3 sætninger)
+4. categories: Kommaseparerede relevante kategorier på DANSK. Vælg KUN fra disse kategorier:
+   - Investering
+   - Byggeri
+   - Kontor
+   - Lager
+   - Detailhandel
+   - Logistik
+   - Hotel
+   - Industri
+   - Bolig
+   - Bæredygtighed
 
-Respond ONLY with valid JSON in this exact structure:
+Svar KUN med valid JSON i denne præcise struktur:
 {
-  "slug": "example-slug",
-  "metaDescription": "Description here",
-  "summary": "Summary here",
-  "categories": "Category1, Category2"
+  "slug": "eksempel-slug",
+  "metaDescription": "Beskrivelse her",
+  "summary": "Resumé her",
+  "categories": "Kategori1, Kategori2"
 }`;
 
     const metadataResponse = await openai.responses.create({
@@ -188,6 +237,35 @@ Respond ONLY with valid JSON in this exact structure:
       .returning();
 
     console.log(`Article saved to database with ID: ${insertedArticle.id}`);
+
+    // Step 5: Link article to categories using the junction table
+    if (metadata.categories) {
+      // Parse categories from comma-separated string
+      const categoryNames = metadata.categories
+        .split(",")
+        .map((name) => name.trim())
+        .filter((name) => name.length > 0);
+
+      if (categoryNames.length > 0) {
+        // Look up category IDs by name
+        const matchedCategories = await db
+          .select()
+          .from(category)
+          .where(inArray(category.name, categoryNames));
+
+        if (matchedCategories.length > 0) {
+          // Insert into junction table
+          const articleCategoryValues = matchedCategories.map((cat) => ({
+            articleId: insertedArticle.id,
+            categoryId: cat.id,
+          }));
+
+          await db.insert(articleCategory).values(articleCategoryValues);
+
+          console.log(`✓ Linked article to ${matchedCategories.length} categories`);
+        }
+      }
+    }
 
     return NextResponse.json({
       success: true,

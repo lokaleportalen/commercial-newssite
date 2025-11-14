@@ -3,6 +3,7 @@ import Link from "next/link";
 import { format } from "date-fns";
 import { da } from "date-fns/locale";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { ArticleCategories } from "@/components/article-categories";
 
 interface ArticleCardProps {
   title: string;
@@ -38,9 +39,9 @@ export function ArticleCard({
 
   return (
     <Link href={`/nyheder/${slug}`} className="group">
-      <Card className="h-full overflow-hidden transition-shadow hover:shadow-lg">
-        {/* Article Image */}
-        <div className="relative aspect-video w-full overflow-hidden bg-muted">
+      <Card className="h-full overflow-hidden transition-shadow hover:shadow-lg p-0 gap-0">
+        {/* Article Image - smaller aspect ratio */}
+        <div className="relative aspect-video w-full overflow-hidden bg-muted max-h-[300px]">
           {image ? (
             <Image
               src={image}
@@ -56,39 +57,28 @@ export function ArticleCard({
           )}
         </div>
 
-        {/* Article Content */}
-        <CardHeader className="space-y-2">
+        {/* Article Content - using flex column with auto margins for date positioning */}
+        <div className="flex flex-col p-4 flex-1">
           {/* Categories */}
-          {categoryList.length > 0 && (
-            <div className="flex flex-wrap gap-2">
-              {categoryList.map((category, index) => (
-                <span
-                  key={index}
-                  className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary"
-                >
-                  {category}
-                </span>
-              ))}
-            </div>
-          )}
+          <ArticleCategories categories={categoryList} />
 
           {/* Title */}
-          <h3 className="line-clamp-2 text-xl font-semibold group-hover:text-primary transition-colors">
+          <h3 className="line-clamp-2 text-lg font-semibold group-hover:text-primary transition-colors mb-2">
             {title}
           </h3>
-        </CardHeader>
 
-        <CardContent className="space-y-3">
           {/* Summary */}
           {truncatedSummary && (
-            <p className="text-sm text-muted-foreground line-clamp-3">
+            <p className="text-sm text-muted-foreground line-clamp-2 mb-4">
               {truncatedSummary}
             </p>
           )}
 
-          {/* Published Date */}
-          <p className="text-xs text-muted-foreground">{formattedDate}</p>
-        </CardContent>
+          {/* Published Date - pushed to bottom */}
+          <p className="text-xs text-muted-foreground mt-auto">
+            {formattedDate}
+          </p>
+        </div>
       </Card>
     </Link>
   );

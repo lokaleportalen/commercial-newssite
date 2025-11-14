@@ -70,10 +70,8 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
 
   return (
     <article className="min-h-screen">
-      {/* Article Header */}
       <header className="bg-muted/50 border-b">
         <div className="container mx-auto px-4 py-12 max-w-4xl">
-          {/* Categories */}
           {categoryList.length > 0 && (
             <div className="flex flex-wrap gap-2 mb-4">
               {categoryList.map((category, index) => (
@@ -87,41 +85,24 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
             </div>
           )}
 
-          {/* Title */}
           <h1 className="text-4xl md:text-5xl font-bold mb-4">
             {articleData.title}
           </h1>
 
-          {/* Summary */}
           {articleData.summary && (
             <p className="text-xl text-muted-foreground mb-4">
               {articleData.summary}
             </p>
           )}
 
-          {/* Metadata */}
           <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
             <time dateTime={articleData.publishedDate.toISOString()}>
               {formattedDate}
             </time>
-            {articleData.sourceUrl && (
-              <>
-                <span>•</span>
-                <a
-                  href={articleData.sourceUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="hover:text-primary underline"
-                >
-                  Kilde
-                </a>
-              </>
-            )}
           </div>
         </div>
       </header>
 
-      {/* Featured Image */}
       {articleData.image && (
         <div className="relative w-full aspect-video max-w-4xl mx-auto my-8">
           <Image
@@ -135,7 +116,6 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
         </div>
       )}
 
-      {/* Article Content */}
       <div className="container mx-auto px-4 py-8 max-w-4xl">
         <div className="prose max-w-none">
           <ReactMarkdown>{articleData.content}</ReactMarkdown>

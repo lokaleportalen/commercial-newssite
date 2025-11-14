@@ -1,0 +1,113 @@
+import Link from "next/link";
+
+export function Footer() {
+  return (
+    <footer className="border-t bg-muted/30 mt-auto">
+      <div className="container mx-auto px-4 py-12 max-w-6xl">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+          {/* About Section */}
+          <div>
+            <h3 className="font-semibold text-foreground mb-4">Om</h3>
+            <ul className="space-y-2">
+              <li>
+                <Link
+                  href="/om-os"
+                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Om os
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/kontakt"
+                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Kontakt
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          {/* Newsletter Section */}
+          <div>
+            <h3 className="font-semibold text-foreground mb-4">Nyhedsbrev</h3>
+            <p className="text-sm text-muted-foreground mb-3">
+              Få de seneste nyheder direkte i din indbakke
+            </p>
+            <Link
+              href="/nyhedsbrev"
+              className="text-sm text-primary hover:underline"
+            >
+              Tilmeld dig her
+            </Link>
+          </div>
+
+          {/* Archive Section */}
+          <div>
+            <h3 className="font-semibold text-foreground mb-4">Arkiv</h3>
+            <ul className="space-y-2">
+              <li>
+                <Link
+                  href="/arkiv"
+                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Alle artikler
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/kategorier"
+                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Kategorier
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          {/* Follow Us Section */}
+          <div>
+            <h3 className="font-semibold text-foreground mb-4">Følg os</h3>
+            <ul className="space-y-2">
+              <li>
+                <a
+                  href="https://www.facebook.com/lokaleportalen"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Facebook
+                </a>
+              </li>
+              <li>
+                <a
+                  href="https://www.linkedin.com/company/lokaleportalen"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  LinkedIn
+                </a>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        {/* Bottom Bar */}
+        <div className="mt-8 pt-8 border-t">
+          <p className="text-center text-sm text-muted-foreground">
+            © {new Date().getFullYear()} Nyheder - Del af{" "}
+            <a
+              href="https://www.lokaleportalen.dk"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary hover:underline"
+            >
+              Lokaleportalen.dk
+            </a>
+          </p>
+        </div>
+      </div>
+    </footer>
+  );
+}
