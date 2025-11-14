@@ -15,7 +15,7 @@ import {
 
 export function Navigation() {
   const router = useRouter();
-  const { data: session } = authClient.useSession();
+  const { data: session, isPending } = authClient.useSession();
 
   const handleSignOut = async () => {
     await authClient.signOut({
@@ -67,7 +67,13 @@ export function Navigation() {
           </div>
 
           <div className="flex items-center gap-4">
-            {session?.user ? (
+            {isPending ? (
+              // Loading skeleton - reserve space to prevent layout shift
+              <div className="flex items-center gap-4">
+                <div className="h-9 w-24 animate-pulse rounded-md bg-muted" />
+                <div className="h-9 w-28 animate-pulse rounded-md bg-muted" />
+              </div>
+            ) : session?.user ? (
               <>
                 <span className="text-sm text-muted-foreground">
                   {session.user.name || session.user.email}

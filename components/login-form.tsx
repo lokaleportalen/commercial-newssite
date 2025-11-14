@@ -20,6 +20,7 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { Loader2 } from "lucide-react";
 
 export function LoginForm({
   className,
@@ -103,8 +104,16 @@ export function LoginForm({
                 />
               </Field>
               <Field>
-                <Button type="submit" disabled={isLoading} className="w-full">
-                  {isLoading ? "Logger ind..." : "Log ind"}
+                <Button
+                  type="submit"
+                  disabled={isLoading}
+                  className="w-full cursor-pointer"
+                >
+                  {isLoading ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    "Log ind"
+                  )}
                 </Button>
                 <FieldDescription className="text-center">
                   Har du ikke en konto?{" "}
