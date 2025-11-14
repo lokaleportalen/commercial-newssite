@@ -10,8 +10,9 @@ export const article = pgTable("article", {
   image: text("image"),
   sourceUrl: text("source_url"),
   categories: text("categories"), // Store as comma-separated values or JSON string
+  // TODO: Migrate to proper categories table with fixed values for better consistency and filtering
   status: text("status").notNull().default("draft"), // draft, published, archived
-  publishedDate: timestamp("published_date"),
+  publishedDate: timestamp("published_date").defaultNow().notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at")
     .defaultNow()
