@@ -450,8 +450,21 @@ npm run studio      # Open Drizzle Studio
 npm run generate    # Generate migrations
 npm run push        # Push schema to database
 npm run migrate     # Run migrations
-npm run seed        # Seed database
+npm run seed        # Seed local database
 ```
+
+**Seed Production Database:**
+
+```bash
+cd database
+DATABASE_URL="postgresql://newssite_mp5z_user:rV2W48mBCtizpgBp7w5FXkzWhJhNqXHB@dpg-d4dejgqdbo4c73dpseb0-a.oregon-postgres.render.com/newssite_mp5z" npx tsx seed/reset.ts
+```
+
+This will:
+- Clear all tables in the production database
+- Re-seed with auth data (test user)
+- Re-seed with categories
+- Re-seed with articles
 
 ---
 
