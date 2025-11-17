@@ -2,6 +2,7 @@ import { config } from "dotenv";
 import { resolve } from "path";
 import { seedAuth } from "./auth-seed";
 import { seedCategories } from "./categories-seed";
+import { seedArticles } from "./articles-seed";
 
 config({ path: resolve(__dirname, "../../.env") });
 
@@ -10,6 +11,7 @@ export async function seed() {
 
   await seedAuth();
   await seedCategories();
+  await seedArticles();
 
   console.log("\n✓ All seeds completed successfully!");
 }
