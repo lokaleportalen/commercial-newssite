@@ -8,7 +8,8 @@
       "Bash(printf:*)",
       "Bash(\"C:\\Users\\Emil\\projects\\bachelor\\commercial-newssite\\CLAUDE.md\")",
       "Bash(npx shadcn@latest list:*)",
-      "WebFetch(domain:www.better-auth.com)"
+      "WebFetch(domain:www.better-auth.com)",
+      "Bash(curl:*)"
     ],
     "deny": [],
     "ask": []

@@ -9,7 +9,9 @@ const openai = new OpenAI({
 // Fixed prompt for fetching commercial real estate news in Denmark
 const NEWS_PROMPT = `Find 10 nyheder fra ejendomsbranchen som har fået meget omtale den seneste uge - rank med de mest spændende, unikke og aktuelle først. Det skal være relevant for ejere af erhvervsejendomme (målgruppen er udlejere som bruger Lokaleportalen).
 
-Returner resultaterne i JSON format med følgende struktur:
+KRITISK: Du SKAL returnere dit svar som RENT JSON uden nogen ekstra tekst, forklaringer eller kommentarer.
+
+Returner resultaterne i denne EKSAKTE JSON struktur:
 {
   "newsItems": [
     {
@@ -21,9 +23,12 @@ Returner resultaterne i JSON format med følgende struktur:
   ]
 }
 
-VIGTIGT: "sourceUrl" skal være den faktiske URL hvor du fandt nyheden, IKKE bare navnet på kilden. Inkluder altid den fulde URL.
-
-Sørg for at returnere præcis 10 nyhedshistorier.`;
+VIGTIGT:
+- "sourceUrl" skal være den faktiske URL hvor du fandt nyheden, IKKE bare navnet på kilden. Inkluder altid den fulde URL.
+- Sørg for at returnere præcis 10 nyhedshistorier.
+- Dit HELE svar skal være valid JSON - start med { og slut med }
+- Inkluder INGEN tekst før eller efter JSON'en
+- Skriv IKKE "Her er JSON'en" eller lignende - returner KUN JSON`;
 
 export async function GET(request: NextRequest) {
   try {
@@ -85,12 +90,34 @@ export async function GET(request: NextRequest) {
     }> = [];
 
     try {
-      const parsedResponse = JSON.parse(newsListJson);
+      // Try to extract JSON if it's wrapped in markdown code blocks
+      let jsonText = newsListJson.trim();
+
+      // Remove markdown code blocks if present
+      if (jsonText.startsWith('```')) {
+        const match = jsonText.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+        if (match) {
+          jsonText = match[1].trim();
+        }
+      }
+
+      // Try to find JSON object if there's extra text
+      const jsonMatch = jsonText.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        jsonText = jsonMatch[0];
+      }
+
+      const parsedResponse = JSON.parse(jsonText);
       newsItems = parsedResponse.newsItems || [];
     } catch (error) {
       console.error("Failed to parse news list JSON:", error);
+      console.error("Raw response from OpenAI (first 500 chars):", newsListJson.substring(0, 500));
       return NextResponse.json(
-        { error: "Failed to parse OpenAI response" },
+        {
+          error: "Failed to parse OpenAI response",
+          details: error instanceof Error ? error.message : "Unknown error",
+          preview: newsListJson.substring(0, 200)
+        },
         { status: 500 }
       );
     }
