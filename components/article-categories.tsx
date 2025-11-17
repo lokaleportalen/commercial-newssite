@@ -19,17 +19,14 @@ export function ArticleCategories({ categories }: ArticleCategoriesProps) {
   return (
     <div className="flex flex-wrap items-center gap-2 mb-2">
       {visibleCategories.map((category, index) => (
-        <>
-          <span
-            key={index}
-            className="text-xs font-medium text-muted-foreground"
-          >
+        <div key={index} className="contents">
+          <span className="text-xs font-medium text-muted-foreground">
             {category}
           </span>
           {index < visibleCategories.length - 1 && (
             <span className="text-xs ">|</span>
           )}
-        </>
+        </div>
       ))}
 
       {hasMore && !isExpanded && (
