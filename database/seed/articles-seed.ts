@@ -171,7 +171,6 @@ Der forventes dog fortsat at være udfordringer for ældre kontorejendomme i sek
 
 Det største ukendte er udviklingen i arbejdsmodellerne. Hvis flere virksomheder i fremtiden vælger at øge andelen af hjemmearbejde, kan det igen lægge pres på efterspørgslen. Omvendt viser internationale erfaringer, at behovet for fysiske kontorer er mere robust, end mange forudså under pandemien.`,
     },
-    // Continue with remaining articles...
     {
       title: "Supermarkedskæde ekspanderer – 12 nye butikker i 2026",
       slug: "supermarkedskade-ekspanderer-12-nye-butikker-i-2026",
