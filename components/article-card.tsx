@@ -38,8 +38,8 @@ export function ArticleCard({
   const formattedDate = format(publishedDate, "d. MMMM yyyy", { locale: da });
 
   return (
-    <Link href={`/nyheder/${slug}`} className="group">
-      <Card className="h-full overflow-hidden transition-shadow hover:shadow-lg p-0 gap-0">
+    <Card className="h-full overflow-hidden transition-shadow hover:shadow-lg p-0 gap-0 group">
+      <Link href={`/nyheder/${slug}`}>
         {/* Article Image - smaller aspect ratio */}
         <div className="relative aspect-video w-full overflow-hidden bg-muted max-h-[300px]">
           {image ? (
@@ -56,30 +56,32 @@ export function ArticleCard({
             </div>
           )}
         </div>
+      </Link>
 
-        {/* Article Content - using flex column with auto margins for date positioning */}
-        <div className="flex flex-col p-4 flex-1">
-          {/* Categories */}
-          <ArticleCategories categories={categoryList} />
+      {/* Article Content - using flex column with auto margins for date positioning */}
+      <div className="flex flex-col p-4 flex-1">
+        {/* Categories */}
+        <ArticleCategories categories={categoryList} />
 
-          {/* Title */}
+        {/* Title */}
+        <Link href={`/nyheder/${slug}`}>
           <h3 className="line-clamp-2 text-lg font-semibold group-hover:text-primary transition-colors mb-2">
             {title}
           </h3>
+        </Link>
 
-          {/* Summary */}
-          {truncatedSummary && (
-            <p className="text-sm text-muted-foreground line-clamp-2 mb-4">
-              {truncatedSummary}
-            </p>
-          )}
-
-          {/* Published Date - pushed to bottom */}
-          <p className="text-xs text-muted-foreground mt-auto">
-            {formattedDate}
+        {/* Summary */}
+        {truncatedSummary && (
+          <p className="text-sm text-muted-foreground line-clamp-2 mb-4">
+            {truncatedSummary}
           </p>
-        </div>
-      </Card>
-    </Link>
+        )}
+
+        {/* Published Date - pushed to bottom */}
+        <p className="text-xs text-muted-foreground mt-auto">
+          {formattedDate}
+        </p>
+      </div>
+    </Card>
   );
 }

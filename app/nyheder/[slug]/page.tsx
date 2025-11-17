@@ -6,6 +6,7 @@ import Image from "next/image";
 import { format } from "date-fns";
 import { da } from "date-fns/locale";
 import ReactMarkdown from "react-markdown";
+import { CategoryLink } from "@/components/category-link";
 import type { Metadata } from "next";
 
 interface ArticlePageProps {
@@ -75,12 +76,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
           {categoryList.length > 0 && (
             <div className="flex flex-wrap gap-2 mb-4">
               {categoryList.map((category, index) => (
-                <span
-                  key={index}
-                  className="inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-sm font-medium text-primary"
-                >
-                  {category}
-                </span>
+                <CategoryLink key={index} category={category} variant="badge" />
               ))}
             </div>
           )}

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { ChevronDown } from "lucide-react";
+import { CategoryLink } from "./category-link";
 
 interface ArticleCategoriesProps {
   categories: string[];
@@ -20,9 +21,7 @@ export function ArticleCategories({ categories }: ArticleCategoriesProps) {
     <div className="flex flex-wrap items-center gap-2 mb-2">
       {visibleCategories.map((category, index) => (
         <div key={index} className="contents">
-          <span className="text-xs font-medium text-muted-foreground">
-            {category}
-          </span>
+          <CategoryLink category={category} />
           {index < visibleCategories.length - 1 && (
             <span className="text-xs ">|</span>
           )}

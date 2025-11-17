@@ -48,18 +48,18 @@ export function Navigation() {
                 </NavigationMenuItem>
                 <NavigationMenuItem>
                   <NavigationMenuLink
-                    href="/investeringsnyheder"
+                    href="/investering"
                     className={navigationMenuTriggerStyle()}
                   >
-                    Investeringsnyheder
+                    Investering
                   </NavigationMenuLink>
                 </NavigationMenuItem>
                 <NavigationMenuItem>
                   <NavigationMenuLink
-                    href="/byudvikling"
+                    href="/byggeri"
                     className={navigationMenuTriggerStyle()}
                   >
-                    Byudvikling
+                    Byggeri
                   </NavigationMenuLink>
                 </NavigationMenuItem>
               </NavigationMenuList>
