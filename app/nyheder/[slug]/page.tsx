@@ -103,20 +103,19 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
         </div>
       </header>
 
-      {articleData.image && (
-        <div className="relative w-full aspect-video max-w-4xl mx-auto my-8">
-          <Image
-            src={articleData.image}
-            alt={articleData.title}
-            fill
-            className="object-cover rounded-lg"
-            priority
-            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 1200px"
-          />
-        </div>
-      )}
-
       <div className="container mx-auto px-4 py-8 max-w-4xl">
+        {articleData.image && (
+          <div className="relative w-full aspect-video max-w-4xl mx-auto mb-8">
+            <Image
+              src={articleData.image}
+              alt={articleData.title}
+              fill
+              className="object-cover rounded-lg"
+              priority
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 1200px"
+            />
+          </div>
+        )}
         <div className="prose max-w-none">
           <ReactMarkdown>{articleData.content}</ReactMarkdown>
         </div>
