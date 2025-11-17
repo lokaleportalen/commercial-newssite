@@ -3,6 +3,7 @@ import { resolve } from "path";
 import { db } from "../db";
 import { user, session, account, verification } from "../schema/auth-schema";
 import { article } from "../schema/articles-schema";
+import { category, articleCategory } from "../schema/categories-schema";
 import { seed } from "./seed";
 
 config({ path: resolve(__dirname, "../../.env") });
@@ -11,6 +12,10 @@ async function reset() {
   console.log("Clearing all tables...\n");
 
   try {
+    // Clear junction tables first (have foreign keys)
+    await db.delete(articleCategory);
+    console.log("✓ Cleared article categories");
+
     await db.delete(session);
     console.log("✓ Cleared sessions");
 
@@ -22,6 +27,9 @@ async function reset() {
 
     await db.delete(article);
     console.log("✓ Cleared articles");
+
+    await db.delete(category);
+    console.log("✓ Cleared categories");
 
     // Clear user table last (has foreign key references)
     await db.delete(user);
