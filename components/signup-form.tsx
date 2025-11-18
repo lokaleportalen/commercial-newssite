@@ -59,7 +59,7 @@ export function SignupForm({ ...props }: React.ComponentProps<typeof Card>) {
     }
 
     if (data) {
-      router.push("/");
+      router.push("/onboarding");
       router.refresh();
     }
   };

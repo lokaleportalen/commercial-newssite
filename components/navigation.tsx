@@ -75,9 +75,9 @@ export function Navigation() {
               </div>
             ) : session?.user ? (
               <>
-                <span className="text-sm text-muted-foreground">
-                  {session.user.name || session.user.email}
-                </span>
+                <Button variant="ghost" asChild>
+                  <Link href="/profile">Profil</Link>
+                </Button>
                 <Separator orientation="vertical" className="h-6" />
                 <Button variant="ghost" onClick={handleSignOut}>
                   Log ud
