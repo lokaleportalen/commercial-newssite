@@ -5,15 +5,8 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1763117178718,
-      "tag": "0000_fearless_mandroid",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1763127327894,
-      "tag": "0001_spooky_korg",
+      "when": 1763469576152,
+      "tag": "0000_nice_namor",
       "breakpoints": true
     }
   ]

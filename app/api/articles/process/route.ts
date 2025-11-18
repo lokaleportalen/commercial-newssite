@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
 import { db } from "@/database/db";
-import { article, category, articleCategory } from "@/database/schema";
+import { article, category, articleCategory, image } from "@/database/schema";
 import { eq, or, ilike, inArray } from "drizzle-orm";
+import { searchUnsplashWithFallback } from "@/lib/unsplash";
 
 // Initialize OpenAI client
 const openai = new OpenAI({
@@ -159,7 +160,7 @@ Formatér artiklen i markdown med korrekte overskrifter (#, ##, ###).`;
 
     console.log("Article written, generating metadata...");
 
-    // Step 3: Generate metadata (slug, meta description, summary)
+    // Step 3: Generate metadata (slug, meta description, summary, image keywords)
     const metadataPrompt = `Baseret på denne artikel, generer følgende metadata i JSON format:
 
 Artikel:
@@ -180,13 +181,15 @@ Levér:
    - Industri
    - Bolig
    - Bæredygtighed
+5. imageKeywords: Array med 2-3 søgeord på ENGELSK til billedsøgning (f.eks. ["commercial building", "office interior", "real estate denmark"])
 
 Svar KUN med valid JSON i denne præcise struktur:
 {
   "slug": "eksempel-slug",
   "metaDescription": "Beskrivelse her",
   "summary": "Resumé her",
-  "categories": "Kategori1, Kategori2"
+  "categories": "Kategori1, Kategori2",
+  "imageKeywords": ["keyword1", "keyword2"]
 }`;
 
     const metadataResponse = await openai.responses.create({
@@ -200,6 +203,7 @@ Svar KUN med valid JSON i denne præcise struktur:
       metaDescription: string;
       summary: string;
       categories: string;
+      imageKeywords?: string[];
     };
 
     try {
@@ -215,12 +219,49 @@ Svar KUN med valid JSON i denne præcise struktur:
         metaDescription: newsItem.summary.substring(0, 160),
         summary: newsItem.summary,
         categories: "Commercial Real Estate",
+        imageKeywords: ["commercial real estate", "office building"],
       };
     }
 
-    console.log("Metadata generated, saving to database...");
+    console.log("Metadata generated, searching for image...");
 
-    // Step 4: Save the article to the database
+    // Step 4: Search for and save image from Unsplash
+    let imageId: string | null = null;
+
+    if (metadata.imageKeywords && metadata.imageKeywords.length > 0) {
+      // Try to find an image using the keywords
+      const unsplashImage = await searchUnsplashWithFallback(
+        metadata.imageKeywords
+      );
+
+      if (unsplashImage) {
+        console.log(`Found image by ${unsplashImage.photographerName}`);
+
+        // Save image to database
+        const [savedImage] = await db
+          .insert(image)
+          .values({
+            url: unsplashImage.url,
+            unsplashUrl: unsplashImage.unsplashUrl,
+            photographerName: unsplashImage.photographerName,
+            photographerUrl: unsplashImage.photographerUrl,
+            license: "Unsplash License",
+            unsplashId: unsplashImage.id,
+            downloadLocation: unsplashImage.downloadLocation,
+            description: unsplashImage.description,
+          })
+          .returning();
+
+        imageId = savedImage.id;
+        console.log(`Image saved to database with ID: ${imageId}`);
+      } else {
+        console.log("No suitable image found on Unsplash");
+      }
+    }
+
+    console.log("Saving article to database...");
+
+    // Step 5: Save the article to the database
     const [insertedArticle] = await db
       .insert(article)
       .values({
@@ -229,6 +270,7 @@ Svar KUN med valid JSON i denne præcise struktur:
         content: articleContent,
         summary: metadata.summary,
         metaDescription: metadata.metaDescription,
+        imageId: imageId,
         sourceUrl: newsItem.sourceUrl || null,
         categories: metadata.categories,
         status: "published",

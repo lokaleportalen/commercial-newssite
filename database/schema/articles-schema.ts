@@ -1,4 +1,5 @@
 import { pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import { image } from "./image-schema";
 
 export const article = pgTable("article", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -7,7 +8,7 @@ export const article = pgTable("article", {
   content: text("content").notNull(),
   summary: text("summary"),
   metaDescription: text("meta_description"),
-  image: text("image"),
+  imageId: uuid("image_id").references(() => image.id, { onDelete: "set null" }),
   sourceUrl: text("source_url"),
   categories: text("categories"), // Store as comma-separated values or JSON string
   // TODO: Migrate to proper categories table with fixed values for better consistency and filtering
