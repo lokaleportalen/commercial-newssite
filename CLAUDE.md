@@ -15,6 +15,50 @@ This is a Next.js 16 full-stack web application for "Nyheder" (News), a commerci
 
 ---
 
+## Development Guidelines
+
+**IMPORTANT: Follow these guidelines for all development work.**
+
+### Before Implementing Solutions
+
+1. **Be Critical of Solutions**
+   - Question assumptions and evaluate trade-offs
+   - Consider edge cases and potential issues
+   - Don't accept the first solution that comes to mind
+
+2. **Think Thoroughly**
+   - Analyze the problem from multiple angles
+   - Consider performance, security, and maintainability implications
+   - Evaluate long-term consequences of design decisions
+
+3. **Check for Existing Components**
+   - Search the codebase for reusable components before creating new ones
+   - Check `components/ui/` for existing ShadCN components
+   - Look for existing utilities in `lib/` before writing new helpers
+   - Avoid code duplication and redundancy
+
+4. **Plan Before Executing**
+   - Provide a concise plan outlining the approach
+   - Ask clarifying questions when requirements are ambiguous
+   - Get confirmation before making significant changes
+
+### After Major Changes
+
+5. **Update Documentation**
+   - Update this CLAUDE.md file after major updates, adjustments, or changes
+   - Keep the "Recent Changes" section current
+   - Document new components, endpoints, or patterns
+
+### Component Reuse Checklist
+
+Before creating new components, check:
+- [ ] `components/ui/` - ShadCN components (Button, Card, Input, Field, etc.)
+- [ ] `components/` - Custom components (Navigation, forms, etc.)
+- [ ] `lib/utils.ts` - Utility functions
+- [ ] `lib/auth.ts` / `lib/auth-client.ts` - Auth utilities
+
+---
+
 ## Technology Stack
 
 | Package                  | Version | Purpose                         |
@@ -716,6 +760,11 @@ Page (Server Component)
 
 ## Recent Changes
 
+- Added Development Guidelines section with best practices for critical thinking, component reuse, and documentation
+- Added hero section with featured article
+- Implemented simple profile and email settings
+- Created category pages and links to pages
+- Updated article seed
 - Added ShadCN components and custom orange theme
 - Implemented Drizzle ORM with PostgreSQL
 - Set up Better-Auth authentication system
@@ -828,4 +877,4 @@ Page (Server Component)
 
 ---
 
-Last Updated: 2025-11-14
+Last Updated: 2025-11-19
