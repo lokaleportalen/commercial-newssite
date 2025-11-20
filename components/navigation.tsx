@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { authClient } from "@/lib/auth-client";
+import { useAuth } from "@/lib/payload-auth";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -15,16 +15,10 @@ import {
 
 export function Navigation() {
   const router = useRouter();
-  const { data: session, isPending } = authClient.useSession();
+  const { user, isPending, signOut } = useAuth();
 
   const handleSignOut = async () => {
-    await authClient.signOut({
-      fetchOptions: {
-        onSuccess: () => {
-          router.push("/");
-        },
-      },
-    });
+    await signOut();
   };
 
   return (
@@ -73,7 +67,7 @@ export function Navigation() {
                 <div className="h-9 w-24 animate-pulse rounded-md bg-muted" />
                 <div className="h-9 w-28 animate-pulse rounded-md bg-muted" />
               </div>
-            ) : session?.user ? (
+            ) : user ? (
               <>
                 <Button variant="ghost" asChild>
                   <Link href="/profile">Profil</Link>

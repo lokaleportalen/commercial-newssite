@@ -1,28 +1,34 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
-import { db } from "@/database/db";
-import { userPreferences } from "@/database/schema";
-import { eq } from "drizzle-orm";
-import { headers } from "next/headers";
+import { getPayload } from "payload";
+import config from "@payload-config";
+import { cookies } from "next/headers";
 
 // Unsubscribe from all emails
 export async function POST(request: NextRequest) {
   try {
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    });
+    const payload = await getPayload({ config });
+    const cookieStore = await cookies();
+    const token = cookieStore.get("payload-token");
 
-    if (!session?.user) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
+    if (!token) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Delete user preferences (which unsubscribes them)
-    await db
-      .delete(userPreferences)
-      .where(eq(userPreferences.userId, session.user.id));
+    // Verify token and get user
+    const { user } = await payload.auth({ headers: request.headers });
+
+    if (!user || user.collection !== "users") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Unsubscribe user from emails
+    await payload.update({
+      collection: "users",
+      id: user.id,
+      data: {
+        emailPreferences: false,
+      },
+    });
 
     return NextResponse.json({ success: true });
   } catch (error) {

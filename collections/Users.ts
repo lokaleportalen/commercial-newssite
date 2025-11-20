@@ -58,5 +58,28 @@ export const Users: CollectionConfig = {
       label: 'Modtag email notifikationer',
       defaultValue: true,
     },
+    {
+      name: 'newsCategory',
+      type: 'select',
+      label: 'News Category Preference',
+      options: [
+        { label: 'All news', value: 'all' },
+        { label: 'Investment news', value: 'investment' },
+        { label: 'Construction', value: 'construction' },
+        { label: 'New', value: 'new' },
+        { label: 'Old', value: 'old' },
+      ],
+      defaultValue: 'all',
+    },
+    {
+      name: 'emailFrequency',
+      type: 'select',
+      label: 'Email Frequency',
+      options: [
+        { label: 'Immediate', value: 'immediate' },
+        { label: 'Daily', value: 'daily' },
+      ],
+      defaultValue: 'daily',
+    },
   ],
 }

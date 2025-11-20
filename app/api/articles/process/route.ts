@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
-import { db } from "@/database/db";
-import { article, category, articleCategory } from "@/database/schema";
-import { eq, or, ilike, inArray } from "drizzle-orm";
+import { getPayload } from "payload";
+import config from "@payload-config";
 
 // Initialize OpenAI client
 const openai = new OpenAI({
@@ -47,33 +46,42 @@ export async function POST(request: NextRequest) {
 
     console.log(`Processing news item: ${newsItem.title}`);
 
+    const payload = await getPayload({ config });
+
     // Check for duplicate articles before processing
-    const duplicateConditions = [];
+    const duplicateQuery: any = {
+      or: [],
+    };
 
     // Check by sourceUrl if provided
     if (newsItem.sourceUrl) {
-      duplicateConditions.push(eq(article.sourceUrl, newsItem.sourceUrl));
+      duplicateQuery.or.push({ sourceUrl: { equals: newsItem.sourceUrl } });
     }
 
-    // Check by similar title (case-insensitive)
-    duplicateConditions.push(ilike(article.title, newsItem.title));
+    // Check by similar title (case-insensitive contains)
+    duplicateQuery.or.push({ title: { like: newsItem.title } });
 
-    if (duplicateConditions.length > 0) {
-      const existingArticles = await db
-        .select()
-        .from(article)
-        .where(or(...duplicateConditions))
-        .limit(1);
+    if (duplicateQuery.or.length > 0) {
+      const { docs: existingArticles } = await payload.find({
+        collection: "articles",
+        where: duplicateQuery,
+        limit: 1,
+      });
 
       if (existingArticles.length > 0) {
-        console.log(`Duplicate article found: ${existingArticles[0].title} (ID: ${existingArticles[0].id})`);
-        return NextResponse.json({
-          success: false,
-          message: "Duplicate article detected",
-          duplicate: true,
-          existingArticleId: existingArticles[0].id,
-          existingArticleTitle: existingArticles[0].title,
-        }, { status: 200 }); // Return 200 to not break the cron job flow
+        console.log(
+          `Duplicate article found: ${existingArticles[0].title} (ID: ${existingArticles[0].id})`
+        );
+        return NextResponse.json(
+          {
+            success: false,
+            message: "Duplicate article detected",
+            duplicate: true,
+            existingArticleId: existingArticles[0].id,
+            existingArticleTitle: existingArticles[0].title,
+          },
+          { status: 200 }
+        );
       }
     }
 
@@ -98,9 +106,7 @@ Formatér dine research-resultater tydeligt med overskrifter og punkter.`;
 
     const researchResponse = await openai.responses.create({
       model: "gpt-5-mini",
-      tools: [
-        { type: "web_search" },
-      ],
+      tools: [{ type: "web_search" }],
       input: researchPrompt,
     });
 
@@ -169,7 +175,7 @@ Levér:
 1. slug: URL-venlig slug (små bogstaver, bindestreger, ingen specialtegn)
 2. metaDescription: SEO meta beskrivelse på DANSK (150-160 tegn)
 3. summary: Kort resumé til artikelforhåndsvisning på DANSK (2-3 sætninger)
-4. categories: Kommaseparerede relevante kategorier på DANSK. Vælg KUN fra disse kategorier:
+4. categories: Array af relevante kategori-navne på DANSK. Vælg KUN fra disse kategorier:
    - Investering
    - Byggeri
    - Kontor
@@ -186,7 +192,7 @@ Svar KUN med valid JSON i denne præcise struktur:
   "slug": "eksempel-slug",
   "metaDescription": "Beskrivelse her",
   "summary": "Resumé her",
-  "categories": "Kategori1, Kategori2"
+  "categories": ["Kategori1", "Kategori2"]
 }`;
 
     const metadataResponse = await openai.responses.create({
@@ -199,11 +205,17 @@ Svar KUN med valid JSON i denne præcise struktur:
       slug: string;
       metaDescription: string;
       summary: string;
-      categories: string;
+      categories: string[];
     };
 
     try {
       metadata = JSON.parse(metadataText || "{}");
+      // Ensure categories is an array
+      if (typeof metadata.categories === "string") {
+        metadata.categories = (metadata.categories as any)
+          .split(",")
+          .map((c: string) => c.trim());
+      }
     } catch (error) {
       console.error("Failed to parse metadata JSON:", error);
       // Fallback metadata
@@ -214,58 +226,73 @@ Svar KUN med valid JSON i denne præcise struktur:
           .replace(/^-|-$/g, ""),
         metaDescription: newsItem.summary.substring(0, 160),
         summary: newsItem.summary,
-        categories: "Commercial Real Estate",
+        categories: [],
       };
     }
 
-    console.log("Metadata generated, saving to database...");
+    console.log("Metadata generated, finding category IDs...");
 
-    // Step 4: Save the article to the database
-    const [insertedArticle] = await db
-      .insert(article)
-      .values({
+    // Step 4: Look up category IDs by name
+    let categoryIds: string[] = [];
+
+    if (metadata.categories && metadata.categories.length > 0) {
+      const { docs: matchedCategories } = await payload.find({
+        collection: "categories",
+        where: {
+          name: { in: metadata.categories },
+        },
+      });
+
+      categoryIds = matchedCategories.map((cat: any) => cat.id);
+      console.log(`✓ Matched ${categoryIds.length} categories`);
+    }
+
+    console.log("Saving article to database...");
+
+    // Step 5: Save the article to the database with Lexical content
+    // Convert markdown to basic Lexical format
+    const lexicalContent = {
+      root: {
+        type: "root",
+        format: "",
+        indent: 0,
+        version: 1,
+        children: [
+          {
+            type: "paragraph",
+            format: "",
+            indent: 0,
+            version: 1,
+            children: [
+              {
+                type: "text",
+                format: 0,
+                text: articleContent,
+                version: 1,
+              },
+            ],
+          },
+        ],
+        direction: "ltr",
+      },
+    };
+
+    const insertedArticle = await payload.create({
+      collection: "articles",
+      data: {
         title: newsItem.title,
         slug: metadata.slug,
-        content: articleContent,
+        content: lexicalContent,
         summary: metadata.summary,
         metaDescription: metadata.metaDescription,
-        sourceUrl: newsItem.sourceUrl || null,
-        categories: metadata.categories,
-        status: "published",
-        publishedDate: new Date(),
-      })
-      .returning();
+        sourceUrl: newsItem.sourceUrl || undefined,
+        categories: categoryIds,
+        _status: "published",
+        publishedDate: new Date().toISOString(),
+      },
+    });
 
-    console.log(`Article saved to database with ID: ${insertedArticle.id}`);
-
-    // Step 5: Link article to categories using the junction table
-    if (metadata.categories) {
-      // Parse categories from comma-separated string
-      const categoryNames = metadata.categories
-        .split(",")
-        .map((name) => name.trim())
-        .filter((name) => name.length > 0);
-
-      if (categoryNames.length > 0) {
-        // Look up category IDs by name
-        const matchedCategories = await db
-          .select()
-          .from(category)
-          .where(inArray(category.name, categoryNames));
-
-        if (matchedCategories.length > 0) {
-          // Insert into junction table
-          const articleCategoryValues = matchedCategories.map((cat) => ({
-            articleId: insertedArticle.id,
-            categoryId: cat.id,
-          }));
-
-          await db.insert(articleCategory).values(articleCategoryValues);
-
-          console.log(`✓ Linked article to ${matchedCategories.length} categories`);
-        }
-      }
-    }
+    console.log(`✓ Article saved to database with ID: ${insertedArticle.id}`);
 
     return NextResponse.json({
       success: true,

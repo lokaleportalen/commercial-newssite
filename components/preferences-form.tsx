@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { authClient } from "@/lib/auth-client";
+import { useAuth } from "@/lib/payload-auth";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -16,7 +16,7 @@ import { Label } from "@/components/ui/label";
 
 export function PreferencesForm() {
   const router = useRouter();
-  const { data: session } = authClient.useSession();
+  const { user } = useAuth();
   const [newsCategory, setNewsCategory] = useState("all");
   const [emailFrequency, setEmailFrequency] = useState("daily");
   const [isLoading, setIsLoading] = useState(true);
@@ -26,7 +26,7 @@ export function PreferencesForm() {
 
   useEffect(() => {
     const loadPreferences = async () => {
-      if (!session?.user) return;
+      if (!user) return;
 
       try {
         const response = await fetch("/api/user/preferences");
@@ -43,7 +43,7 @@ export function PreferencesForm() {
     };
 
     loadPreferences();
-  }, [session]);
+  }, [user]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -100,7 +100,7 @@ export function PreferencesForm() {
     }
   };
 
-  if (!session) {
+  if (!user) {
     return (
       <Card>
         <CardContent className="py-8 text-center">

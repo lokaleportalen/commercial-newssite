@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { authClient } from "@/lib/auth-client";
+import { useAuth } from "@/lib/payload-auth";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -22,6 +22,7 @@ import { Input } from "@/components/ui/input";
 
 export function SignupForm({ ...props }: React.ComponentProps<typeof Card>) {
   const router = useRouter();
+  const { signUp } = useAuth();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -45,11 +46,7 @@ export function SignupForm({ ...props }: React.ComponentProps<typeof Card>) {
 
     setIsLoading(true);
 
-    const { data, error: signUpError } = await authClient.signUp.email({
-      name,
-      email,
-      password,
-    });
+    const { user, error: signUpError } = await signUp(name, email, password);
 
     setIsLoading(false);
 
@@ -58,7 +55,7 @@ export function SignupForm({ ...props }: React.ComponentProps<typeof Card>) {
       return;
     }
 
-    if (data) {
+    if (user) {
       router.push("/onboarding");
       router.refresh();
     }

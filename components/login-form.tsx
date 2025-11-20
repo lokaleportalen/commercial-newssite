@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { authClient } from "@/lib/auth-client";
+import { useAuth } from "@/lib/payload-auth";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -27,6 +27,7 @@ export function LoginForm({
   ...props
 }: React.ComponentProps<"div">) {
   const router = useRouter();
+  const { signIn } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -37,10 +38,7 @@ export function LoginForm({
     setError("");
     setIsLoading(true);
 
-    const { data, error: signInError } = await authClient.signIn.email({
-      email,
-      password,
-    });
+    const { user, error: signInError } = await signIn(email, password);
 
     setIsLoading(false);
 
@@ -49,7 +47,7 @@ export function LoginForm({
       return;
     }
 
-    if (data) {
+    if (user) {
       router.push("/");
       router.refresh();
     }

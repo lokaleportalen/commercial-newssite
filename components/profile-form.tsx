@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { authClient } from "@/lib/auth-client";
+import { useAuth } from "@/lib/payload-auth";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -21,7 +21,7 @@ import { Input } from "@/components/ui/input";
 
 export function ProfileForm() {
   const router = useRouter();
-  const { data: session } = authClient.useSession();
+  const { user, signOut } = useAuth();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -29,11 +29,11 @@ export function ProfileForm() {
   const [success, setSuccess] = useState("");
 
   useEffect(() => {
-    if (session?.user) {
-      setName(session.user.name || "");
-      setEmail(session.user.email || "");
+    if (user) {
+      setName(user.name || "");
+      setEmail(user.email || "");
     }
-  }, [session]);
+  }, [user]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -82,16 +82,14 @@ export function ProfileForm() {
         throw new Error("Failed to delete account");
       }
 
-      await authClient.signOut();
-      router.push("/");
-      router.refresh();
+      await signOut();
     } catch (err) {
       setError("Der opstod en fejl ved sletning af konto. Prøv venligst igen.");
       setIsLoading(false);
     }
   };
 
-  if (!session) {
+  if (!user) {
     return (
       <Card>
         <CardContent className="py-8 text-center">

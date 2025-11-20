@@ -1,6 +1,5 @@
-import { db } from "@/database/db";
-import { article } from "@/database/schema";
-import { eq } from "drizzle-orm";
+import { getPayload } from "payload";
+import config from "@payload-config";
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import { format } from "date-fns";
@@ -18,12 +17,15 @@ export async function generateMetadata({
   params,
 }: ArticlePageProps): Promise<Metadata> {
   const { slug } = await params;
+  const payload = await getPayload({ config });
 
-  const [articleData] = await db
-    .select()
-    .from(article)
-    .where(eq(article.slug, slug))
-    .limit(1);
+  const { docs: articles } = await payload.find({
+    collection: "articles",
+    where: { slug: { equals: slug } },
+    limit: 1,
+  });
+
+  const articleData = articles[0];
 
   if (!articleData) {
     return {
@@ -38,36 +40,65 @@ export async function generateMetadata({
       title: articleData.title,
       description: articleData.metaDescription || articleData.summary || "",
       type: "article",
-      publishedTime: articleData.publishedDate.toISOString(),
-      images: articleData.image ? [articleData.image] : [],
+      publishedTime: articleData.publishedDate,
+      images: articleData.featuredImage?.url ? [articleData.featuredImage.url] : [],
     },
   };
 }
 
 export default async function ArticlePage({ params }: ArticlePageProps) {
   const { slug } = await params;
+  const payload = await getPayload({ config });
 
   // Fetch article by slug
-  const [articleData] = await db
-    .select()
-    .from(article)
-    .where(eq(article.slug, slug))
-    .limit(1);
+  const { docs: articles } = await payload.find({
+    collection: "articles",
+    where: { slug: { equals: slug } },
+    limit: 1,
+  });
+
+  const articleData = articles[0];
 
   // Return 404 if article not found
   if (!articleData) {
     notFound();
   }
 
-  // Parse categories
-  const categoryList = articleData.categories
-    ? articleData.categories.split(",").map((cat) => cat.trim())
-    : [];
+  // Get category names
+  const categoryList: string[] = [];
+  if (articleData.categories && Array.isArray(articleData.categories)) {
+    articleData.categories.forEach((cat: any) => {
+      if (typeof cat === "string") {
+        categoryList.push(cat);
+      } else if (cat.name) {
+        categoryList.push(cat.name);
+      }
+    });
+  }
 
   // Format date in Danish
-  const formattedDate = format(articleData.publishedDate, "d. MMMM yyyy", {
+  const formattedDate = format(new Date(articleData.publishedDate), "d. MMMM yyyy", {
     locale: da,
   });
+
+  // Extract text content from Lexical content
+  // For now, we'll use a simple extraction. You may want to implement proper Lexical rendering
+  let contentText = "";
+  if (articleData.content && typeof articleData.content === "object") {
+    // Simple text extraction from Lexical format
+    const root = (articleData.content as any).root;
+    if (root && root.children) {
+      root.children.forEach((child: any) => {
+        if (child.children) {
+          child.children.forEach((textNode: any) => {
+            if (textNode.text) {
+              contentText += textNode.text + "\n\n";
+            }
+          });
+        }
+      });
+    }
+  }
 
   return (
     <article className="min-h-screen">
@@ -92,7 +123,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
           )}
 
           <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
-            <time dateTime={articleData.publishedDate.toISOString()}>
+            <time dateTime={articleData.publishedDate}>
               {formattedDate}
             </time>
           </div>
@@ -100,10 +131,10 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
       </header>
 
       <div className="container mx-auto px-4 py-8 max-w-4xl">
-        {articleData.image && (
+        {articleData.featuredImage?.url && (
           <div className="relative w-full aspect-video max-w-4xl mx-auto mb-8">
             <Image
-              src={articleData.image}
+              src={articleData.featuredImage.url}
               alt={articleData.title}
               fill
               className="object-cover rounded-lg"
@@ -113,7 +144,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
           </div>
         )}
         <div className="prose max-w-none">
-          <ReactMarkdown>{articleData.content}</ReactMarkdown>
+          <ReactMarkdown>{contentText}</ReactMarkdown>
         </div>
       </div>
     </article>
