@@ -1,6 +1,5 @@
-import { db } from "@/database/db";
-import { article } from "@/database/schema";
-import { eq, desc, sql } from "drizzle-orm";
+import { getPayload } from 'payload'
+import config from '@payload-config'
 import { HeroBanner } from "@/components/hero-banner";
 import { HeroSection } from "@/components/hero-section";
 import { ArticleCard } from "@/components/article-card";
@@ -15,37 +14,30 @@ interface HomeProps {
 }
 
 export default async function Home({ searchParams }: HomeProps) {
+  const payload = await getPayload({ config })
+
   const params = await searchParams;
   const currentPage = Number(params.page) || 1;
   const isFirstPage = currentPage === 1;
 
-  const gridOffset = isFirstPage
-    ? HERO_ARTICLES_COUNT
-    : HERO_ARTICLES_COUNT + (currentPage - 1) * ARTICLES_PER_PAGE;
+  // Fetch all published articles
+  const { docs: allArticles, totalDocs } = await payload.find({
+    collection: 'articles',
+    where: {
+      _status: {
+        equals: 'published',
+      },
+    },
+    sort: '-publishedDate',
+    limit: 100, // Get enough for hero + grid
+  })
 
-  const [heroArticles, gridArticles, totalCountResult] = await Promise.all([
-    isFirstPage
-      ? db
-          .select()
-          .from(article)
-          .where(eq(article.status, "published"))
-          .orderBy(desc(article.publishedDate))
-          .limit(HERO_ARTICLES_COUNT)
-      : Promise.resolve([]),
-    db
-      .select()
-      .from(article)
-      .where(eq(article.status, "published"))
-      .orderBy(desc(article.publishedDate))
-      .limit(ARTICLES_PER_PAGE)
-      .offset(gridOffset),
-    db
-      .select({ count: sql<number>`count(*)` })
-      .from(article)
-      .where(eq(article.status, "published")),
-  ]);
+  // Split articles for hero and grid display
+  const heroArticles = isFirstPage ? allArticles.slice(0, HERO_ARTICLES_COUNT) : []
+  const startIndex = isFirstPage ? HERO_ARTICLES_COUNT : (currentPage - 1) * ARTICLES_PER_PAGE + HERO_ARTICLES_COUNT
+  const gridArticles = allArticles.slice(startIndex, startIndex + ARTICLES_PER_PAGE)
 
-  const totalCount = Number(totalCountResult[0]?.count || 0);
+  const totalCount = totalDocs
   const gridArticlesCount = Math.max(0, totalCount - HERO_ARTICLES_COUNT);
   const totalPages = Math.ceil(gridArticlesCount / ARTICLES_PER_PAGE);
 
@@ -56,7 +48,7 @@ export default async function Home({ searchParams }: HomeProps) {
       <HeroBanner />
 
       {isFirstPage && heroArticles.length > 0 && (
-        <HeroSection articles={heroArticles} />
+        <HeroSection articles={heroArticles as any} />
       )}
 
       <main className="container mx-auto px-4 py-12 max-w-6xl">
@@ -72,15 +64,15 @@ export default async function Home({ searchParams }: HomeProps) {
 
             {gridArticles.length > 0 && (
               <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {gridArticles.map((articleItem) => (
+                {gridArticles.map((articleItem: any) => (
                   <ArticleCard
                     key={articleItem.id}
                     title={articleItem.title}
                     slug={articleItem.slug}
-                    summary={articleItem.summary}
-                    image={articleItem.image}
+                    summary={articleItem.summary || ''}
+                    image={articleItem.featuredImage?.url || null}
                     publishedDate={articleItem.publishedDate}
-                    categories={articleItem.categories}
+                    categories={articleItem.categories?.map((cat: any) => cat.name).join(', ') || ''}
                   />
                 ))}
               </section>
