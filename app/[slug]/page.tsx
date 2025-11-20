@@ -1,6 +1,5 @@
-import { db } from "@/database/db";
-import { article, category } from "@/database/schema";
-import { eq, desc, sql, like } from "drizzle-orm";
+import { getPayload } from "payload";
+import config from "@payload-config";
 import { notFound } from "next/navigation";
 import { ArticleCard } from "@/components/article-card";
 import { Pagination } from "@/components/pagination";
@@ -18,12 +17,15 @@ export async function generateMetadata({
   params,
 }: CategoryPageProps): Promise<Metadata> {
   const { slug } = await params;
+  const payload = await getPayload({ config });
 
-  const [categoryData] = await db
-    .select()
-    .from(category)
-    .where(eq(category.slug, slug))
-    .limit(1);
+  const { docs: categories } = await payload.find({
+    collection: "categories",
+    where: { slug: { equals: slug } },
+    limit: 1,
+  });
+
+  const categoryData = categories[0];
 
   if (!categoryData) {
     return {
@@ -46,44 +48,36 @@ export default async function CategoryPage({
   const { slug } = await params;
   const { page } = await searchParams;
   const currentPage = Number(page) || 1;
-  const offset = (currentPage - 1) * ARTICLES_PER_PAGE;
+
+  const payload = await getPayload({ config });
 
   // Fetch category by slug
-  const [categoryData] = await db
-    .select()
-    .from(category)
-    .where(eq(category.slug, slug))
-    .limit(1);
+  const { docs: categories } = await payload.find({
+    collection: "categories",
+    where: { slug: { equals: slug } },
+    limit: 1,
+  });
+
+  const categoryData = categories[0];
 
   // Return 404 if category not found
   if (!categoryData) {
     notFound();
   }
 
-  // Fetch articles that contain this category
-  // Since categories are stored as comma-separated strings, we use LIKE
-  const categoryPattern = `%${categoryData.name}%`;
+  // Fetch articles that include this category
+  const { docs: articles, totalDocs } = await payload.find({
+    collection: "articles",
+    where: {
+      _status: { equals: "published" },
+      categories: { contains: categoryData.id },
+    },
+    sort: "-publishedDate",
+    limit: ARTICLES_PER_PAGE,
+    page: currentPage,
+  });
 
-  const [articles, totalCountResult] = await Promise.all([
-    db
-      .select()
-      .from(article)
-      .where(
-        sql`${article.status} = 'published' AND ${article.categories} LIKE ${categoryPattern}`
-      )
-      .orderBy(desc(article.publishedDate))
-      .limit(ARTICLES_PER_PAGE)
-      .offset(offset),
-    db
-      .select({ count: sql<number>`count(*)` })
-      .from(article)
-      .where(
-        sql`${article.status} = 'published' AND ${article.categories} LIKE ${categoryPattern}`
-      ),
-  ]);
-
-  const totalCount = Number(totalCountResult[0]?.count || 0);
-  const totalPages = Math.ceil(totalCount / ARTICLES_PER_PAGE);
+  const totalPages = Math.ceil(totalDocs / ARTICLES_PER_PAGE);
 
   return (
     <div className="flex-1">
@@ -118,15 +112,19 @@ export default async function CategoryPage({
 
             {/* Articles Grid */}
             <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {articles.map((articleItem) => (
+              {articles.map((articleItem: any) => (
                 <ArticleCard
                   key={articleItem.id}
                   title={articleItem.title}
                   slug={articleItem.slug}
                   summary={articleItem.summary}
-                  image={articleItem.image}
+                  image={articleItem.featuredImage?.url || null}
                   publishedDate={articleItem.publishedDate}
-                  categories={articleItem.categories}
+                  categories={
+                    articleItem.categories
+                      ?.map((cat: any) => (typeof cat === "string" ? cat : cat.name))
+                      .join(", ") || ""
+                  }
                 />
               ))}
             </section>

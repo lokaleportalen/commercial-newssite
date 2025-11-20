@@ -1,22 +1,24 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
-import { db } from "@/database/db";
-import { user } from "@/database/schema";
-import { eq } from "drizzle-orm";
-import { headers } from "next/headers";
+import { getPayload } from "payload";
+import config from "@payload-config";
+import { cookies } from "next/headers";
 
 // Update user profile
 export async function PATCH(request: NextRequest) {
   try {
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    });
+    const payload = await getPayload({ config });
+    const cookieStore = await cookies();
+    const token = cookieStore.get("payload-token");
 
-    if (!session?.user) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
+    if (!token) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Verify token and get user
+    const { user } = await payload.auth({ headers: request.headers });
+
+    if (!user || user.collection !== "users") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const { name, email } = await request.json();
@@ -29,14 +31,14 @@ export async function PATCH(request: NextRequest) {
     }
 
     // Check if email is already taken by another user
-    if (email !== session.user.email) {
-      const existingUser = await db
-        .select()
-        .from(user)
-        .where(eq(user.email, email))
-        .limit(1);
+    if (email !== user.email) {
+      const { docs: existingUsers } = await payload.find({
+        collection: "users",
+        where: { email: { equals: email } },
+        limit: 1,
+      });
 
-      if (existingUser.length > 0 && existingUser[0].id !== session.user.id) {
+      if (existingUsers.length > 0 && existingUsers[0].id !== user.id) {
         return NextResponse.json(
           { error: "Email is already in use" },
           { status: 400 }
@@ -45,14 +47,14 @@ export async function PATCH(request: NextRequest) {
     }
 
     // Update user
-    await db
-      .update(user)
-      .set({
+    await payload.update({
+      collection: "users",
+      id: user.id,
+      data: {
         name,
         email,
-        updatedAt: new Date(),
-      })
-      .where(eq(user.id, session.user.id));
+      },
+    });
 
     return NextResponse.json({ success: true });
   } catch (error) {
@@ -67,21 +69,26 @@ export async function PATCH(request: NextRequest) {
 // Delete user account
 export async function DELETE(request: NextRequest) {
   try {
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    });
+    const payload = await getPayload({ config });
+    const cookieStore = await cookies();
+    const token = cookieStore.get("payload-token");
 
-    if (!session?.user) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
+    if (!token) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Delete user (CASCADE will handle related records)
-    await db
-      .delete(user)
-      .where(eq(user.id, session.user.id));
+    // Verify token and get user
+    const { user } = await payload.auth({ headers: request.headers });
+
+    if (!user || user.collection !== "users") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Delete user
+    await payload.delete({
+      collection: "users",
+      id: user.id,
+    });
 
     return NextResponse.json({ success: true });
   } catch (error) {
