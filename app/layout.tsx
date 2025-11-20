@@ -1,7 +1,5 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
-import { Navigation } from "@/components/navigation";
-import { Footer } from "@/components/footer";
 import "./globals.css";
 
 const inter = Inter({
@@ -21,10 +19,8 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="da">
-      <body className={`${inter.variable} antialiased flex flex-col min-h-screen`}>
-        <Navigation />
+      <body className={`${inter.variable} antialiased`}>
         {children}
-        <Footer />
       </body>
     </html>
   );
