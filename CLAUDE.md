@@ -57,6 +57,71 @@ Before creating new components, check:
 - [ ] `lib/utils.ts` - Utility functions
 - [ ] `lib/auth.ts` / `lib/auth-client.ts` - Auth utilities
 
+### Testing Guidelines
+
+**IMPORTANT: Write unit tests for all new custom components.**
+
+1. **Test Coverage Requirements:**
+   - All custom components in `components/` must have corresponding `.test.tsx` files
+   - ShadCN UI components in `components/ui/` do NOT need tests (they are third-party)
+   - Run tests after implementing new functionality or making big changes
+   - Run tests before creating pull requests
+
+2. **Testing Framework:**
+   - **Vitest** - Modern, fast test runner with Jest-compatible API
+   - **React Testing Library** - Component testing utilities focused on user behavior
+   - **@testing-library/user-event** - Realistic user interaction simulation
+   - **@testing-library/jest-dom** - Custom matchers for better assertions
+
+3. **What to Test:**
+   - Component renders correctly with required props
+   - User interactions (clicks, typing, form submissions)
+   - Conditional rendering based on props or state
+   - Error states and validation
+   - Links have correct href attributes
+   - Accessibility features
+   - Integration with auth (session states)
+
+4. **Test File Naming:**
+   - Place test files next to component: `component-name.test.tsx`
+   - Example: `login-form.tsx` → `login-form.test.tsx`
+
+5. **Running Tests:**
+   ```bash
+   npm test              # Run all tests once
+   npm run test:watch    # Watch mode for development
+   npm run test:ui       # Interactive UI for tests
+   npm run test:coverage # Generate coverage report
+   ```
+
+6. **Mocking Guidelines:**
+   - Mock Next.js modules (`next/navigation`, `next/image`)
+   - Mock Better-Auth client (`@/lib/auth-client`)
+   - Mock global functions (`fetch`, `confirm`) when needed
+   - Use utilities from `lib/test-utils.tsx` for common mocks
+
+7. **Example Test Structure:**
+   ```typescript
+   import { describe, it, expect, vi } from 'vitest'
+   import { render, screen } from '@testing-library/react'
+   import userEvent from '@testing-library/user-event'
+   import { YourComponent } from './your-component'
+
+   describe('YourComponent', () => {
+     it('renders correctly', () => {
+       render(<YourComponent />)
+       expect(screen.getByText('Expected Text')).toBeInTheDocument()
+     })
+
+     it('handles user interaction', async () => {
+       const user = userEvent.setup()
+       render(<YourComponent />)
+       await user.click(screen.getByRole('button'))
+       expect(mockFunction).toHaveBeenCalled()
+     })
+   })
+   ```
+
 ---
 
 ## Technology Stack
@@ -72,6 +137,10 @@ Before creating new components, check:
 | lucide-react             | 0.553.0 | Icon library                    |
 | class-variance-authority | 0.7.1   | Component variants              |
 | openai                   | latest  | AI article generation           |
+| vitest                   | 4.0.13  | Unit testing framework          |
+| @testing-library/react   | 16.3.0  | React component testing         |
+| @testing-library/jest-dom| 6.9.1   | Custom Jest matchers            |
+| @testing-library/user-event | 14.6.1 | User interaction simulation  |
 
 ---
 
@@ -486,6 +555,15 @@ npm run start  # Production server
 npm run lint   # ESLint
 ```
 
+### Testing Commands
+
+```bash
+npm test              # Run all tests once
+npm run test:watch    # Run tests in watch mode (re-runs on file changes)
+npm run test:ui       # Open Vitest UI for interactive testing
+npm run test:coverage # Run tests and generate coverage report
+```
+
 ### Database Operations
 
 ```bash
@@ -760,6 +838,12 @@ Page (Server Component)
 
 ## Recent Changes
 
+- **Added comprehensive unit testing infrastructure:**
+  - Set up Vitest with React Testing Library
+  - Created test utilities and mocking helpers
+  - Wrote tests for all custom components (13 test files)
+  - Added test scripts to package.json
+  - Updated Development Guidelines with testing requirements
 - Added Development Guidelines section with best practices for critical thinking, component reuse, and documentation
 - Added hero section with featured article
 - Implemented simple profile and email settings
@@ -877,4 +961,4 @@ Page (Server Component)
 
 ---
 
-Last Updated: 2025-11-19
+Last Updated: 2025-11-24

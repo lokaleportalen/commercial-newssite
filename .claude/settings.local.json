@@ -11,7 +11,8 @@
       "WebFetch(domain:www.better-auth.com)",
       "Bash(curl:*)",
       "Bash(DATABASE_URL=\"postgresql://newssite_mp5z_user:rV2W48mBCtizpgBp7w5FXkzWhJhNqXHB@dpg-d4dejgqdbo4c73dpseb0-a.oregon-postgres.render.com/newssite_mp5z\" npx tsx:*)",
-      "Bash(npm run generate:*)"
+      "Bash(npm run generate:*)",
+      "Bash(npm test)"
     ],
     "deny": [],
     "ask": []
