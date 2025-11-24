@@ -7,9 +7,18 @@ This is a Next.js 16 full-stack web application for "Nyheder" (News), a commerci
 ### Key Features
 
 - Complete authentication system with Better-Auth
+  - Email/password authentication
+  - Email verification on signup
+  - Password reset functionality
+- Full email system with Mailgun integration
+  - Welcome emails with verification links
+  - Password reset emails
+  - Daily news digests
+  - Immediate article notifications
 - PostgreSQL database with Drizzle ORM
 - Automated news gathering and AI-powered article generation using OpenAI GPT-4o
 - Weekly cron job for automated content publishing
+- User preferences system for personalized email delivery
 - Modern UI with ShadCN components and custom orange theme
 - Production-ready architecture with TypeScript strict mode
 
@@ -68,6 +77,8 @@ Before creating new components, check:
 | better-auth              | 1.3.34  | Authentication system           |
 | drizzle-orm              | 0.44.7  | Database ORM                    |
 | pg                       | 8.16.3  | PostgreSQL driver               |
+| mailgun.js               | latest  | Email service provider          |
+| form-data                | latest  | Mailgun dependency              |
 | tailwindcss              | 4       | CSS framework                   |
 | lucide-react             | 0.553.0 | Icon library                    |
 | class-variance-authority | 0.7.1   | Component variants              |
@@ -83,11 +94,16 @@ commercial-newssite/
 │   ├── api/
 │   │   ├── auth/[...all]/       # Better-Auth API routes
 │   │   ├── cron/
-│   │   │   └── weekly-news/     # Weekly news fetching cron
+│   │   │   ├── weekly-news/     # Weekly news fetching cron
+│   │   │   └── send-daily-digest/ # Daily email digest cron
 │   │   └── articles/
-│   │       └── process/         # Article processing endpoint
+│   │       ├── process/         # Article processing endpoint
+│   │       └── send-notifications/ # Immediate email notifications
 │   ├── login/                   # Login page
 │   ├── signup/                  # Signup page
+│   ├── forgot-password/         # Forgot password page
+│   ├── reset-password/          # Reset password page
+│   ├── verify-email/            # Email verification page
 │   ├── page.tsx                 # Home page
 │   ├── layout.tsx               # Root layout
 │   └── globals.css              # Global styles
@@ -96,14 +112,18 @@ commercial-newssite/
 │   ├── ui/                      # ShadCN UI library
 │   ├── navigation.tsx           # Main navigation
 │   ├── login-form.tsx           # Login form
-│   └── signup-form.tsx          # Signup form
+│   ├── signup-form.tsx          # Signup form
+│   ├── forgot-password-form.tsx # Forgot password form
+│   ├── reset-password-form.tsx  # Reset password form
+│   └── email-verification.tsx   # Email verification component
 │
 ├── database/                    # Database setup
 │   ├── db.ts                    # Drizzle connection
 │   ├── schema/
 │   │   ├── index.ts             # Schema exports
 │   │   ├── auth-schema.ts       # Auth tables
-│   │   └── articles-schema.ts   # Articles table
+│   │   ├── articles-schema.ts   # Articles table
+│   │   └── user-preferences-schema.ts # User email preferences
 │   ├── drizzle/                 # Generated migrations
 │   ├── seed/                    # Seeding scripts
 │   └── drizzle.config.ts        # Drizzle configuration
@@ -111,6 +131,7 @@ commercial-newssite/
 ├── lib/                         # Utilities
 │   ├── auth.ts                  # Better-Auth server
 │   ├── auth-client.ts           # Better-Auth client
+│   ├── email.ts                 # Mailgun email service
 │   └── utils.ts                 # Helper functions
 │
 ├── .env                         # Environment variables (gitignored)
@@ -181,10 +202,22 @@ PostgreSQL via Drizzle ORM with node-postgres pool:
 - createdAt (Timestamp, Auto) - Record creation timestamp
 - updatedAt (Timestamp, Auto) - Last update timestamp
 
+### User Preferences Table (database/schema/user-preferences-schema.ts)
+
+**userPreferences** - User email preferences
+
+- id (Text, PK) - Unique preference ID
+- userId (Text, Not Null, Unique) - FK to user, CASCADE
+- newsCategory (Text, Default: 'all') - Preferred categories: all, investment, construction, new, old
+- emailFrequency (Text, Default: 'daily') - Email frequency: daily, weekly, immediate
+- createdAt (Timestamp, Auto) - Record creation timestamp
+- updatedAt (Timestamp, Auto) - Last update timestamp
+
 ### Migrations
 
 - `0000_unique_mattie_franklin.sql` - Auth tables
 - `0001_solid_ser_duncan.sql` - Articles table
+- User preferences migrations
 
 ### Seeding
 
@@ -200,30 +233,164 @@ PostgreSQL via Drizzle ORM with node-postgres pool:
 ```typescript
 export const auth = betterAuth({
   database: drizzleAdapter(db, { provider: "pg" }),
-  emailAndPassword: { enabled: true },
+  emailAndPassword: {
+    enabled: true,
+    requireEmailVerification: false, // Set to true to require verification before login
+    sendResetPassword: async ({ user, url, token }) => {
+      // Sends password reset email via Mailgun
+      await sendPasswordResetEmail(user.email, user.name, token);
+    },
+  },
+  emailVerification: {
+    sendVerificationEmail: async ({ user, url, token }) => {
+      // Sends welcome email with verification link via Mailgun
+      await sendWelcomeEmail(user.email, user.name, token);
+    },
+    sendOnSignUp: true, // Automatically send verification email on signup
+  },
 });
 ```
 
-PostgreSQL database, email/password auth enabled.
+Features:
+- PostgreSQL database with Drizzle adapter
+- Email/password authentication
+- Email verification on signup
+- Password reset functionality
+- Automatic email sending via Mailgun
 
 ### Client Config (lib/auth-client.ts)
 
 ```typescript
 export const authClient = createAuthClient({
-  baseURL: "http://localhost:3000",
+  baseURL: process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000",
 });
 ```
 
 Client-side state and API calls with `useSession()` hook.
 
+Available methods:
+- `signUp()` - Register new user, triggers welcome email
+- `signIn()` - Login existing user
+- `signOut()` - Logout
+- `forgetPassword()` - Request password reset email
+- `resetPassword()` - Reset password with token
+- `verifyEmail()` - Verify email with token
+- `getSession()` - Get current session
+
 ### API Routes (app/api/auth/[...all]/route.ts)
 
 Catch-all handler for:
 
-- POST /api/auth/sign-up
-- POST /api/auth/sign-in
-- POST /api/auth/sign-out
+- POST /api/auth/sign-up - Register + send welcome email
+- POST /api/auth/sign-in - Login
+- POST /api/auth/sign-out - Logout
+- POST /api/auth/forget-password - Request password reset
+- POST /api/auth/reset-password - Reset password with token
+- POST /api/auth/verify-email - Verify email with token
 - Session and OAuth endpoints
+
+### Authentication Pages
+
+- **/login** - Login form with "Forgot password?" link
+- **/signup** - Signup form (triggers welcome email)
+- **/forgot-password** - Request password reset
+- **/reset-password?token=xxx** - Reset password with token
+- **/verify-email?token=xxx** - Verify email address
+
+---
+
+## Email System
+
+### Email Service (lib/email.ts)
+
+Mailgun-powered email system with responsive HTML templates in Danish.
+
+**Configuration:**
+- Provider: Mailgun
+- Client: mailgun.js with form-data
+- Templates: Responsive HTML with fallback text
+
+**Environment Variables:**
+- `MAILGUN_API_KEY` - Mailgun API key
+- `MAILGUN_DOMAIN` - Verified Mailgun domain
+- `FROM_EMAIL` - Sender email address
+- `FROM_NAME` - Sender name
+
+### Email Templates
+
+All emails are sent in Danish with professional, branded design:
+
+**1. Welcome Email** (`sendWelcomeEmail`)
+- Sent automatically on user signup
+- Includes email verification link
+- Link expires in 24 hours
+- Orange gradient header with Nyheder branding
+
+**2. Password Reset Email** (`sendPasswordResetEmail`)
+- Sent when user requests password reset
+- Includes reset link with token
+- Link expires in 1 hour
+- Security warning included
+
+**3. Daily News Digest** (`sendDailyDigestEmail`)
+- Personalized article summaries
+- Filtered by user's category preferences
+- Up to 10 articles per digest
+- Links to full articles
+- Preferences management links
+
+**4. Immediate Notification** (`sendImmediateNotificationEmail`)
+- Real-time notification for new articles
+- Sent only for matching categories
+- Single article per email
+- Quick "read article" CTA
+
+### Email Triggers
+
+**Automatic Triggers:**
+- User signup → Welcome email with verification link
+- Password reset request → Reset email with token
+- Daily cron (8 AM) → Daily digest to subscribed users
+- New article published → Immediate notifications to subscribed users
+
+**Manual Triggers:**
+- User can resend verification email from verification page
+- Admin can trigger digest manually via cron endpoint
+
+### User Email Preferences
+
+Users can configure email preferences via `/preferences` page:
+
+**Email Frequency:**
+- `daily` - Receive daily digest at 8 AM
+- `weekly` - Receive weekly digest (not yet implemented)
+- `immediate` - Receive notification for each new article
+
+**News Categories:**
+- `all` - All commercial real estate news
+- `investment` - Investment news
+- `construction` - Construction news
+- And more category options
+
+**Unsubscribe:**
+- One-click unsubscribe via `/api/user/preferences/unsubscribe`
+- All emails include unsubscribe link
+
+### Email Deliverability
+
+**Mailgun Setup Steps:**
+1. Sign up at mailgun.com
+2. Add and verify domain (DNS records)
+3. Get API key from Account Settings
+4. Configure environment variables
+5. Test email sending
+
+**Best Practices:**
+- Use verified domain for better deliverability
+- Include plain text fallback
+- Responsive design for mobile
+- Unsubscribe link in every email
+- Monitor bounce rates via Mailgun dashboard
 
 ---
 
@@ -337,6 +504,100 @@ Requires `Authorization: Bearer <CRON_SECRET>` header
 }
 ```
 
+**Note:** After saving the article, this endpoint automatically triggers immediate notifications to subscribed users.
+
+### 3. Daily Digest Cron Job
+
+**Endpoint:** `GET /api/cron/send-daily-digest`
+
+**Location:** `app/api/cron/send-daily-digest/route.ts`
+
+**Purpose:**
+
+- Sends personalized daily news digests to subscribed users
+- Triggered daily at 8:00 AM (configure in Vercel Cron or GitHub Actions)
+- Filters articles based on user preferences
+
+**Authentication:**
+Requires `Authorization: Bearer <CRON_SECRET>` header
+
+**Process Flow:**
+
+1. Validates authorization token
+2. Queries all users with `emailFrequency = 'daily'`
+3. For each user:
+   - Fetches articles from last 24 hours
+   - Filters by user's `newsCategory` preference
+   - Sends personalized digest email (up to 10 articles)
+   - Skips users with no matching articles
+4. Returns summary of emails sent
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "message": "Daily digest processing completed",
+  "totalUsers": 50,
+  "emailsSent": 45,
+  "skipped": 3,
+  "failed": 2,
+  "results": [...]
+}
+```
+
+### 4. Send Immediate Notifications
+
+**Endpoint:** `POST /api/articles/send-notifications`
+
+**Location:** `app/api/articles/send-notifications/route.ts`
+
+**Purpose:**
+
+- Sends immediate email notifications for a newly published article
+- Called automatically by article processing endpoint
+- Can be manually triggered for existing articles
+
+**Authentication:**
+Requires `Authorization: Bearer <CRON_SECRET>` header
+
+**Request Body:**
+
+```json
+{
+  "articleId": "uuid-of-article"
+}
+```
+
+**Process Flow:**
+
+1. Validates authorization token
+2. Fetches article details from database
+3. Queries all users with `emailFrequency = 'immediate'`
+4. Filters users based on:
+   - User wants all categories, OR
+   - Article categories match user's preference
+5. Sends notification email to each matching user
+6. Returns summary of emails sent
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "message": "Immediate notifications sent",
+  "article": {
+    "id": "uuid",
+    "title": "Article Title",
+    "slug": "article-slug"
+  },
+  "totalMatchingUsers": 10,
+  "emailsSent": 9,
+  "failed": 1,
+  "results": [...]
+}
+```
+
 ---
 
 ## Application Routes
@@ -440,6 +701,15 @@ DATABASE_URL=postgresql://user:password@localhost:5432/newssite
 # OpenAI API Configuration
 OPENAI_API_KEY=sk-...
 
+# Unsplash API Configuration
+UNSPLASH_ACCESS_KEY=your-access-key-here
+
+# Mailgun Email Configuration
+MAILGUN_API_KEY=your-mailgun-api-key-here
+MAILGUN_DOMAIN=mg.yourdomain.com
+FROM_EMAIL=nyheder@lokaleportalen.dk
+FROM_NAME=Nyheder
+
 # Cron Job Security
 CRON_SECRET=your-secret-key-here
 
@@ -454,6 +724,14 @@ OpenAI API Key:
 1. Visit https://platform.openai.com/api-keys
 2. Create new API key
 3. Add to `.env` as `OPENAI_API_KEY`
+
+Mailgun Setup:
+
+1. Sign up at https://mailgun.com
+2. Add and verify your domain (DNS records required)
+3. Get API key from Account Settings > API Keys
+4. Add to `.env` as `MAILGUN_API_KEY`
+5. Use your verified domain as `MAILGUN_DOMAIN` (e.g., mg.yourdomain.com)
 
 Cron Secret:
 
@@ -512,7 +790,7 @@ This will:
 
 ---
 
-## Setting Up Weekly Cron Job
+## Setting Up Cron Jobs
 
 ### Option 1: Vercel Cron (Recommended for Vercel deployments)
 
@@ -524,15 +802,27 @@ Create `vercel.json`:
     {
       "path": "/api/cron/weekly-news",
       "schedule": "0 9 * * 1"
+    },
+    {
+      "path": "/api/cron/send-daily-digest",
+      "schedule": "0 8 * * *"
     }
   ]
 }
 ```
 
+**Cron Schedules:**
+- Weekly news: `0 9 * * 1` (Every Monday at 9 AM UTC)
+- Daily digest: `0 8 * * *` (Every day at 8 AM UTC)
+
 Add to Vercel environment variables:
 
 - `CRON_SECRET` - Your generated secret
 - `OPENAI_API_KEY` - Your OpenAI key
+- `MAILGUN_API_KEY` - Your Mailgun API key
+- `MAILGUN_DOMAIN` - Your Mailgun domain
+- `FROM_EMAIL` - Sender email address
+- `FROM_NAME` - Sender name
 - `DATABASE_URL` - Your database connection string
 - `NEXT_PUBLIC_BASE_URL` - Your production URL
 
@@ -560,6 +850,26 @@ jobs:
             https://yourdomain.com/api/cron/weekly-news
 ```
 
+Create `.github/workflows/daily-digest.yml`:
+
+```yaml
+name: Daily Email Digest
+on:
+  schedule:
+    - cron: "0 8 * * *" # Every day at 8 AM UTC
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  send-digest:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Daily Digest
+        run: |
+          curl -X GET \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            https://yourdomain.com/api/cron/send-daily-digest
+```
+
 Add secrets to GitHub repository:
 
 - `CRON_SECRET`
@@ -572,12 +882,19 @@ Use services like:
 - EasyCron
 - AWS EventBridge
 
-Configure HTTP request:
+Configure two HTTP requests:
 
+**Weekly News:**
 - **URL:** `https://yourdomain.com/api/cron/weekly-news`
 - **Method:** GET
 - **Header:** `Authorization: Bearer <your-cron-secret>`
 - **Schedule:** Weekly (e.g., Monday 9 AM)
+
+**Daily Digest:**
+- **URL:** `https://yourdomain.com/api/cron/send-daily-digest`
+- **Method:** GET
+- **Header:** `Authorization: Bearer <your-cron-secret>`
+- **Schedule:** Daily (e.g., 8 AM)
 
 ---
 
@@ -594,6 +911,10 @@ npm install
 # Set up environment variables in .env
 DATABASE_URL=...
 OPENAI_API_KEY=...
+MAILGUN_API_KEY=...
+MAILGUN_DOMAIN=...
+FROM_EMAIL=...
+FROM_NAME=...
 CRON_SECRET=...
 NEXT_PUBLIC_BASE_URL=http://localhost:3000
 
@@ -602,12 +923,20 @@ cd database
 npm run push
 ```
 
-**Test the cron endpoint:**
+**Test the weekly news cron:**
 
 ```bash
 curl -X GET \
   -H "Authorization: Bearer your-cron-secret" \
   http://localhost:3000/api/cron/weekly-news
+```
+
+**Test the daily digest cron:**
+
+```bash
+curl -X GET \
+  -H "Authorization: Bearer your-cron-secret" \
+  http://localhost:3000/api/cron/send-daily-digest
 ```
 
 **Test article processing directly:**
@@ -624,6 +953,25 @@ curl -X POST \
   }' \
   http://localhost:3000/api/articles/process
 ```
+
+**Test immediate notifications:**
+
+```bash
+# First, get an article ID from the database, then:
+curl -X POST \
+  -H "Authorization: Bearer your-cron-secret" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "articleId": "your-article-uuid"
+  }' \
+  http://localhost:3000/api/articles/send-notifications
+```
+
+**Test authentication emails:**
+
+1. Sign up at `/signup` - should receive welcome email
+2. Visit `/forgot-password` and request reset - should receive password reset email
+3. Check email and click verification/reset links
 
 ### 2. Verify Database
 
@@ -760,6 +1108,35 @@ Page (Server Component)
 
 ## Recent Changes
 
+### 2025-11-24 - Complete Email System Implementation
+
+**Email Service:**
+- Integrated Mailgun for transactional and marketing emails
+- Created `lib/email.ts` with Mailgun client and email templates
+- Designed responsive HTML email templates in Danish
+- Added plain text fallbacks for all emails
+
+**Authentication Emails:**
+- Implemented welcome email with email verification link
+- Added password reset email functionality
+- Created forgot password page and form (`/forgot-password`)
+- Created reset password page and form (`/reset-password`)
+- Created email verification page (`/verify-email`)
+- Updated Better-Auth configuration with email verification and password reset hooks
+
+**News Digest Emails:**
+- Implemented daily digest cron job (`/api/cron/send-daily-digest`)
+- Implemented immediate notification system (`/api/articles/send-notifications`)
+- Integrated immediate notifications into article processing pipeline
+- Email filtering based on user preferences (category and frequency)
+
+**Database & Configuration:**
+- User preferences table already existed and was leveraged
+- Added Mailgun environment variables to `.env.example`
+- Updated documentation with email system architecture
+
+### Previous Changes
+
 - Added Development Guidelines section with best practices for critical thinking, component reuse, and documentation
 - Added hero section with featured article
 - Implemented simple profile and email settings
@@ -785,10 +1162,17 @@ Page (Server Component)
 1. **Authentication:**
 
    - OAuth (Google/GitHub integration)
-   - Password reset functionality
-   - Email verification
+   - ~~Password reset functionality~~ ✓ Completed
+   - ~~Email verification~~ ✓ Completed
 
-2. **Articles:**
+2. **Email System:**
+
+   - Weekly digest option (daily is implemented)
+   - Email templates customization
+   - Email analytics and tracking
+   - A/B testing for email campaigns
+
+3. **Articles:**
 
    - Article listing page
    - Article detail pages

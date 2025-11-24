@@ -267,6 +267,33 @@ Svar KUN med valid JSON i denne præcise struktur:
       }
     }
 
+    // Step 6: Send immediate notifications to subscribed users
+    try {
+      console.log("Sending immediate notifications to subscribed users...");
+      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
+
+      const notificationResponse = await fetch(`${baseUrl}/api/articles/send-notifications`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${cronSecret}`,
+        },
+        body: JSON.stringify({
+          articleId: insertedArticle.id,
+        }),
+      });
+
+      if (!notificationResponse.ok) {
+        console.error("Failed to send immediate notifications:", await notificationResponse.text());
+      } else {
+        const notificationResult = await notificationResponse.json();
+        console.log(`✓ Sent ${notificationResult.emailsSent} immediate notifications`);
+      }
+    } catch (error) {
+      console.error("Error sending immediate notifications:", error);
+      // Don't fail the entire process if notifications fail
+    }
+
     return NextResponse.json({
       success: true,
       message: "Article processed and saved successfully",
