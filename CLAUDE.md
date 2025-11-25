@@ -53,7 +53,10 @@ This is a Next.js 16 full-stack web application for "Nyheder" (News), a commerci
 
 Before creating new components, check:
 - [ ] `components/ui/` - ShadCN components (Button, Card, Input, Field, etc.)
-- [ ] `components/` - Custom components (Navigation, forms, etc.)
+- [ ] `components/article/` - Article-related components (ArticleCard, Pagination, etc.)
+- [ ] `components/auth/` - Authentication components (LoginForm, SignupForm, etc.)
+- [ ] `components/profile/` - Profile and settings components
+- [ ] `components/layout/` - Layout components (Navigation, Footer)
 - [ ] `lib/utils.ts` - Utility functions
 - [ ] `lib/auth.ts` / `lib/auth-client.ts` - Auth utilities
 
@@ -82,9 +85,10 @@ Before creating new components, check:
    - Accessibility features
    - Integration with auth (session states)
 
-4. **Test File Naming:**
-   - Place test files next to component: `component-name.test.tsx`
-   - Example: `login-form.tsx` → `login-form.test.tsx`
+4. **Test File Organization:**
+   - Test files are organized in `test/` subdirectories within each component folder
+   - Example: `components/auth/login-form.tsx` → `components/auth/test/login-form.test.tsx`
+   - Tests import components from parent directory: `import { LoginForm } from '../login-form'`
 
 5. **Running Tests:**
    ```bash
@@ -163,9 +167,27 @@ commercial-newssite/
 │
 ├── components/                  # React components
 │   ├── ui/                      # ShadCN UI library
-│   ├── navigation.tsx           # Main navigation
-│   ├── login-form.tsx           # Login form
-│   └── signup-form.tsx          # Signup form
+│   ├── article/                 # Article-related components
+│   │   ├── test/                # Article component tests
+│   │   ├── article-card.tsx     # Article card component
+│   │   ├── article-categories.tsx # Article categories display
+│   │   ├── category-link.tsx    # Category link component
+│   │   ├── hero-banner.tsx      # Hero banner component
+│   │   ├── hero-section.tsx     # Hero section with featured articles
+│   │   └── pagination.tsx       # Pagination component
+│   ├── auth/                    # Authentication components
+│   │   ├── test/                # Auth component tests
+│   │   ├── login-form.tsx       # Login form
+│   │   ├── signup-form.tsx      # Signup form
+│   │   └── onboarding-form.tsx  # Onboarding form
+│   ├── profile/                 # User profile components
+│   │   ├── test/                # Profile component tests
+│   │   ├── profile-form.tsx     # Profile management form
+│   │   └── preferences-form.tsx # User preferences form
+│   └── layout/                  # Layout components
+│       ├── test/                # Layout component tests
+│       ├── navigation.tsx       # Main navigation
+│       └── footer.tsx           # Footer component
 │
 ├── database/                    # Database setup
 │   ├── db.ts                    # Drizzle connection
@@ -422,32 +444,83 @@ Requires `Authorization: Bearer <CRON_SECRET>` header
 
 ## Components
 
-### Navigation (components/navigation.tsx)
+Components are organized into logical folders with their tests in separate `test/` subdirectories:
 
+### Article Components (components/article/)
+
+**ArticleCard** (article-card.tsx)
+- Displays article preview with image, title, summary, and categories
+- Supports two variants: default (vertical) and small (horizontal)
+- Handles date formatting in Danish locale
+- Links to article detail page
+
+**ArticleCategories** (article-categories.tsx)
+- Displays article categories with expand/collapse functionality
+- Shows first 3 categories by default
+- Expandable to show all categories
+
+**CategoryLink** (category-link.tsx)
+- Links to category pages with proper slug conversion
+- Supports badge and default variants
+- Handles Danish characters (æ, ø, å) in slug generation
+
+**HeroBanner** (hero-banner.tsx)
+- Hero banner component for homepage
+
+**HeroSection** (hero-section.tsx)
+- Featured article display with side articles
+- Large featured article with image overlay
+- Up to 3 side articles in compact format
+
+**Pagination** (pagination.tsx)
+- Page navigation for article listings
+- Supports custom base URLs
+- Shows ellipsis for large page counts
+
+### Authentication Components (components/auth/)
+
+**LoginForm** (login-form.tsx)
+- Email and password inputs
+- "Forgot password?" link
+- Loading states and error handling
+- Redirects to home after successful login
+
+**SignupForm** (signup-form.tsx)
+- Full name, email, password, and confirm password inputs
+- Password validation (minimum 8 characters)
+- Password match validation
+- Redirects to onboarding after signup
+
+**OnboardingForm** (onboarding-form.tsx)
+- News category preference selection
+- Email frequency preferences
+- Skip option available
+
+### Profile Components (components/profile/)
+
+**ProfileForm** (profile-form.tsx)
+- User profile management
+- Update name and email
+- Account deletion functionality
+- Link to preferences page
+
+**PreferencesForm** (preferences-form.tsx)
+- News category preferences
+- Email frequency settings
+- Unsubscribe from all emails option
+
+### Layout Components (components/layout/)
+
+**Navigation** (navigation.tsx)
 - Main site navigation with responsive design
-- Session-aware menu items (login/logout)
+- Session-aware menu items (login/logout/profile)
 - Loading skeleton to prevent flash of incorrect state
 - Links to news categories
 
-### LoginForm (components/login-form.tsx)
-
-- Card with header
-- Email input
-- Password input with "Forgot?" link
-- Login button
-- Google login button
-- Sign up link
-
-### SignupForm (components/signup-form.tsx)
-
-- Card with header
-- Full Name input
-- Email input
-- Password input
-- Confirm Password input
-- Create Account button
-- Google signup button
-- Sign in link
+**Footer** (footer.tsx)
+- Site footer with links
+- Social media links
+- Copyright information
 
 ### UI Components (components/ui/)
 
@@ -838,6 +911,13 @@ Page (Server Component)
 
 ## Recent Changes
 
+- **Reorganized component folder structure (2025-11-25):**
+  - Organized components into logical subfolders: `article/`, `auth/`, `profile/`, `layout/`
+  - Moved test files into separate `test/` subdirectories within each component folder
+  - Updated all import paths across the codebase
+  - All 120 tests pass with new structure
+  - Updated documentation to reflect new organization
+  - Improved code organization and maintainability
 - **Added comprehensive unit testing infrastructure:**
   - Set up Vitest with React Testing Library
   - Created test utilities and mocking helpers

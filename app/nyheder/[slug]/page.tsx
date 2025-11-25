@@ -6,7 +6,7 @@ import Image from "next/image";
 import { format } from "date-fns";
 import { da } from "date-fns/locale";
 import ReactMarkdown from "react-markdown";
-import { CategoryLink } from "@/components/category-link";
+import { CategoryLink } from "@/components/article/category-link";
 import type { Metadata } from "next";
 
 interface ArticlePageProps {

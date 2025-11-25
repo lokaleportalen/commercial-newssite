@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { render, screen } from '@testing-library/react'
-import { CategoryLink } from './category-link'
+import { CategoryLink } from '../category-link'
 
 describe('CategoryLink', () => {
   it('renders category name', () => {

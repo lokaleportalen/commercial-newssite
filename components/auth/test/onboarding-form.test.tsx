@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { OnboardingForm } from './onboarding-form'
+import { OnboardingForm } from '../onboarding-form'
 
 // Mock next/navigation
 const mockPush = vi.fn()

@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { LoginForm } from './login-form'
+import { LoginForm } from '../login-form'
 
 // Mock next/navigation
 vi.mock('next/navigation', () => ({

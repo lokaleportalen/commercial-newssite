@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
-import { Footer } from './footer'
+import { Footer } from '../footer'
 
 describe('Footer', () => {
   let originalDate: typeof Date

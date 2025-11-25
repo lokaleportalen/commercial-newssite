@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { render, screen } from '@testing-library/react'
-import { HeroSection } from './hero-section'
+import { HeroSection } from '../hero-section'
 
 // Mock Next.js Image component
 vi.mock('next/image', () => ({

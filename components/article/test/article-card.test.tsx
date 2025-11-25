@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { render, screen } from '@testing-library/react'
-import { ArticleCard } from './article-card'
+import { ArticleCard } from '../article-card'
 
 // Mock Next.js Image component
 vi.mock('next/image', () => ({
