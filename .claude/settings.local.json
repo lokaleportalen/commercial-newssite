@@ -15,7 +15,9 @@
       "Bash(npm test)",
       "Bash(dir /s /b \"C:\\Users\\Emil\\projects\\bachelor\\commercial-newssite\\components\")",
       "Bash(mkdir:*)",
-      "Bash(git mv:*)"
+      "Bash(git mv:*)",
+      "Bash(npx shadcn@latest add:*)",
+      "Bash(dir /b \"C:\\Users\\Emil\\projects\\bachelor\\commercial-newssite\\components\\ui\")"
     ],
     "deny": [],
     "ask": []
