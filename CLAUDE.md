@@ -22,16 +22,19 @@ This is a Next.js 16 full-stack web application for "Nyheder" (News), a commerci
 ### Before Implementing Solutions
 
 1. **Be Critical of Solutions**
+
    - Question assumptions and evaluate trade-offs
    - Consider edge cases and potential issues
    - Don't accept the first solution that comes to mind
 
 2. **Think Thoroughly**
+
    - Analyze the problem from multiple angles
    - Consider performance, security, and maintainability implications
    - Evaluate long-term consequences of design decisions
 
 3. **Check for Existing Components**
+
    - Search the codebase for reusable components before creating new ones
    - Check `components/ui/` for existing ShadCN components
    - Look for existing utilities in `lib/` before writing new helpers
@@ -52,6 +55,7 @@ This is a Next.js 16 full-stack web application for "Nyheder" (News), a commerci
 ### Component Reuse Checklist
 
 Before creating new components, check:
+
 - [ ] `components/ui/` - ShadCN components (Button, Card, Input, Field, etc.)
 - [ ] `components/article/` - Article-related components (ArticleCard, Pagination, etc.)
 - [ ] `components/auth/` - Authentication components (LoginForm, SignupForm, etc.)
@@ -65,18 +69,21 @@ Before creating new components, check:
 **IMPORTANT: Write unit tests for all new custom components.**
 
 1. **Test Coverage Requirements:**
+
    - All custom components in `components/` must have corresponding `.test.tsx` files
    - ShadCN UI components in `components/ui/` do NOT need tests (they are third-party)
    - Run tests after implementing new functionality or making big changes
    - Run tests before creating pull requests
 
 2. **Testing Framework:**
+
    - **Vitest** - Modern, fast test runner with Jest-compatible API
    - **React Testing Library** - Component testing utilities focused on user behavior
    - **@testing-library/user-event** - Realistic user interaction simulation
    - **@testing-library/jest-dom** - Custom matchers for better assertions
 
 3. **What to Test:**
+
    - Component renders correctly with required props
    - User interactions (clicks, typing, form submissions)
    - Conditional rendering based on props or state
@@ -86,11 +93,13 @@ Before creating new components, check:
    - Integration with auth (session states)
 
 4. **Test File Organization:**
+
    - Test files are organized in `test/` subdirectories within each component folder
    - Example: `components/auth/login-form.tsx` → `components/auth/test/login-form.test.tsx`
    - Tests import components from parent directory: `import { LoginForm } from '../login-form'`
 
 5. **Running Tests:**
+
    ```bash
    npm test              # Run all tests once
    npm run test:watch    # Watch mode for development
@@ -99,52 +108,54 @@ Before creating new components, check:
    ```
 
 6. **Mocking Guidelines:**
+
    - Mock Next.js modules (`next/navigation`, `next/image`)
    - Mock Better-Auth client (`@/lib/auth-client`)
    - Mock global functions (`fetch`, `confirm`) when needed
    - Use utilities from `lib/test-utils.tsx` for common mocks
 
 7. **Example Test Structure:**
+
    ```typescript
-   import { describe, it, expect, vi } from 'vitest'
-   import { render, screen } from '@testing-library/react'
-   import userEvent from '@testing-library/user-event'
-   import { YourComponent } from './your-component'
+   import { describe, it, expect, vi } from "vitest";
+   import { render, screen } from "@testing-library/react";
+   import userEvent from "@testing-library/user-event";
+   import { YourComponent } from "./your-component";
 
-   describe('YourComponent', () => {
-     it('renders correctly', () => {
-       render(<YourComponent />)
-       expect(screen.getByText('Expected Text')).toBeInTheDocument()
-     })
+   describe("YourComponent", () => {
+     it("renders correctly", () => {
+       render(<YourComponent />);
+       expect(screen.getByText("Expected Text")).toBeInTheDocument();
+     });
 
-     it('handles user interaction', async () => {
-       const user = userEvent.setup()
-       render(<YourComponent />)
-       await user.click(screen.getByRole('button'))
-       expect(mockFunction).toHaveBeenCalled()
-     })
-   })
+     it("handles user interaction", async () => {
+       const user = userEvent.setup();
+       render(<YourComponent />);
+       await user.click(screen.getByRole("button"));
+       expect(mockFunction).toHaveBeenCalled();
+     });
+   });
    ```
 
 ---
 
 ## Technology Stack
 
-| Package                  | Version | Purpose                         |
-| ------------------------ | ------- | ------------------------------- |
-| next                     | 16.0.1  | React framework with App Router |
-| react                    | 19.2.0  | UI library                      |
-| better-auth              | 1.3.34  | Authentication system           |
-| drizzle-orm              | 0.44.7  | Database ORM                    |
-| pg                       | 8.16.3  | PostgreSQL driver               |
-| tailwindcss              | 4       | CSS framework                   |
-| lucide-react             | 0.553.0 | Icon library                    |
-| class-variance-authority | 0.7.1   | Component variants              |
-| openai                   | latest  | AI article generation           |
-| vitest                   | 4.0.13  | Unit testing framework          |
-| @testing-library/react   | 16.3.0  | React component testing         |
-| @testing-library/jest-dom| 6.9.1   | Custom Jest matchers            |
-| @testing-library/user-event | 14.6.1 | User interaction simulation  |
+| Package                     | Version | Purpose                         |
+| --------------------------- | ------- | ------------------------------- |
+| next                        | 16.0.1  | React framework with App Router |
+| react                       | 19.2.0  | UI library                      |
+| better-auth                 | 1.3.34  | Authentication system           |
+| drizzle-orm                 | 0.44.7  | Database ORM                    |
+| pg                          | 8.16.3  | PostgreSQL driver               |
+| tailwindcss                 | 4       | CSS framework                   |
+| lucide-react                | 0.553.0 | Icon library                    |
+| class-variance-authority    | 0.7.1   | Component variants              |
+| openai                      | latest  | AI article generation           |
+| vitest                      | 4.0.13  | Unit testing framework          |
+| @testing-library/react      | 16.3.0  | React component testing         |
+| @testing-library/jest-dom   | 6.9.1   | Custom Jest matchers            |
+| @testing-library/user-event | 14.6.1  | User interaction simulation     |
 
 ---
 
@@ -153,20 +164,44 @@ Before creating new components, check:
 ```
 commercial-newssite/
 ├── app/                          # Next.js App Router
+│   ├── admin/
+│   │   └── page.tsx             # Admin dashboard (protected)
 │   ├── api/
+│   │   ├── admin/
+│   │   │   └── articles/        # Admin article CRUD endpoints
+│   │   │       ├── route.ts     # List/search articles
+│   │   │       └── [id]/        # Get/update/delete article
 │   │   ├── auth/[...all]/       # Better-Auth API routes
 │   │   ├── cron/
 │   │   │   └── weekly-news/     # Weekly news fetching cron
-│   │   └── articles/
-│   │       └── process/         # Article processing endpoint
+│   │   ├── articles/
+│   │   │   └── process/         # Article processing endpoint
+│   │   └── upload/              # Image upload to Vercel Blob
 │   ├── login/                   # Login page
 │   ├── signup/                  # Signup page
 │   ├── page.tsx                 # Home page
-│   ├── layout.tsx               # Root layout
+│   ├── layout.tsx               # Root layout with Toaster
 │   └── globals.css              # Global styles
 │
 ├── components/                  # React components
+│   ├── admin/                   # Admin dashboard components
+│   │   ├── article-list.tsx    # Article list with search
+│   │   └── article-editor.tsx  # Article editor with full CRUD
 │   ├── ui/                      # ShadCN UI library
+│   │   ├── button.tsx           # Button component with variants
+│   │   ├── card.tsx             # Card and related subcomponents
+│   │   ├── input.tsx            # Input field component
+│   │   ├── field.tsx            # Form field system
+│   │   ├── label.tsx            # Form label component
+│   │   ├── separator.tsx        # Visual separator
+│   │   ├── badge.tsx            # Status badges
+│   │   ├── textarea.tsx         # Multi-line text input
+│   │   ├── switch.tsx           # Publish toggle
+│   │   ├── scroll-area.tsx      # Custom scrollbar
+│   │   ├── alert-dialog.tsx     # Confirmation dialogs
+│   │   ├── dropdown-menu.tsx    # Actions menu
+│   │   ├── skeleton.tsx         # Loading placeholders
+│   │   └── sonner.tsx           # Toast notifications
 │   ├── article/                 # Article-related components
 │   │   ├── test/                # Article component tests
 │   │   ├── article-card.tsx     # Article card component
@@ -194,14 +229,18 @@ commercial-newssite/
 │   ├── schema/
 │   │   ├── index.ts             # Schema exports
 │   │   ├── auth-schema.ts       # Auth tables
+│   │   ├── roles-schema.ts      # User roles table
 │   │   └── articles-schema.ts   # Articles table
 │   ├── drizzle/                 # Generated migrations
 │   ├── seed/                    # Seeding scripts
+│   │   ├── seed.ts              # Main entry point
+│   │   └── auth-seed.ts         # Creates admin + test users
 │   └── drizzle.config.ts        # Drizzle configuration
 │
 ├── lib/                         # Utilities
 │   ├── auth.ts                  # Better-Auth server
 │   ├── auth-client.ts           # Better-Auth client
+│   ├── auth-helpers.ts          # Authorization utilities
 │   └── utils.ts                 # Helper functions
 │
 ├── .env                         # Environment variables (gitignored)
@@ -277,10 +316,19 @@ PostgreSQL via Drizzle ORM with node-postgres pool:
 - `0000_unique_mattie_franklin.sql` - Auth tables
 - `0001_solid_ser_duncan.sql` - Articles table
 
+### Roles Table (database/schema/roles-schema.ts)
+
+**role** - User roles
+
+- id (text, PK) - Unique role identifier
+- userId (text, FK to user, CASCADE, UNIQUE) - One role per user
+- role (text, default: 'user') - Role type: 'admin' or 'user'
+- createdAt, updatedAt (timestamps)
+
 ### Seeding
 
 - `seed.ts` - Main entry point
-- `auth-seed.ts` - Creates test user (test@example.com / password123)
+- `auth-seed.ts` - Creates admin user (admin@example.com / admin123) and test user (test@example.com / password123)
 
 ---
 
@@ -430,6 +478,324 @@ Requires `Authorization: Bearer <CRON_SECRET>` header
 
 ---
 
+## Admin Dashboard & CMS
+
+### Overview
+
+A complete Content Management System for managing articles, accessible only to users with admin role. The admin dashboard provides full CRUD functionality for all articles generated by the automated news system.
+
+### Access Control
+
+**Route:** `/admin`
+
+**Authorization:**
+
+- Requires authenticated user session
+- User must have `admin` role in the `role` table
+- Non-admin users are automatically redirected to home page
+- Uses `lib/auth-helpers.ts` for server-side authorization checks
+
+### Roles System (database/schema/roles-schema.ts)
+
+**role** - User roles table
+
+- id (text, PK) - Unique role identifier
+- userId (text, FK to user, CASCADE, UNIQUE) - One role per user
+- role (text, default: 'user') - Role type: 'admin' or 'user'
+- createdAt, updatedAt (timestamps)
+
+**Seed Data:**
+
+- Admin user: `admin@example.com` / `admin123`
+- Test user: `test@example.com` / `password123`
+
+### Admin API Endpoints
+
+All admin endpoints require authentication and admin role. Returns 401 for unauthenticated requests, 403 for non-admin users.
+
+#### GET /api/admin/articles
+
+**Location:** `app/api/admin/articles/route.ts`
+
+List all articles with optional search.
+
+**Query Parameters:**
+
+- `search` (optional) - Search by title, summary, or categories
+
+**Response:**
+
+```json
+{
+  "articles": [
+    {
+      "id": "uuid",
+      "title": "Article Title",
+      "status": "draft|published|archived",
+      "summary": "Brief summary",
+      "createdAt": "timestamp",
+      "updatedAt": "timestamp",
+      ...
+    }
+  ]
+}
+```
+
+#### GET /api/admin/articles/[id]
+
+**Location:** `app/api/admin/articles/[id]/route.ts`
+
+Get a single article by ID.
+
+**Response:**
+
+```json
+{
+  "article": {
+    "id": "uuid",
+    "title": "Article Title",
+    "slug": "article-slug",
+    "content": "Full markdown content",
+    "summary": "Brief summary",
+    "metaDescription": "SEO description",
+    "image": "image-url",
+    "sourceUrl": "source-url",
+    "categories": "comma,separated,categories",
+    "status": "draft|published|archived",
+    ...
+  }
+}
+```
+
+#### PUT /api/admin/articles/[id]
+
+Update an article. All fields are editable.
+
+**Request Body:**
+
+```json
+{
+  "title": "Updated Title",
+  "slug": "updated-slug",
+  "content": "Updated content",
+  "summary": "Updated summary",
+  "metaDescription": "Updated meta",
+  "image": "new-image-url",
+  "sourceUrl": "source-url",
+  "categories": "updated,categories",
+  "status": "published"
+}
+```
+
+**Response:**
+
+```json
+{
+  "article": { ... },
+  "message": "Article updated successfully"
+}
+```
+
+#### DELETE /api/admin/articles/[id]
+
+Permanently delete an article.
+
+**Response:**
+
+```json
+{
+  "message": "Article deleted successfully"
+}
+```
+
+### Image Upload API
+
+#### POST /api/upload
+
+**Location:** `app/api/upload/route.ts`
+
+Upload images to Vercel Blob storage.
+
+**Query Parameters:**
+
+- `filename` (required) - Original filename
+
+**Request Body:** Binary file data
+
+**Response:**
+
+```json
+{
+  "url": "https://blob-url.vercel-storage.com/filename",
+  "pathname": "/filename",
+  "contentType": "image/jpeg",
+  "contentDisposition": "inline; filename=\"filename\""
+}
+```
+
+### Dashboard UI Components
+
+#### Admin Dashboard Page (app/admin/page.tsx)
+
+Main dashboard layout with two-panel design:
+
+- **Sidebar (left):** Article list with search
+- **Main area (right):** Article editor or empty state
+
+Features:
+
+- Session validation on mount
+- Admin role verification via API test request
+- Loading states with skeletons
+- Automatic redirection for non-admin users
+
+#### ArticleList Component (components/admin/article-list.tsx)
+
+Sidebar component for article browsing and selection.
+
+**Features:**
+
+- Real-time search (filters by title and summary)
+- Visual status badges (Draft/Published/Archived)
+- Active article highlighting
+- Scrollable list with custom scrollbar
+- Article count footer
+- Loading skeletons
+- Empty state handling
+
+**UI Elements:**
+
+- Search input with icon
+- Clickable article cards showing:
+  - Title (truncated, 2 lines max)
+  - Status badge (color-coded)
+  - Summary (truncated, 2 lines max)
+  - Last updated date
+
+#### ArticleEditor Component (components/admin/article-editor.tsx)
+
+Main content editor with complete CRUD functionality.
+
+**Features:**
+
+- **Editing:**
+
+  - All fields editable: title, slug, content, summary, meta description, image, categories, source URL
+  - Markdown content editor with monospace font
+  - Character counter for meta description (160 chars max)
+  - Image preview after upload/URL entry
+
+- **Publishing:**
+
+  - Toggle switch to publish/unpublish articles
+  - Visual status badge at top
+  - Cannot publish archived articles
+
+- **Change Detection:**
+
+  - Save/Cancel buttons only appear when changes are made
+  - Unsaved changes warning before page navigation (browser prompt)
+  - Reset to original state on cancel
+
+- **Image Management:**
+
+  - Upload button to select and upload to Vercel Blob
+  - Manual URL input option
+  - Image preview with responsive sizing
+  - Upload progress indication
+
+- **Actions Menu (3-dot menu):**
+
+  - **Archive:** Moves article to archived status (with confirmation)
+  - **Delete:** Permanently removes article (with confirmation)
+
+- **Confirmations:**
+
+  - Alert dialogs for destructive actions (archive, delete)
+  - Clear descriptions of action consequences
+
+- **Feedback:**
+  - Toast notifications for all operations (save, delete, archive, upload)
+  - Error handling with user-friendly messages
+  - Loading states during async operations
+
+**UI Layout:**
+
+- Header with status badge, publish toggle, actions menu, close button
+- Save/Cancel buttons appear below header when changes detected
+- Main content area with scrollable form
+- All inputs properly labeled with accessible labels
+- Responsive design with max-width constraint
+
+### Authorization Helpers (lib/auth-helpers.ts)
+
+Utility functions for server-side authorization:
+
+```typescript
+// Get current user session
+getSession(): Promise<Session | null>
+
+// Get current user
+getCurrentUser(): Promise<User | null>
+
+// Check if user has specific role
+hasRole(roleToCheck: string): Promise<boolean>
+
+// Check if user is admin
+isAdmin(): Promise<boolean>
+
+// Require authentication (throws if not authenticated)
+requireAuth(): Promise<User>
+
+// Require admin role (throws if not admin)
+requireAdmin(): Promise<User>
+```
+
+**Usage in API routes:**
+
+```typescript
+export async function GET(request: NextRequest) {
+  await requireAdmin(); // Throws error if not admin
+  // ... rest of handler
+}
+```
+
+### Workflow
+
+1. **Access Dashboard:** Navigate to `/admin` (requires login + admin role)
+2. **Browse Articles:** View all articles in sidebar, use search to filter
+3. **Select Article:** Click article to load in editor
+4. **Edit Article:** Modify any fields, upload images, change status
+5. **Save Changes:** Click "Gem" button when ready (appears after changes)
+6. **Publish/Unpublish:** Toggle switch to change visibility
+7. **Archive:** Use actions menu to archive (keeps data, hides from public)
+8. **Delete:** Use actions menu to permanently remove article
+
+### Article Status States
+
+- **draft** (default) - Created by cron, not visible to public, not ready
+- **published** - Visible to public, approved by admin
+- **archived** - Hidden from public, preserved for records
+
+### Security Features
+
+- Server-side authorization on all admin endpoints
+- Session validation with Better-Auth
+- Role-based access control (RBAC)
+- Protected API routes with error handling
+- Automatic redirects for unauthorized access
+- No client-side security bypasses
+
+### Error Handling
+
+- 401 Unauthorized - User not authenticated
+- 403 Forbidden - User lacks admin role
+- 404 Not Found - Article doesn't exist
+- 500 Internal Server Error - Server-side failures
+- User-friendly toast notifications for all errors
+
+---
+
 ## Application Routes
 
 **Home** (app/page.tsx) - Landing page, ready for content
@@ -449,30 +815,36 @@ Components are organized into logical folders with their tests in separate `test
 ### Article Components (components/article/)
 
 **ArticleCard** (article-card.tsx)
+
 - Displays article preview with image, title, summary, and categories
 - Supports two variants: default (vertical) and small (horizontal)
 - Handles date formatting in Danish locale
 - Links to article detail page
 
 **ArticleCategories** (article-categories.tsx)
+
 - Displays article categories with expand/collapse functionality
 - Shows first 3 categories by default
 - Expandable to show all categories
 
 **CategoryLink** (category-link.tsx)
+
 - Links to category pages with proper slug conversion
 - Supports badge and default variants
 - Handles Danish characters (æ, ø, å) in slug generation
 
 **HeroBanner** (hero-banner.tsx)
+
 - Hero banner component for homepage
 
 **HeroSection** (hero-section.tsx)
+
 - Featured article display with side articles
 - Large featured article with image overlay
 - Up to 3 side articles in compact format
 
 **Pagination** (pagination.tsx)
+
 - Page navigation for article listings
 - Supports custom base URLs
 - Shows ellipsis for large page counts
@@ -480,18 +852,21 @@ Components are organized into logical folders with their tests in separate `test
 ### Authentication Components (components/auth/)
 
 **LoginForm** (login-form.tsx)
+
 - Email and password inputs
 - "Forgot password?" link
 - Loading states and error handling
 - Redirects to home after successful login
 
 **SignupForm** (signup-form.tsx)
+
 - Full name, email, password, and confirm password inputs
 - Password validation (minimum 8 characters)
 - Password match validation
 - Redirects to onboarding after signup
 
 **OnboardingForm** (onboarding-form.tsx)
+
 - News category preference selection
 - Email frequency preferences
 - Skip option available
@@ -499,12 +874,14 @@ Components are organized into logical folders with their tests in separate `test
 ### Profile Components (components/profile/)
 
 **ProfileForm** (profile-form.tsx)
+
 - User profile management
 - Update name and email
 - Account deletion functionality
 - Link to preferences page
 
 **PreferencesForm** (preferences-form.tsx)
+
 - News category preferences
 - Email frequency settings
 - Unsubscribe from all emails option
@@ -512,27 +889,96 @@ Components are organized into logical folders with their tests in separate `test
 ### Layout Components (components/layout/)
 
 **Navigation** (navigation.tsx)
+
 - Main site navigation with responsive design
 - Session-aware menu items (login/logout/profile)
 - Loading skeleton to prevent flash of incorrect state
 - Links to news categories
 
 **Footer** (footer.tsx)
+
 - Site footer with links
 - Social media links
 - Copyright information
 
+### Admin Components (components/admin/)
+
+**ArticleList** (article-list.tsx)
+
+- Sidebar component for browsing articles
+- Real-time search filtering by title and summary
+- Visual status badges (Draft/Published/Archived)
+- Active article highlighting
+- Scrollable list with custom scrollbar
+- Article count footer
+
+**ArticleEditor** (article-editor.tsx)
+
+- Complete CRUD functionality for articles
+- Edit all fields: title, slug, content, summary, meta description, image, categories, source URL
+- Markdown content editor with monospace font
+- Image upload to Vercel Blob and manual URL input
+- Publish/unpublish toggle switch
+- Archive and delete actions with confirmations
+- Unsaved changes detection and warning
+- Toast notifications for all operations
+
 ### UI Components (components/ui/)
 
-**Button** - Variants (default, destructive, outline, secondary, ghost, link), sizes (sm, default, lg, icon)
+ShadCN components with custom styling:
 
-**Card** - Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter, CardAction
+**Button** (button.tsx)
 
-**Input** - Styled input element with focus states
+- Variants: default, destructive, outline, secondary, ghost, link
+- Sizes: sm, default, lg, icon
 
-**Field** - Complex form system - Field, FieldGroup, FieldLabel, FieldContent, FieldDescription, FieldError, FieldSeparator, FieldSet, FieldLegend
+**Card** (card.tsx)
 
-**Other** - Label, Separator, NavigationMenu
+- Components: Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter, CardAction
+
+**Input** (input.tsx)
+
+- Styled input element with focus states
+
+**Field** (field.tsx)
+
+- Complex form system with Field, FieldGroup, FieldLabel, FieldContent, FieldDescription, FieldError, FieldSeparator, FieldSet, FieldLegend
+
+**Badge** (badge.tsx)
+
+- Status indicators with color variants
+
+**Textarea** (textarea.tsx)
+
+- Multi-line text input with auto-resize
+
+**Switch** (switch.tsx)
+
+- Toggle switch for boolean states
+
+**ScrollArea** (scroll-area.tsx)
+
+- Custom styled scrollbar container
+
+**AlertDialog** (alert-dialog.tsx)
+
+- Confirmation dialogs for destructive actions
+
+**DropdownMenu** (dropdown-menu.tsx)
+
+- Contextual action menus
+
+**Skeleton** (skeleton.tsx)
+
+- Loading state placeholders
+
+**Sonner** (sonner.tsx)
+
+- Toast notification system
+
+**Other**
+
+- Label, Separator, NavigationMenu
 
 ---
 
@@ -656,6 +1102,7 @@ DATABASE_URL="postgresql://newssite_mp5z_user:rV2W48mBCtizpgBp7w5FXkzWhJhNqXHB@d
 ```
 
 This will:
+
 - Clear all tables in the production database
 - Re-seed with auth data (test user)
 - Re-seed with categories
@@ -892,38 +1339,84 @@ Page (Server Component)
 
 ## Key Files Reference
 
-| File                               | Purpose                          |
-| ---------------------------------- | -------------------------------- |
-| lib/auth.ts                        | Better-Auth server configuration |
-| lib/auth-client.ts                 | Better-Auth client configuration |
-| database/db.ts                     | Database connection pool         |
-| database/schema/auth-schema.ts     | Authentication tables            |
-| database/schema/articles-schema.ts | Articles table                   |
-| app/api/auth/[...all]/route.ts     | Auth API handler                 |
-| app/api/cron/weekly-news/route.ts  | Weekly news cron job             |
-| app/api/articles/process/route.ts  | Article processing               |
-| app/globals.css                    | Theme and global styles          |
-| components/navigation.tsx          | Main navigation                  |
-| components/login-form.tsx          | Login UI                         |
-| components/signup-form.tsx         | Signup UI                        |
+| File                                    | Purpose                          |
+| --------------------------------------- | -------------------------------- |
+| lib/auth.ts                             | Better-Auth server configuration |
+| lib/auth-client.ts                      | Better-Auth client configuration |
+| lib/auth-helpers.ts                     | Authorization utilities          |
+| database/db.ts                          | Database connection pool         |
+| database/schema/auth-schema.ts          | Authentication tables            |
+| database/schema/roles-schema.ts         | User roles table                 |
+| database/schema/articles-schema.ts      | Articles table                   |
+| app/api/auth/[...all]/route.ts          | Auth API handler                 |
+| app/api/admin/articles/route.ts         | Admin article list/search        |
+| app/api/admin/articles/[id]/route.ts    | Admin article CRUD               |
+| app/api/cron/weekly-news/route.ts       | Weekly news cron job             |
+| app/api/articles/process/route.ts       | Article processing               |
+| app/api/upload/route.ts                 | Image upload to Vercel Blob      |
+| app/globals.css                         | Theme and global styles          |
+| components/admin/article-list.tsx       | Admin article list sidebar       |
+| components/admin/article-editor.tsx     | Admin article editor             |
+| components/layout/navigation.tsx        | Main navigation                  |
+| components/layout/footer.tsx            | Site footer                      |
+| components/auth/login-form.tsx          | Login UI                         |
+| components/auth/signup-form.tsx         | Signup UI                        |
+| components/auth/onboarding-form.tsx     | Onboarding UI                    |
+| components/profile/profile-form.tsx     | Profile management UI            |
+| components/profile/preferences-form.tsx | User preferences UI              |
+| components/article/article-card.tsx     | Article preview card             |
+| components/article/hero-section.tsx     | Homepage hero section            |
 
 ---
 
 ## Recent Changes
 
-- **Reorganized component folder structure (2025-11-25):**
+### 2025-11-25: Component Reorganization & Testing Infrastructure
+
+- **Reorganized component folder structure:**
+
   - Organized components into logical subfolders: `article/`, `auth/`, `profile/`, `layout/`
   - Moved test files into separate `test/` subdirectories within each component folder
-  - Updated all import paths across the codebase
+  - Updated all import paths across the codebase (25 files modified)
   - All 120 tests pass with new structure
   - Updated documentation to reflect new organization
   - Improved code organization and maintainability
+
 - **Added comprehensive unit testing infrastructure:**
   - Set up Vitest with React Testing Library
-  - Created test utilities and mocking helpers
-  - Wrote tests for all custom components (13 test files)
-  - Added test scripts to package.json
+  - Created test utilities and mocking helpers in `lib/test-utils.tsx`
+  - Wrote tests for all custom components (13 test files, 120 tests total)
+  - Added test scripts to package.json (test, test:watch, test:ui, test:coverage)
   - Updated Development Guidelines with testing requirements
+  - Test coverage includes: rendering, user interactions, form validation, error states, loading states
+
+### 2025-11-25: Admin Dashboard & CMS Implementation
+
+- **Roles System:** Created roles table schema with admin/user roles
+- **Authorization:** Implemented auth helpers (requireAdmin, isAdmin, hasRole)
+- **Admin API:** Built complete REST API for article CRUD operations
+  - GET /api/admin/articles - List/search articles
+  - GET /api/admin/articles/[id] - Get single article
+  - PUT /api/admin/articles/[id] - Update article
+  - DELETE /api/admin/articles/[id] - Delete article
+- **Admin Dashboard:** Full-featured CMS at /admin route
+  - Two-panel layout: sidebar + main editor
+  - Article list with real-time search
+  - Visual status badges (Draft/Published/Archived)
+  - Complete article editor with all fields editable
+  - Publish/unpublish toggle switch
+  - Image upload to Vercel Blob + manual URL input
+  - Actions dropdown with Archive and Delete options
+  - Unsaved changes warning
+  - Toast notifications for all operations
+  - Confirmation dialogs for destructive actions
+- **ShadCN Components:** Added Badge, Textarea, Switch, ScrollArea, AlertDialog, DropdownMenu, Skeleton, Toast/Sonner
+- **Image Upload:** Integrated Vercel Blob storage for image uploads
+- **Seed Data:** Updated to create admin user (admin@example.com / admin123)
+- **UI/UX:** Loading skeletons, empty states, responsive design, accessible labels
+
+### Previous Changes
+
 - Added Development Guidelines section with best practices for critical thinking, component reuse, and documentation
 - Added hero section with featured article
 - Implemented simple profile and email settings
@@ -962,10 +1455,12 @@ Page (Server Component)
 
 3. **Admin Features:**
 
-   - Admin panel for article review
-   - Manual article editing
-   - Publishing workflow
+   - ~~Admin panel for article review~~ ✅ Completed
+   - ~~Manual article editing~~ ✅ Completed
+   - ~~Publishing workflow~~ ✅ Completed
    - Analytics dashboard
+   - Bulk actions (publish/archive multiple articles)
+   - Article scheduling/auto-publish dates
 
 4. **Technical:**
 
@@ -1041,4 +1536,4 @@ Page (Server Component)
 
 ---
 
-Last Updated: 2025-11-24
+Last Updated: 2025-11-25
