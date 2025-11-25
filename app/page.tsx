@@ -1,10 +1,10 @@
 import { db } from "@/database/db";
 import { article } from "@/database/schema";
 import { eq, desc, sql } from "drizzle-orm";
-import { HeroBanner } from "@/components/hero-banner";
-import { HeroSection } from "@/components/hero-section";
-import { ArticleCard } from "@/components/article-card";
-import { Pagination } from "@/components/pagination";
+import { HeroBanner } from "@/components/article/hero-banner";
+import { HeroSection } from "@/components/article/hero-section";
+import { ArticleCard } from "@/components/article/article-card";
+import { Pagination } from "@/components/article/pagination";
 
 const HERO_ARTICLES_COUNT = 4;
 

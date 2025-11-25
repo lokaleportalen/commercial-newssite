@@ -3,7 +3,7 @@ import Link from "next/link";
 import { format } from "date-fns";
 import { da } from "date-fns/locale";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { ArticleCategories } from "@/components/article-categories";
+import { ArticleCategories } from "@/components/article/article-categories";
 
 interface ArticleCardProps {
   title: string;

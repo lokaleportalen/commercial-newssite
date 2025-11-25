@@ -2,8 +2,8 @@ import { db } from "@/database/db";
 import { article, category } from "@/database/schema";
 import { eq, desc, sql, like } from "drizzle-orm";
 import { notFound } from "next/navigation";
-import { ArticleCard } from "@/components/article-card";
-import { Pagination } from "@/components/pagination";
+import { ArticleCard } from "@/components/article/article-card";
+import { Pagination } from "@/components/article/pagination";
 import type { Metadata } from "next";
 
 const ARTICLES_PER_PAGE = 15;

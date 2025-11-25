@@ -1,4 +1,4 @@
-import { PreferencesForm } from "@/components/preferences-form";
+import { PreferencesForm } from "@/components/profile/preferences-form";
 
 export default function PreferencesPage() {
   return (

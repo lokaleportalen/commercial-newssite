@@ -2,8 +2,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { ArticleCard } from "@/components/article-card";
-import { CategoryLink } from "@/components/category-link";
+import { ArticleCard } from "@/components/article/article-card";
+import { CategoryLink } from "@/components/article/category-link";
 
 interface Article {
   id: string;

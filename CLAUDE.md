@@ -1,293 +1,120 @@
-# Commercial Newssite - Architecture Documentation
+# Commercial Newssite - Documentation
 
 ## Project Overview
 
-This is a Next.js 16 full-stack web application for "Nyheder" (News), a commercial newssite focused on Danish commercial real estate that is part of Lokaleportalen.dk.
+Next.js 16 full-stack newssite for Danish commercial real estate (Lokaleportalen.dk).
 
-### Key Features
+**Stack:** Next.js 16, React 19, Better-Auth, PostgreSQL, Drizzle ORM, Tailwind v4, OpenAI GPT-4o, Vitest
 
-- Complete authentication system with Better-Auth
-  - Email/password authentication
-  - Email verification on signup
-  - Password reset functionality
-- Full email system with Mailgun integration
-  - Welcome emails with verification links
-  - Password reset emails
-  - Daily news digests
-  - Immediate article notifications
-- PostgreSQL database with Drizzle ORM
-- Automated news gathering and AI-powered article generation using OpenAI GPT-4o
-- Weekly cron job for automated content publishing
-- User preferences system for personalized email delivery
-- Modern UI with ShadCN components and custom orange theme
-- Production-ready architecture with TypeScript strict mode
+**Key Features:**
+
+- Better-Auth authentication with roles (admin/user)
+- AI-powered article generation via OpenAI GPT-4o
+- Weekly cron job for automated news gathering
+- Admin CMS for article management
+- ShadCN UI components with custom orange theme
 
 ---
 
 ## Development Guidelines
 
-**IMPORTANT: Follow these guidelines for all development work.**
+### Before Implementing
 
-### Before Implementing Solutions
-
-1. **Be Critical of Solutions**
-   - Question assumptions and evaluate trade-offs
-   - Consider edge cases and potential issues
-   - Don't accept the first solution that comes to mind
-
-2. **Think Thoroughly**
-   - Analyze the problem from multiple angles
-   - Consider performance, security, and maintainability implications
-   - Evaluate long-term consequences of design decisions
-
-3. **Check for Existing Components**
-   - Search the codebase for reusable components before creating new ones
-   - Check `components/ui/` for existing ShadCN components
-   - Look for existing utilities in `lib/` before writing new helpers
-   - Avoid code duplication and redundancy
-
-4. **Plan Before Executing**
-   - Provide a concise plan outlining the approach
-   - Ask clarifying questions when requirements are ambiguous
-   - Get confirmation before making significant changes
+1. **Be Critical** - Question assumptions, evaluate trade-offs, consider edge cases
+2. **Think Thoroughly** - Analyze from multiple angles, consider long-term consequences
+3. **Check for Existing Components** - Search `components/ui/`, `components/*/`, `lib/` before creating new ones
+4. **Plan First** - Outline approach, ask clarifying questions, get confirmation for major changes
 
 ### After Major Changes
 
-5. **Update Documentation**
-   - Update this CLAUDE.md file after major updates, adjustments, or changes
-   - Keep the "Recent Changes" section current
-   - Document new components, endpoints, or patterns
+5. **Update Documentation** - Update CLAUDE.md and Recent Changes section
 
 ### Component Reuse Checklist
 
-Before creating new components, check:
-- [ ] `components/ui/` - ShadCN components (Button, Card, Input, Field, etc.)
-- [ ] `components/` - Custom components (Navigation, forms, etc.)
-- [ ] `lib/utils.ts` - Utility functions
-- [ ] `lib/auth.ts` / `lib/auth-client.ts` - Auth utilities
+- `components/ui/` - ShadCN components
+- `components/article/`, `auth/`, `profile/`, `layout/` - Feature components
+- `lib/utils.ts`, `lib/auth.ts`, `lib/auth-client.ts` - Utilities
 
----
+### Testing
 
-## Technology Stack
+**IMPORTANT: Write unit tests for all custom components (not ShadCN UI).**
 
-| Package                  | Version | Purpose                         |
-| ------------------------ | ------- | ------------------------------- |
-| next                     | 16.0.1  | React framework with App Router |
-| react                    | 19.2.0  | UI library                      |
-| better-auth              | 1.3.34  | Authentication system           |
-| drizzle-orm              | 0.44.7  | Database ORM                    |
-| pg                       | 8.16.3  | PostgreSQL driver               |
-| mailgun.js               | latest  | Email service provider          |
-| form-data                | latest  | Mailgun dependency              |
-| tailwindcss              | 4       | CSS framework                   |
-| lucide-react             | 0.553.0 | Icon library                    |
-| class-variance-authority | 0.7.1   | Component variants              |
-| openai                   | latest  | AI article generation           |
+- **Framework:** Vitest + React Testing Library
+- **Location:** `test/` subdirectories (e.g., `components/auth/test/login-form.test.tsx`)
+- **Commands:**
+  ```bash
+  npm test              # Run all tests
+  npm run test:watch    # Watch mode
+  npm run test:ui       # Interactive UI
+  npm run test:coverage # Coverage report
+  ```
+- **Mock:** Next.js modules, Better-Auth client, global functions (use `lib/test-utils.tsx`)
+- **Test:** Rendering, interactions, validation, error states, accessibility
 
 ---
 
 ## Directory Structure
 
 ```
-commercial-newssite/
-├── app/                          # Next.js App Router
-│   ├── api/
-│   │   ├── auth/[...all]/       # Better-Auth API routes
-│   │   ├── cron/
-│   │   │   ├── weekly-news/     # Weekly news fetching cron
-│   │   │   └── send-daily-digest/ # Daily email digest cron
-│   │   └── articles/
-│   │       ├── process/         # Article processing endpoint
-│   │       └── send-notifications/ # Immediate email notifications
-│   ├── login/                   # Login page
-│   ├── signup/                  # Signup page
-│   ├── forgot-password/         # Forgot password page
-│   ├── reset-password/          # Reset password page
-│   ├── verify-email/            # Email verification page
-│   ├── page.tsx                 # Home page
-│   ├── layout.tsx               # Root layout
-│   └── globals.css              # Global styles
-│
-├── components/                  # React components
-│   ├── ui/                      # ShadCN UI library
-│   ├── navigation.tsx           # Main navigation
-│   ├── login-form.tsx           # Login form
-│   ├── signup-form.tsx          # Signup form
-│   ├── forgot-password-form.tsx # Forgot password form
-│   ├── reset-password-form.tsx  # Reset password form
-│   └── email-verification.tsx   # Email verification component
-│
-├── database/                    # Database setup
-│   ├── db.ts                    # Drizzle connection
-│   ├── schema/
-│   │   ├── index.ts             # Schema exports
-│   │   ├── auth-schema.ts       # Auth tables
-│   │   ├── articles-schema.ts   # Articles table
-│   │   └── user-preferences-schema.ts # User email preferences
-│   ├── drizzle/                 # Generated migrations
-│   ├── seed/                    # Seeding scripts
-│   └── drizzle.config.ts        # Drizzle configuration
-│
-├── lib/                         # Utilities
-│   ├── auth.ts                  # Better-Auth server
-│   ├── auth-client.ts           # Better-Auth client
-│   ├── email.ts                 # Mailgun email service
-│   └── utils.ts                 # Helper functions
-│
-├── .env                         # Environment variables (gitignored)
-├── .env.example                 # Environment template
-└── CLAUDE.md                    # This file
+app/
+├── admin/page.tsx              # Admin CMS (protected)
+├── api/
+│   ├── admin/articles/         # Article CRUD endpoints
+│   ├── auth/[...all]/          # Better-Auth routes
+│   ├── cron/weekly-news/       # News fetching cron
+│   ├── articles/process/       # Article generation
+│   └── upload/                 # Image upload (Vercel Blob)
+├── login/, signup/             # Auth pages
+└── page.tsx, layout.tsx        # Home & root layout
+
+components/
+├── admin/                      # ArticleList, ArticleEditor
+├── article/                    # ArticleCard, HeroSection, Pagination, Categories
+├── auth/                       # LoginForm, SignupForm, OnboardingForm
+├── profile/                    # ProfileForm, PreferencesForm
+├── layout/                     # Navigation, Footer
+└── ui/                         # ShadCN components (Button, Card, Input, etc.)
+
+database/
+├── db.ts                       # Drizzle connection
+├── schema/                     # auth-schema, roles-schema, articles-schema
+├── drizzle/                    # Migrations
+└── seed/                       # Seed scripts (auth-seed.ts)
+
+lib/
+├── auth.ts, auth-client.ts     # Better-Auth config
+├── auth-helpers.ts             # Authorization utilities
+└── utils.ts                    # Helper functions
 ```
 
 ---
 
 ## Database Schema
 
-### Connection (database/db.ts)
+**PostgreSQL via Drizzle ORM** (see `database/schema/` for full definitions)
 
-PostgreSQL via Drizzle ORM with node-postgres pool:
+- **user** - User accounts (id, name, email, password, timestamps)
+- **session** - User sessions (token, expiresAt, userId FK)
+- **account** - OAuth providers (accountId, providerId, userId FK, tokens)
+- **verification** - Email verification tokens
+- **role** - User roles (userId FK, role: 'admin'|'user')
+- **article** - News articles (id UUID, title, slug unique, content markdown, summary, metaDescription, image, sourceUrl, categories, status: draft|published|archived, timestamps)
 
-- Pool-based connection management
-- DATABASE_URL from environment
-- Type-safe query API
-
-### Authentication Tables (database/schema/auth-schema.ts)
-
-**user** - User accounts
-
-- id (text, PK)
-- name, email (text, email unique)
-- emailVerified (boolean)
-- image, password (text)
-- createdAt, updatedAt (timestamps)
-
-**session** - User sessions
-
-- id, token (text, token unique)
-- expiresAt (timestamp)
-- ipAddress, userAgent (text)
-- userId (FK to user, CASCADE)
-- createdAt, updatedAt
-
-**account** - OAuth provider accounts
-
-- id, accountId, providerId (text)
-- userId (FK to user, CASCADE)
-- accessToken, refreshToken, idToken
-- Token expiration fields
-- scope, password (text)
-- Timestamps
-
-**verification** - Email verification
-
-- id, identifier, value (text)
-- expiresAt (timestamp)
-- Timestamps
-
-### Articles Table (database/schema/articles-schema.ts)
-
-**article** - News articles
-
-- id (UUID, PK) - Unique article identifier
-- title (Text, Not Null) - Article headline
-- slug (Text, Not Null, Unique) - URL-friendly identifier
-- content (Text, Not Null) - Full article content in markdown
-- summary (Text) - Brief article summary (2-3 sentences)
-- metaDescription (Text) - SEO meta description (150-160 chars)
-- image (Text) - Featured image URL
-- sourceUrl (Text) - Original news source URL
-- categories (Text) - Comma-separated categories
-- status (Text, Default: 'draft') - Article status: draft, published, archived
-- publishedDate (Timestamp) - When article was published
-- createdAt (Timestamp, Auto) - Record creation timestamp
-- updatedAt (Timestamp, Auto) - Last update timestamp
-
-### User Preferences Table (database/schema/user-preferences-schema.ts)
-
-**userPreferences** - User email preferences
-
-- id (Text, PK) - Unique preference ID
-- userId (Text, Not Null, Unique) - FK to user, CASCADE
-- newsCategory (Text, Default: 'all') - Preferred categories: all, investment, construction, new, old
-- emailFrequency (Text, Default: 'daily') - Email frequency: daily, weekly, immediate
-- createdAt (Timestamp, Auto) - Record creation timestamp
-- updatedAt (Timestamp, Auto) - Last update timestamp
-
-### Migrations
-
-- `0000_unique_mattie_franklin.sql` - Auth tables
-- `0001_solid_ser_duncan.sql` - Articles table
-- User preferences migrations
-
-### Seeding
-
-- `seed.ts` - Main entry point
-- `auth-seed.ts` - Creates test user (test@example.com / password123)
+**Seed Users:** admin@example.com / admin123, test@example.com / password123
 
 ---
 
-## Authentication System
+## Authentication
 
-### Server Config (lib/auth.ts)
+**Better-Auth** with PostgreSQL adapter and email/password auth. See `lib/auth.ts` (server), `lib/auth-client.ts` (client with `useSession()` hook).
 
-```typescript
-export const auth = betterAuth({
-  database: drizzleAdapter(db, { provider: "pg" }),
-  emailAndPassword: {
-    enabled: true,
-    requireEmailVerification: false, // Set to true to require verification before login
-    sendResetPassword: async ({ user, url, token }) => {
-      // Sends password reset email via Mailgun
-      await sendPasswordResetEmail(user.email, user.name, token);
-    },
-  },
-  emailVerification: {
-    sendVerificationEmail: async ({ user, url, token }) => {
-      // Sends welcome email with verification link via Mailgun
-      await sendWelcomeEmail(user.email, user.name, token);
-    },
-    sendOnSignUp: true, // Automatically send verification email on signup
-  },
-});
-```
+**Routes:** `/api/auth/*` - sign-up, sign-in, sign-out, session management
 
-Features:
-- PostgreSQL database with Drizzle adapter
-- Email/password authentication
-- Email verification on signup
-- Password reset functionality
-- Automatic email sending via Mailgun
+**Authorization Helpers** (`lib/auth-helpers.ts`):
 
-### Client Config (lib/auth-client.ts)
-
-```typescript
-export const authClient = createAuthClient({
-  baseURL: process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000",
-});
-```
-
-Client-side state and API calls with `useSession()` hook.
-
-Available methods:
-- `signUp()` - Register new user, triggers welcome email
-- `signIn()` - Login existing user
-- `signOut()` - Logout
-- `forgetPassword()` - Request password reset email
-- `resetPassword()` - Reset password with token
-- `verifyEmail()` - Verify email with token
-- `getSession()` - Get current session
-
-### API Routes (app/api/auth/[...all]/route.ts)
-
-Catch-all handler for:
-
-- POST /api/auth/sign-up - Register + send welcome email
-- POST /api/auth/sign-in - Login
-- POST /api/auth/sign-out - Logout
-- POST /api/auth/forget-password - Request password reset
-- POST /api/auth/reset-password - Reset password with token
-- POST /api/auth/verify-email - Verify email with token
-- Session and OAuth endpoints
+- `requireAdmin()` - Throw if not admin (use in API routes)
+- `isAdmin()`, `hasRole(role)` - Check user role
+- `getCurrentUser()`, `getSession()` - Get current user/session
 
 ### Authentication Pages
 
@@ -306,11 +133,13 @@ Catch-all handler for:
 Mailgun-powered email system with responsive HTML templates in Danish.
 
 **Configuration:**
+
 - Provider: Mailgun
 - Client: mailgun.js with form-data
 - Templates: Responsive HTML with fallback text
 
 **Environment Variables:**
+
 - `MAILGUN_API_KEY` - Mailgun API key
 - `MAILGUN_DOMAIN` - Verified Mailgun domain
 - `FROM_EMAIL` - Sender email address
@@ -321,18 +150,21 @@ Mailgun-powered email system with responsive HTML templates in Danish.
 All emails are sent in Danish with professional, branded design:
 
 **1. Welcome Email** (`sendWelcomeEmail`)
+
 - Sent automatically on user signup
 - Includes email verification link
 - Link expires in 24 hours
 - Orange gradient header with Nyheder branding
 
 **2. Password Reset Email** (`sendPasswordResetEmail`)
+
 - Sent when user requests password reset
 - Includes reset link with token
 - Link expires in 1 hour
 - Security warning included
 
 **3. Daily News Digest** (`sendDailyDigestEmail`)
+
 - Personalized article summaries
 - Filtered by user's category preferences
 - Up to 10 articles per digest
@@ -340,6 +172,7 @@ All emails are sent in Danish with professional, branded design:
 - Preferences management links
 
 **4. Immediate Notification** (`sendImmediateNotificationEmail`)
+
 - Real-time notification for new articles
 - Sent only for matching categories
 - Single article per email
@@ -348,12 +181,14 @@ All emails are sent in Danish with professional, branded design:
 ### Email Triggers
 
 **Automatic Triggers:**
+
 - User signup → Welcome email with verification link
 - Password reset request → Reset email with token
 - Daily cron (8 AM) → Daily digest to subscribed users
 - New article published → Immediate notifications to subscribed users
 
 **Manual Triggers:**
+
 - User can resend verification email from verification page
 - Admin can trigger digest manually via cron endpoint
 
@@ -362,23 +197,27 @@ All emails are sent in Danish with professional, branded design:
 Users can configure email preferences via `/preferences` page:
 
 **Email Frequency:**
+
 - `daily` - Receive daily digest at 8 AM
 - `weekly` - Receive weekly digest (not yet implemented)
 - `immediate` - Receive notification for each new article
 
 **News Categories:**
+
 - `all` - All commercial real estate news
 - `investment` - Investment news
 - `construction` - Construction news
 - And more category options
 
 **Unsubscribe:**
+
 - One-click unsubscribe via `/api/user/preferences/unsubscribe`
 - All emails include unsubscribe link
 
 ### Email Deliverability
 
 **Mailgun Setup Steps:**
+
 1. Sign up at mailgun.com
 2. Add and verify domain (DNS records)
 3. Get API key from Account Settings
@@ -386,6 +225,7 @@ Users can configure email preferences via `/preferences` page:
 5. Test email sending
 
 **Best Practices:**
+
 - Use verified domain for better deliverability
 - Include plain text fallback
 - Responsive design for mobile
@@ -396,113 +236,33 @@ Users can configure email preferences via `/preferences` page:
 
 ## API Endpoints
 
-### 1. Weekly News Cron Job
+### Public Endpoints
 
-**Endpoint:** `GET /api/cron/weekly-news`
+- **POST /api/auth/\*** - Better-Auth endpoints (sign-up, sign-in, sign-out)
+- **POST /api/upload?filename=X** - Upload images to Vercel Blob (returns URL)
 
-**Location:** `app/api/cron/weekly-news/route.ts`
+### Admin Endpoints (require admin role)
 
-**Purpose:**
+- **GET /api/admin/articles?search=X** - List/search articles
+- **GET /api/admin/articles/[id]** - Get single article
+- **PUT /api/admin/articles/[id]** - Update article (all fields editable)
+- **DELETE /api/admin/articles/[id]** - Delete article
 
-- Triggered weekly by cron service (Vercel Cron, GitHub Actions, etc.)
-- Fetches list of Danish commercial real estate news from OpenAI GPT-4o
-- Sends each news item to article processing endpoint
+### Cron Endpoints (require `Authorization: Bearer <CRON_SECRET>`)
 
-**Authentication:**
-Requires `Authorization: Bearer <CRON_SECRET>` header
+**GET /api/cron/weekly-news**
 
-**Process Flow:**
+- Fetches Danish real estate news from OpenAI GPT-4o
+- Sends each item to `/api/articles/process`
+- Returns processing summary
 
-1. Validates authorization token
-2. Sends fixed prompt to OpenAI GPT-4o requesting Danish commercial real estate news
-3. Receives markdown-formatted list of news items
-4. Parses news items into structured objects
-5. Sends each item to `/api/articles/process` endpoint
-6. Returns summary of processing results
+**POST /api/articles/process**
 
-**Expected News Format:**
-
-```markdown
-- **Title**: [News title]
-  - **Summary**: [2-3 sentence summary]
-  - **Source**: [Source name]
-  - **Date**: [Date or timeframe]
-```
-
-**Response:**
-
-```json
-{
-  "success": true,
-  "message": "Weekly news processing completed",
-  "totalItems": 7,
-  "processedArticles": [
-    {
-      "success": true,
-      "title": "Example Title",
-      "id": "uuid"
-    }
-  ],
-  "rawNewsList": "..."
-}
-```
-
-### 2. Article Processing Endpoint
-
-**Endpoint:** `POST /api/articles/process`
-
-**Location:** `app/api/articles/process/route.ts`
-
-**Purpose:**
-
-- Receives individual news items
-- Uses OpenAI to research and write full articles
-- Saves completed articles to database
-
-**Authentication:**
-Requires `Authorization: Bearer <CRON_SECRET>` header
-
-**Request Body:**
-
-```json
-{
-  "title": "News title",
-  "summary": "Brief summary",
-  "source": "Source name (optional)",
-  "date": "Date or timeframe (optional)"
-}
-```
-
-**Process Flow:**
-
-1. Validates authorization token
-2. **Research Phase:** Uses OpenAI GPT-4o to research the news story
-   - Searches web for additional details
-   - Gathers context and related information
-   - Identifies key facts and quotes
-3. **Writing Phase:** Uses research to write professional article
-   - Creates structured markdown content
-   - Includes proper headings and formatting
-   - Uses journalistic tone
-4. **Metadata Generation:** Generates SEO and organizational metadata
-   - URL slug
-   - Meta description
-   - Summary
-   - Categories
-5. **Database Storage:** Saves article to PostgreSQL
-   - Sets status to "published"
-   - Records timestamp
-
-**Response:**
-
-```json
-{
-  "success": true,
-  "message": "Article processed and saved successfully",
-  "articleId": "uuid",
-  "slug": "article-url-slug"
-}
-```
+- Receives news item (title, summary, source, date)
+- Research phase: OpenAI searches web for details
+- Writing phase: Generates markdown article
+- Metadata phase: Creates slug, meta description, categories
+- Saves to database as "published"
 
 **Note:** After saving the article, this endpoint automatically triggers immediate notifications to subscribed users.
 
@@ -600,156 +360,53 @@ Requires `Authorization: Bearer <CRON_SECRET>` header
 
 ---
 
-## Application Routes
+## Admin CMS
 
-**Home** (app/page.tsx) - Landing page, ready for content
+**Route:** `/admin` (requires admin role, see API Endpoints section above for full CRUD details)
 
-**Login** (app/login/page.tsx) - LoginForm in centered layout
+**Features:**
 
-**Signup** (app/signup/page.tsx) - SignupForm in centered layout
+- Two-panel layout: ArticleList (sidebar) + ArticleEditor (main)
+- Search articles, edit all fields (title, slug, content, summary, meta, image, categories, source)
+- Upload images to Vercel Blob
+- Publish/archive/delete with confirmations
+- Unsaved changes detection
+- Toast notifications
 
-**Root Layout** (app/layout.tsx) - Title "Nyheder", global styles, navigation
+**Article Status:** draft (default) → published (visible) → archived (hidden)
+
+**Security:** Role-based access control with `requireAdmin()`, 401/403 handling
 
 ---
 
 ## Components
 
-### Navigation (components/navigation.tsx)
+See `components/` for all files. Tests in `test/` subdirectories.
 
-- Main site navigation with responsive design
-- Session-aware menu items (login/logout)
-- Loading skeleton to prevent flash of incorrect state
-- Links to news categories
-
-### LoginForm (components/login-form.tsx)
-
-- Card with header
-- Email input
-- Password input with "Forgot?" link
-- Login button
-- Google login button
-- Sign up link
-
-### SignupForm (components/signup-form.tsx)
-
-- Card with header
-- Full Name input
-- Email input
-- Password input
-- Confirm Password input
-- Create Account button
-- Google signup button
-- Sign in link
-
-### UI Components (components/ui/)
-
-**Button** - Variants (default, destructive, outline, secondary, ghost, link), sizes (sm, default, lg, icon)
-
-**Card** - Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter, CardAction
-
-**Input** - Styled input element with focus states
-
-**Field** - Complex form system - Field, FieldGroup, FieldLabel, FieldContent, FieldDescription, FieldError, FieldSeparator, FieldSet, FieldLegend
-
-**Other** - Label, Separator, NavigationMenu
-
----
-
-## Styling & Theme
-
-### Global Styles (app/globals.css)
-
-Tailwind v4 with OKLCh colors:
-
-**Primary: Orange**
-
-- Light: oklch(0.646 0.222 41.116)
-- Dark: oklch(0.705 0.213 47.604)
-
-**Color System:**
-
-- Background/Foreground
-- Card, Popover
-- Primary, Secondary
-- Muted, Accent
-- Destructive, Border, Input, Ring
-- Chart colors (1-5)
-- Sidebar colors
-
-**Radius:** 0.65rem base with sm, md, lg, xl variants
-
-**Dark Mode:** Via .dark class selector
+**Admin:** ArticleList, ArticleEditor
+**Article:** ArticleCard, HeroSection, Pagination, ArticleCategories, CategoryLink, HeroBanner
+**Auth:** LoginForm, SignupForm, OnboardingForm
+**Profile:** ProfileForm, PreferencesForm
+**Layout:** Navigation (session-aware), Footer
+**UI:** ShadCN components (Button, Card, Input, Field, Badge, Textarea, Switch, ScrollArea, AlertDialog, DropdownMenu, Skeleton, Sonner, Label, Separator, NavigationMenu)
 
 ---
 
 ## Configuration
 
-### TypeScript (tsconfig.json)
-
-- ES2017 target
-- Strict mode enabled
-- @ alias to ./
-
-### Environment Variables (.env)
-
-Required variables (copy from `.env.example`):
+**Environment Variables** (`.env`):
 
 ```bash
-# Database Configuration
-DATABASE_URL=postgresql://user:password@localhost:5432/newssite
-
-# OpenAI API Configuration
+DATABASE_URL=postgresql://...
 OPENAI_API_KEY=sk-...
-
-# Unsplash API Configuration
-UNSPLASH_ACCESS_KEY=your-access-key-here
-
-# Mailgun Email Configuration
-MAILGUN_API_KEY=your-mailgun-api-key-here
-MAILGUN_DOMAIN=mg.yourdomain.com
-FROM_EMAIL=nyheder@lokaleportalen.dk
-FROM_NAME=Nyheder
-
-# Cron Job Security
-CRON_SECRET=your-secret-key-here
-
-# Application Base URL
+CRON_SECRET=$(openssl rand -base64 32)
 NEXT_PUBLIC_BASE_URL=http://localhost:3000
 ```
 
-**Getting API Keys:**
-
-OpenAI API Key:
-
-1. Visit https://platform.openai.com/api-keys
-2. Create new API key
-3. Add to `.env` as `OPENAI_API_KEY`
-
-Mailgun Setup:
-
-1. Sign up at https://mailgun.com
-2. Add and verify your domain (DNS records required)
-3. Get API key from Account Settings > API Keys
-4. Add to `.env` as `MAILGUN_API_KEY`
-5. Use your verified domain as `MAILGUN_DOMAIN` (e.g., mg.yourdomain.com)
-
-Cron Secret:
-
-```bash
-openssl rand -base64 32
-```
-
-### ShadCN (components.json)
-
-- Style: new-york
-- Icons: lucide-react
-- Aliases configured
-
-### Drizzle (database/drizzle.config.ts)
-
-- PostgreSQL dialect
-- Schema: ./schema/index.ts
-- Output: ./drizzle/
+**TypeScript:** Strict mode, @ alias
+**Tailwind:** v4 with custom orange theme (OKLCh colors), dark mode support
+**ShadCN:** new-york style, lucide-react icons
+**Drizzle:** PostgreSQL, schema in `./schema/`, output `./drizzle/`
 
 ---
 
@@ -762,6 +419,15 @@ npm run dev    # Dev server (:3000)
 npm run build  # Production build
 npm run start  # Production server
 npm run lint   # ESLint
+```
+
+### Testing Commands
+
+```bash
+npm test              # Run all tests once
+npm run test:watch    # Run tests in watch mode (re-runs on file changes)
+npm run test:ui       # Open Vitest UI for interactive testing
+npm run test:coverage # Run tests and generate coverage report
 ```
 
 ### Database Operations
@@ -783,6 +449,7 @@ DATABASE_URL="postgresql://newssite_mp5z_user:rV2W48mBCtizpgBp7w5FXkzWhJhNqXHB@d
 ```
 
 This will:
+
 - Clear all tables in the production database
 - Re-seed with auth data (test user)
 - Re-seed with categories
@@ -812,6 +479,7 @@ Create `vercel.json`:
 ```
 
 **Cron Schedules:**
+
 - Weekly news: `0 9 * * 1` (Every Monday at 9 AM UTC)
 - Daily digest: `0 8 * * *` (Every day at 8 AM UTC)
 
@@ -885,12 +553,14 @@ Use services like:
 Configure two HTTP requests:
 
 **Weekly News:**
+
 - **URL:** `https://yourdomain.com/api/cron/weekly-news`
 - **Method:** GET
 - **Header:** `Authorization: Bearer <your-cron-secret>`
 - **Schedule:** Weekly (e.g., Monday 9 AM)
 
 **Daily Digest:**
+
 - **URL:** `https://yourdomain.com/api/cron/send-daily-digest`
 - **Method:** GET
 - **Header:** `Authorization: Bearer <your-cron-secret>`
@@ -1089,51 +759,81 @@ Page (Server Component)
 
 ## Key Files Reference
 
-| File                               | Purpose                          |
-| ---------------------------------- | -------------------------------- |
-| lib/auth.ts                        | Better-Auth server configuration |
-| lib/auth-client.ts                 | Better-Auth client configuration |
-| database/db.ts                     | Database connection pool         |
-| database/schema/auth-schema.ts     | Authentication tables            |
-| database/schema/articles-schema.ts | Articles table                   |
-| app/api/auth/[...all]/route.ts     | Auth API handler                 |
-| app/api/cron/weekly-news/route.ts  | Weekly news cron job             |
-| app/api/articles/process/route.ts  | Article processing               |
-| app/globals.css                    | Theme and global styles          |
-| components/navigation.tsx          | Main navigation                  |
-| components/login-form.tsx          | Login UI                         |
-| components/signup-form.tsx         | Signup UI                        |
+| File                                    | Purpose                          |
+| --------------------------------------- | -------------------------------- |
+| lib/auth.ts                             | Better-Auth server configuration |
+| lib/auth-client.ts                      | Better-Auth client configuration |
+| lib/auth-helpers.ts                     | Authorization utilities          |
+| database/db.ts                          | Database connection pool         |
+| database/schema/auth-schema.ts          | Authentication tables            |
+| database/schema/roles-schema.ts         | User roles table                 |
+| database/schema/articles-schema.ts      | Articles table                   |
+| app/api/auth/[...all]/route.ts          | Auth API handler                 |
+| app/api/admin/articles/route.ts         | Admin article list/search        |
+| app/api/admin/articles/[id]/route.ts    | Admin article CRUD               |
+| app/api/cron/weekly-news/route.ts       | Weekly news cron job             |
+| app/api/articles/process/route.ts       | Article processing               |
+| app/api/upload/route.ts                 | Image upload to Vercel Blob      |
+| app/globals.css                         | Theme and global styles          |
+| components/admin/article-list.tsx       | Admin article list sidebar       |
+| components/admin/article-editor.tsx     | Admin article editor             |
+| components/layout/navigation.tsx        | Main navigation                  |
+| components/layout/footer.tsx            | Site footer                      |
+| components/auth/login-form.tsx          | Login UI                         |
+| components/auth/signup-form.tsx         | Signup UI                        |
+| components/auth/onboarding-form.tsx     | Onboarding UI                    |
+| components/profile/profile-form.tsx     | Profile management UI            |
+| components/profile/preferences-form.tsx | User preferences UI              |
+| components/article/article-card.tsx     | Article preview card             |
+| components/article/hero-section.tsx     | Homepage hero section            |
 
 ---
 
 ## Recent Changes
 
-### 2025-11-24 - Complete Email System Implementation
+### 2025-11-25: Component Reorganization & Testing Infrastructure
 
-**Email Service:**
-- Integrated Mailgun for transactional and marketing emails
-- Created `lib/email.ts` with Mailgun client and email templates
-- Designed responsive HTML email templates in Danish
-- Added plain text fallbacks for all emails
+- **Reorganized component folder structure:**
 
-**Authentication Emails:**
-- Implemented welcome email with email verification link
-- Added password reset email functionality
-- Created forgot password page and form (`/forgot-password`)
-- Created reset password page and form (`/reset-password`)
-- Created email verification page (`/verify-email`)
-- Updated Better-Auth configuration with email verification and password reset hooks
+  - Organized components into logical subfolders: `article/`, `auth/`, `profile/`, `layout/`
+  - Moved test files into separate `test/` subdirectories within each component folder
+  - Updated all import paths across the codebase (25 files modified)
+  - All 120 tests pass with new structure
+  - Updated documentation to reflect new organization
+  - Improved code organization and maintainability
 
-**News Digest Emails:**
-- Implemented daily digest cron job (`/api/cron/send-daily-digest`)
-- Implemented immediate notification system (`/api/articles/send-notifications`)
-- Integrated immediate notifications into article processing pipeline
-- Email filtering based on user preferences (category and frequency)
+- **Added comprehensive unit testing infrastructure:**
+  - Set up Vitest with React Testing Library
+  - Created test utilities and mocking helpers in `lib/test-utils.tsx`
+  - Wrote tests for all custom components (13 test files, 120 tests total)
+  - Added test scripts to package.json (test, test:watch, test:ui, test:coverage)
+  - Updated Development Guidelines with testing requirements
+  - Test coverage includes: rendering, user interactions, form validation, error states, loading states
 
-**Database & Configuration:**
-- User preferences table already existed and was leveraged
-- Added Mailgun environment variables to `.env.example`
-- Updated documentation with email system architecture
+### 2025-11-25: Admin Dashboard & CMS Implementation
+
+- **Roles System:** Created roles table schema with admin/user roles
+- **Authorization:** Implemented auth helpers (requireAdmin, isAdmin, hasRole)
+- **Admin API:** Built complete REST API for article CRUD operations
+  - GET /api/admin/articles - List/search articles
+  - GET /api/admin/articles/[id] - Get single article
+  - PUT /api/admin/articles/[id] - Update article
+  - DELETE /api/admin/articles/[id] - Delete article
+- **Admin Dashboard:** Full-featured CMS at /admin route
+  - Two-panel layout: sidebar + main editor
+  - Article list with real-time search
+  - Visual status badges (Draft/Published/Archived)
+  - Complete article editor with all fields editable
+  - Publish/unpublish toggle switch
+  - Image upload to Vercel Blob + manual URL input
+  - Actions dropdown with Archive and Delete options
+  - Unsaved changes warning
+  - Toast notifications for all operations
+  - Confirmation dialogs for destructive actions
+- **ShadCN Components:** Added Badge, Textarea, Switch, ScrollArea, AlertDialog, DropdownMenu, Skeleton, Toast/Sonner
+- **Image Upload:** Integrated Vercel Blob storage for image uploads
+- **Seed Data:** Updated to create admin user (admin@example.com / admin123)
+- **UI/UX:** Loading skeletons, empty states, responsive design, accessible labels
 
 ### Previous Changes
 
@@ -1180,14 +880,16 @@ Page (Server Component)
    - Search functionality
    - Image generation with DALL-E
 
-3. **Admin Features:**
+4. **Admin Features:**
 
-   - Admin panel for article review
-   - Manual article editing
-   - Publishing workflow
+   - ~~Admin panel for article review~~ ✅ Completed
+   - ~~Manual article editing~~ ✅ Completed
+   - ~~Publishing workflow~~ ✅ Completed
    - Analytics dashboard
+   - Bulk actions (publish/archive multiple articles)
+   - Article scheduling/auto-publish dates
 
-4. **Technical:**
+5. **Technical:**
 
    - Form validation (zod/react-hook-form)
    - Protected routes
@@ -1197,7 +899,7 @@ Page (Server Component)
    - RSS feed generation
    - Duplicate article detection
 
-5. **SEO & Performance:**
+6. **SEO & Performance:**
    - Enhanced SEO metadata
    - Image optimization
    - Static generation for articles
@@ -1261,4 +963,4 @@ Page (Server Component)
 
 ---
 
-Last Updated: 2025-11-19
+Last Updated: 2025-11-25
