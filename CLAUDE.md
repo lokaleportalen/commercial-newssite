@@ -55,319 +55,94 @@ Next.js 16 full-stack newssite for Danish commercial real estate (Lokaleportalen
 ## Directory Structure
 
 ```
-commercial-newssite/
-├── app/                          # Next.js App Router
-│   ├── admin/
-│   │   └── page.tsx             # Admin dashboard (protected)
-│   ├── api/
-│   │   ├── admin/
-│   │   │   └── articles/        # Admin article CRUD endpoints
-│   │   │       ├── route.ts     # List/search articles
-│   │   │       └── [id]/        # Get/update/delete article
-│   │   ├── auth/[...all]/       # Better-Auth API routes
-│   │   ├── cron/
-│   │   │   └── weekly-news/     # Weekly news fetching cron
-│   │   ├── articles/
-│   │   │   └── process/         # Article processing endpoint
-│   │   └── upload/              # Image upload to Vercel Blob
-│   ├── login/                   # Login page
-│   ├── signup/                  # Signup page
-│   ├── page.tsx                 # Home page
-│   ├── layout.tsx               # Root layout with Toaster
-│   └── globals.css              # Global styles
-│
-├── components/                  # React components
-│   ├── admin/                   # Admin dashboard components
-│   │   ├── article-list.tsx    # Article list with search
-│   │   └── article-editor.tsx  # Article editor with full CRUD
-│   ├── ui/                      # ShadCN UI library
-│   │   ├── button.tsx           # Button component with variants
-│   │   ├── card.tsx             # Card and related subcomponents
-│   │   ├── input.tsx            # Input field component
-│   │   ├── field.tsx            # Form field system
-│   │   ├── label.tsx            # Form label component
-│   │   ├── separator.tsx        # Visual separator
-│   │   ├── badge.tsx            # Status badges
-│   │   ├── textarea.tsx         # Multi-line text input
-│   │   ├── switch.tsx           # Publish toggle
-│   │   ├── scroll-area.tsx      # Custom scrollbar
-│   │   ├── alert-dialog.tsx     # Confirmation dialogs
-│   │   ├── dropdown-menu.tsx    # Actions menu
-│   │   ├── skeleton.tsx         # Loading placeholders
-│   │   └── sonner.tsx           # Toast notifications
-│   ├── article/                 # Article-related components
-│   │   ├── test/                # Article component tests
-│   │   ├── article-card.tsx     # Article card component
-│   │   ├── article-categories.tsx # Article categories display
-│   │   ├── category-link.tsx    # Category link component
-│   │   ├── hero-banner.tsx      # Hero banner component
-│   │   ├── hero-section.tsx     # Hero section with featured articles
-│   │   └── pagination.tsx       # Pagination component
-│   ├── auth/                    # Authentication components
-│   │   ├── test/                # Auth component tests
-│   │   ├── login-form.tsx       # Login form
-│   │   ├── signup-form.tsx      # Signup form
-│   │   └── onboarding-form.tsx  # Onboarding form
-│   ├── profile/                 # User profile components
-│   │   ├── test/                # Profile component tests
-│   │   ├── profile-form.tsx     # Profile management form
-│   │   └── preferences-form.tsx # User preferences form
-│   └── layout/                  # Layout components
-│       ├── test/                # Layout component tests
-│       ├── navigation.tsx       # Main navigation
-│       └── footer.tsx           # Footer component
-│
-├── database/                    # Database setup
-│   ├── db.ts                    # Drizzle connection
-│   ├── schema/
-│   │   ├── index.ts             # Schema exports
-│   │   ├── auth-schema.ts       # Auth tables
-│   │   ├── roles-schema.ts      # User roles table
-│   │   └── articles-schema.ts   # Articles table
-│   ├── drizzle/                 # Generated migrations
-│   ├── seed/                    # Seeding scripts
-│   │   ├── seed.ts              # Main entry point
-│   │   └── auth-seed.ts         # Creates admin + test users
-│   └── drizzle.config.ts        # Drizzle configuration
-│
-├── lib/                         # Utilities
-│   ├── auth.ts                  # Better-Auth server
-│   ├── auth-client.ts           # Better-Auth client
-│   ├── auth-helpers.ts          # Authorization utilities
-│   └── utils.ts                 # Helper functions
-│
-├── .env                         # Environment variables (gitignored)
-├── .env.example                 # Environment template
-└── CLAUDE.md                    # This file
+app/
+├── admin/page.tsx              # Admin CMS (protected)
+├── api/
+│   ├── admin/articles/         # Article CRUD endpoints
+│   ├── auth/[...all]/          # Better-Auth routes
+│   ├── cron/weekly-news/       # News fetching cron
+│   ├── articles/process/       # Article generation
+│   └── upload/                 # Image upload (Vercel Blob)
+├── login/, signup/             # Auth pages
+└── page.tsx, layout.tsx        # Home & root layout
+
+components/
+├── admin/                      # ArticleList, ArticleEditor
+├── article/                    # ArticleCard, HeroSection, Pagination, Categories
+├── auth/                       # LoginForm, SignupForm, OnboardingForm
+├── profile/                    # ProfileForm, PreferencesForm
+├── layout/                     # Navigation, Footer
+└── ui/                         # ShadCN components (Button, Card, Input, etc.)
+
+database/
+├── db.ts                       # Drizzle connection
+├── schema/                     # auth-schema, roles-schema, articles-schema
+├── drizzle/                    # Migrations
+└── seed/                       # Seed scripts (auth-seed.ts)
+
+lib/
+├── auth.ts, auth-client.ts     # Better-Auth config
+├── auth-helpers.ts             # Authorization utilities
+└── utils.ts                    # Helper functions
 ```
 
 ---
 
 ## Database Schema
 
-### Connection (database/db.ts)
+**PostgreSQL via Drizzle ORM** (see `database/schema/` for full definitions)
 
-PostgreSQL via Drizzle ORM with node-postgres pool:
+- **user** - User accounts (id, name, email, password, timestamps)
+- **session** - User sessions (token, expiresAt, userId FK)
+- **account** - OAuth providers (accountId, providerId, userId FK, tokens)
+- **verification** - Email verification tokens
+- **role** - User roles (userId FK, role: 'admin'|'user')
+- **article** - News articles (id UUID, title, slug unique, content markdown, summary, metaDescription, image, sourceUrl, categories, status: draft|published|archived, timestamps)
 
-- Pool-based connection management
-- DATABASE_URL from environment
-- Type-safe query API
-
-### Authentication Tables (database/schema/auth-schema.ts)
-
-**user** - User accounts
-
-- id (text, PK)
-- name, email (text, email unique)
-- emailVerified (boolean)
-- image, password (text)
-- createdAt, updatedAt (timestamps)
-
-**session** - User sessions
-
-- id, token (text, token unique)
-- expiresAt (timestamp)
-- ipAddress, userAgent (text)
-- userId (FK to user, CASCADE)
-- createdAt, updatedAt
-
-**account** - OAuth provider accounts
-
-- id, accountId, providerId (text)
-- userId (FK to user, CASCADE)
-- accessToken, refreshToken, idToken
-- Token expiration fields
-- scope, password (text)
-- Timestamps
-
-**verification** - Email verification
-
-- id, identifier, value (text)
-- expiresAt (timestamp)
-- Timestamps
-
-### Articles Table (database/schema/articles-schema.ts)
-
-**article** - News articles
-
-- id (UUID, PK) - Unique article identifier
-- title (Text, Not Null) - Article headline
-- slug (Text, Not Null, Unique) - URL-friendly identifier
-- content (Text, Not Null) - Full article content in markdown
-- summary (Text) - Brief article summary (2-3 sentences)
-- metaDescription (Text) - SEO meta description (150-160 chars)
-- image (Text) - Featured image URL
-- sourceUrl (Text) - Original news source URL
-- categories (Text) - Comma-separated categories
-- status (Text, Default: 'draft') - Article status: draft, published, archived
-- publishedDate (Timestamp) - When article was published
-- createdAt (Timestamp, Auto) - Record creation timestamp
-- updatedAt (Timestamp, Auto) - Last update timestamp
-
-### Migrations
-
-- `0000_unique_mattie_franklin.sql` - Auth tables
-- `0001_solid_ser_duncan.sql` - Articles table
-
-### Roles Table (database/schema/roles-schema.ts)
-
-**role** - User roles
-
-- id (text, PK) - Unique role identifier
-- userId (text, FK to user, CASCADE, UNIQUE) - One role per user
-- role (text, default: 'user') - Role type: 'admin' or 'user'
-- createdAt, updatedAt (timestamps)
-
-### Seeding
-
-- `seed.ts` - Main entry point
-- `auth-seed.ts` - Creates admin user (admin@example.com / admin123) and test user (test@example.com / password123)
+**Seed Users:** admin@example.com / admin123, test@example.com / password123
 
 ---
 
-## Authentication System
+## Authentication
 
-### Server Config (lib/auth.ts)
+**Better-Auth** with PostgreSQL adapter and email/password auth. See `lib/auth.ts` (server), `lib/auth-client.ts` (client with `useSession()` hook).
 
-```typescript
-export const auth = betterAuth({
-  database: drizzleAdapter(db, { provider: "pg" }),
-  emailAndPassword: { enabled: true },
-});
-```
+**Routes:** `/api/auth/*` - sign-up, sign-in, sign-out, session management
 
-PostgreSQL database, email/password auth enabled.
-
-### Client Config (lib/auth-client.ts)
-
-```typescript
-export const authClient = createAuthClient({
-  baseURL: "http://localhost:3000",
-});
-```
-
-Client-side state and API calls with `useSession()` hook.
-
-### API Routes (app/api/auth/[...all]/route.ts)
-
-Catch-all handler for:
-
-- POST /api/auth/sign-up
-- POST /api/auth/sign-in
-- POST /api/auth/sign-out
-- Session and OAuth endpoints
+**Authorization Helpers** (`lib/auth-helpers.ts`):
+- `requireAdmin()` - Throw if not admin (use in API routes)
+- `isAdmin()`, `hasRole(role)` - Check user role
+- `getCurrentUser()`, `getSession()` - Get current user/session
 
 ---
 
 ## API Endpoints
 
-### 1. Weekly News Cron Job
+### Public Endpoints
 
-**Endpoint:** `GET /api/cron/weekly-news`
+- **POST /api/auth/\*** - Better-Auth endpoints (sign-up, sign-in, sign-out)
+- **POST /api/upload?filename=X** - Upload images to Vercel Blob (returns URL)
 
-**Location:** `app/api/cron/weekly-news/route.ts`
+### Admin Endpoints (require admin role)
 
-**Purpose:**
+- **GET /api/admin/articles?search=X** - List/search articles
+- **GET /api/admin/articles/[id]** - Get single article
+- **PUT /api/admin/articles/[id]** - Update article (all fields editable)
+- **DELETE /api/admin/articles/[id]** - Delete article
 
-- Triggered weekly by cron service (Vercel Cron, GitHub Actions, etc.)
-- Fetches list of Danish commercial real estate news from OpenAI GPT-4o
-- Sends each news item to article processing endpoint
+### Cron Endpoints (require `Authorization: Bearer <CRON_SECRET>`)
 
-**Authentication:**
-Requires `Authorization: Bearer <CRON_SECRET>` header
+**GET /api/cron/weekly-news**
+- Fetches Danish real estate news from OpenAI GPT-4o
+- Sends each item to `/api/articles/process`
+- Returns processing summary
 
-**Process Flow:**
-
-1. Validates authorization token
-2. Sends fixed prompt to OpenAI GPT-4o requesting Danish commercial real estate news
-3. Receives markdown-formatted list of news items
-4. Parses news items into structured objects
-5. Sends each item to `/api/articles/process` endpoint
-6. Returns summary of processing results
-
-**Expected News Format:**
-
-```markdown
-- **Title**: [News title]
-  - **Summary**: [2-3 sentence summary]
-  - **Source**: [Source name]
-  - **Date**: [Date or timeframe]
-```
-
-**Response:**
-
-```json
-{
-  "success": true,
-  "message": "Weekly news processing completed",
-  "totalItems": 7,
-  "processedArticles": [
-    {
-      "success": true,
-      "title": "Example Title",
-      "id": "uuid"
-    }
-  ],
-  "rawNewsList": "..."
-}
-```
-
-### 2. Article Processing Endpoint
-
-**Endpoint:** `POST /api/articles/process`
-
-**Location:** `app/api/articles/process/route.ts`
-
-**Purpose:**
-
-- Receives individual news items
-- Uses OpenAI to research and write full articles
-- Saves completed articles to database
-
-**Authentication:**
-Requires `Authorization: Bearer <CRON_SECRET>` header
-
-**Request Body:**
-
-```json
-{
-  "title": "News title",
-  "summary": "Brief summary",
-  "source": "Source name (optional)",
-  "date": "Date or timeframe (optional)"
-}
-```
-
-**Process Flow:**
-
-1. Validates authorization token
-2. **Research Phase:** Uses OpenAI GPT-4o to research the news story
-   - Searches web for additional details
-   - Gathers context and related information
-   - Identifies key facts and quotes
-3. **Writing Phase:** Uses research to write professional article
-   - Creates structured markdown content
-   - Includes proper headings and formatting
-   - Uses journalistic tone
-4. **Metadata Generation:** Generates SEO and organizational metadata
-   - URL slug
-   - Meta description
-   - Summary
-   - Categories
-5. **Database Storage:** Saves article to PostgreSQL
-   - Sets status to "published"
-   - Records timestamp
-
-**Response:**
-
-```json
-{
-  "success": true,
-  "message": "Article processed and saved successfully",
-  "articleId": "uuid",
-  "slug": "article-url-slug"
-}
-```
+**POST /api/articles/process**
+- Receives news item (title, summary, source, date)
+- Research phase: OpenAI searches web for details
+- Writing phase: Generates markdown article
+- Metadata phase: Creates slug, meta description, categories
+- Saves to database as "published"
 
 ---
 
