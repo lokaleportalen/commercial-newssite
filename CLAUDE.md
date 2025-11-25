@@ -1,161 +1,54 @@
-# Commercial Newssite - Architecture Documentation
+# Commercial Newssite - Documentation
 
 ## Project Overview
 
-This is a Next.js 16 full-stack web application for "Nyheder" (News), a commercial newssite focused on Danish commercial real estate that is part of Lokaleportalen.dk.
+Next.js 16 full-stack newssite for Danish commercial real estate (Lokaleportalen.dk).
 
-### Key Features
+**Stack:** Next.js 16, React 19, Better-Auth, PostgreSQL, Drizzle ORM, Tailwind v4, OpenAI GPT-4o, Vitest
 
-- Complete authentication system with Better-Auth
-- PostgreSQL database with Drizzle ORM
-- Automated news gathering and AI-powered article generation using OpenAI GPT-4o
-- Weekly cron job for automated content publishing
-- Modern UI with ShadCN components and custom orange theme
-- Production-ready architecture with TypeScript strict mode
+**Key Features:**
+- Better-Auth authentication with roles (admin/user)
+- AI-powered article generation via OpenAI GPT-4o
+- Weekly cron job for automated news gathering
+- Admin CMS for article management
+- ShadCN UI components with custom orange theme
 
 ---
 
 ## Development Guidelines
 
-**IMPORTANT: Follow these guidelines for all development work.**
+### Before Implementing
 
-### Before Implementing Solutions
-
-1. **Be Critical of Solutions**
-
-   - Question assumptions and evaluate trade-offs
-   - Consider edge cases and potential issues
-   - Don't accept the first solution that comes to mind
-
-2. **Think Thoroughly**
-
-   - Analyze the problem from multiple angles
-   - Consider performance, security, and maintainability implications
-   - Evaluate long-term consequences of design decisions
-
-3. **Check for Existing Components**
-
-   - Search the codebase for reusable components before creating new ones
-   - Check `components/ui/` for existing ShadCN components
-   - Look for existing utilities in `lib/` before writing new helpers
-   - Avoid code duplication and redundancy
-
-4. **Plan Before Executing**
-   - Provide a concise plan outlining the approach
-   - Ask clarifying questions when requirements are ambiguous
-   - Get confirmation before making significant changes
+1. **Be Critical** - Question assumptions, evaluate trade-offs, consider edge cases
+2. **Think Thoroughly** - Analyze from multiple angles, consider long-term consequences
+3. **Check for Existing Components** - Search `components/ui/`, `components/*/`, `lib/` before creating new ones
+4. **Plan First** - Outline approach, ask clarifying questions, get confirmation for major changes
 
 ### After Major Changes
 
-5. **Update Documentation**
-   - Update this CLAUDE.md file after major updates, adjustments, or changes
-   - Keep the "Recent Changes" section current
-   - Document new components, endpoints, or patterns
+5. **Update Documentation** - Update CLAUDE.md and Recent Changes section
 
 ### Component Reuse Checklist
 
-Before creating new components, check:
+- `components/ui/` - ShadCN components
+- `components/article/`, `auth/`, `profile/`, `layout/` - Feature components
+- `lib/utils.ts`, `lib/auth.ts`, `lib/auth-client.ts` - Utilities
 
-- [ ] `components/ui/` - ShadCN components (Button, Card, Input, Field, etc.)
-- [ ] `components/article/` - Article-related components (ArticleCard, Pagination, etc.)
-- [ ] `components/auth/` - Authentication components (LoginForm, SignupForm, etc.)
-- [ ] `components/profile/` - Profile and settings components
-- [ ] `components/layout/` - Layout components (Navigation, Footer)
-- [ ] `lib/utils.ts` - Utility functions
-- [ ] `lib/auth.ts` / `lib/auth-client.ts` - Auth utilities
+### Testing
 
-### Testing Guidelines
+**IMPORTANT: Write unit tests for all custom components (not ShadCN UI).**
 
-**IMPORTANT: Write unit tests for all new custom components.**
-
-1. **Test Coverage Requirements:**
-
-   - All custom components in `components/` must have corresponding `.test.tsx` files
-   - ShadCN UI components in `components/ui/` do NOT need tests (they are third-party)
-   - Run tests after implementing new functionality or making big changes
-   - Run tests before creating pull requests
-
-2. **Testing Framework:**
-
-   - **Vitest** - Modern, fast test runner with Jest-compatible API
-   - **React Testing Library** - Component testing utilities focused on user behavior
-   - **@testing-library/user-event** - Realistic user interaction simulation
-   - **@testing-library/jest-dom** - Custom matchers for better assertions
-
-3. **What to Test:**
-
-   - Component renders correctly with required props
-   - User interactions (clicks, typing, form submissions)
-   - Conditional rendering based on props or state
-   - Error states and validation
-   - Links have correct href attributes
-   - Accessibility features
-   - Integration with auth (session states)
-
-4. **Test File Organization:**
-
-   - Test files are organized in `test/` subdirectories within each component folder
-   - Example: `components/auth/login-form.tsx` → `components/auth/test/login-form.test.tsx`
-   - Tests import components from parent directory: `import { LoginForm } from '../login-form'`
-
-5. **Running Tests:**
-
-   ```bash
-   npm test              # Run all tests once
-   npm run test:watch    # Watch mode for development
-   npm run test:ui       # Interactive UI for tests
-   npm run test:coverage # Generate coverage report
-   ```
-
-6. **Mocking Guidelines:**
-
-   - Mock Next.js modules (`next/navigation`, `next/image`)
-   - Mock Better-Auth client (`@/lib/auth-client`)
-   - Mock global functions (`fetch`, `confirm`) when needed
-   - Use utilities from `lib/test-utils.tsx` for common mocks
-
-7. **Example Test Structure:**
-
-   ```typescript
-   import { describe, it, expect, vi } from "vitest";
-   import { render, screen } from "@testing-library/react";
-   import userEvent from "@testing-library/user-event";
-   import { YourComponent } from "./your-component";
-
-   describe("YourComponent", () => {
-     it("renders correctly", () => {
-       render(<YourComponent />);
-       expect(screen.getByText("Expected Text")).toBeInTheDocument();
-     });
-
-     it("handles user interaction", async () => {
-       const user = userEvent.setup();
-       render(<YourComponent />);
-       await user.click(screen.getByRole("button"));
-       expect(mockFunction).toHaveBeenCalled();
-     });
-   });
-   ```
-
----
-
-## Technology Stack
-
-| Package                     | Version | Purpose                         |
-| --------------------------- | ------- | ------------------------------- |
-| next                        | 16.0.1  | React framework with App Router |
-| react                       | 19.2.0  | UI library                      |
-| better-auth                 | 1.3.34  | Authentication system           |
-| drizzle-orm                 | 0.44.7  | Database ORM                    |
-| pg                          | 8.16.3  | PostgreSQL driver               |
-| tailwindcss                 | 4       | CSS framework                   |
-| lucide-react                | 0.553.0 | Icon library                    |
-| class-variance-authority    | 0.7.1   | Component variants              |
-| openai                      | latest  | AI article generation           |
-| vitest                      | 4.0.13  | Unit testing framework          |
-| @testing-library/react      | 16.3.0  | React component testing         |
-| @testing-library/jest-dom   | 6.9.1   | Custom Jest matchers            |
-| @testing-library/user-event | 14.6.1  | User interaction simulation     |
+- **Framework:** Vitest + React Testing Library
+- **Location:** `test/` subdirectories (e.g., `components/auth/test/login-form.test.tsx`)
+- **Commands:**
+  ```bash
+  npm test              # Run all tests
+  npm run test:watch    # Watch mode
+  npm run test:ui       # Interactive UI
+  npm run test:coverage # Coverage report
+  ```
+- **Mock:** Next.js modules, Better-Auth client, global functions (use `lib/test-utils.tsx`)
+- **Test:** Rendering, interactions, validation, error states, accessibility
 
 ---
 
