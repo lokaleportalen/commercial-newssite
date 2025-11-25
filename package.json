@@ -29,7 +29,7 @@
     "drizzle-orm": "^0.44.7",
     "form-data": "^4.0.5",
     "lucide-react": "^0.553.0",
-    "mailgun.js": "^12.1.1",
+    "mailgun.js": "^12.2.0",
     "next": "16.0.1",
     "next-themes": "^0.4.6",
     "openai": "^6.9.0",

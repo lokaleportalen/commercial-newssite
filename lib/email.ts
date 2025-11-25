@@ -1,12 +1,13 @@
-import formData from "form-data";
+import FormData from "form-data";
 import Mailgun from "mailgun.js";
 
 // Initialize Mailgun client
-const mailgun = new Mailgun(formData);
+const mailgun = new Mailgun(FormData);
 
 const mg = mailgun.client({
   username: "api",
-  key: process.env.MAILGUN_API_KEY || "",
+  key: process.env.MAILGUN_API_KEY,
+  url: "https://api.eu.mailgun.net",
 });
 
 const MAILGUN_DOMAIN = process.env.MAILGUN_DOMAIN || "";
@@ -311,7 +312,9 @@ export async function sendDailyDigestEmail(
     <tr>
       <td style="padding: 30px 0; border-bottom: 1px solid #e5e7eb;">
         <h2 style="margin: 0 0 15px; color: #111827; font-size: 20px; font-weight: 700; line-height: 28px;">
-          <a href="${BASE_URL}/articles/${article.slug}" style="color: #111827; text-decoration: none;">
+          <a href="${BASE_URL}/articles/${
+        article.slug
+      }" style="color: #111827; text-decoration: none;">
             ${article.title}
           </a>
         </h2>
@@ -327,7 +330,9 @@ export async function sendDailyDigestEmail(
         }
 
         <div style="margin: 15px 0 0;">
-          <a href="${BASE_URL}/articles/${article.slug}" style="display: inline-block; color: #f97316; font-size: 14px; font-weight: 600; text-decoration: none;">
+          <a href="${BASE_URL}/articles/${
+        article.slug
+      }" style="display: inline-block; color: #f97316; font-size: 14px; font-weight: 600; text-decoration: none;">
             Læs mere →
           </a>
         </div>
@@ -441,11 +446,11 @@ export async function sendDailyDigestEmail(
   const text = `
 Dit daglige nyhedsoverblik
 ${new Date().toLocaleDateString("da-DK", {
-    weekday: "long",
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  })}
+  weekday: "long",
+  year: "numeric",
+  month: "long",
+  day: "numeric",
+})}
 
 Hej ${name},
 
@@ -477,7 +482,10 @@ Afmeld: ${BASE_URL}/api/user/preferences/unsubscribe
 
   return sendEmail({
     to: email,
-    subject: `📰 Dit daglige nyhedsoverblik - ${new Date().toLocaleDateString("da-DK", { day: "numeric", month: "long" })}`,
+    subject: `📰 Dit daglige nyhedsoverblik - ${new Date().toLocaleDateString(
+      "da-DK",
+      { day: "numeric", month: "long" }
+    )}`,
     html,
     text,
   });
@@ -562,7 +570,9 @@ export async function sendImmediateNotificationEmail(
               <table role="presentation" style="width: 100%; border-collapse: collapse;">
                 <tr>
                   <td align="center" style="padding: 20px 0;">
-                    <a href="${BASE_URL}/articles/${article.slug}" style="display: inline-block; padding: 16px 32px; background-color: #f97316; color: #ffffff; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 16px;">
+                    <a href="${BASE_URL}/articles/${
+    article.slug
+  }" style="display: inline-block; padding: 16px 32px; background-color: #f97316; color: #ffffff; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 16px;">
                       Læs artikel
                     </a>
                   </td>
