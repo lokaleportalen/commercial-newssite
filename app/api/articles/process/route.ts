@@ -272,14 +272,14 @@ Svar KUN med valid JSON i denne præcise struktur:
       }
     }
 
-    // Step 6: Generate hero image using Gemini 3.0 Pro
+    // Step 6: Generate hero image using Gemini 2.0 Flash (Nano Banana)
     let imageUrl: string | null = null;
 
     if (process.env.GEMINI_API_KEY) {
       try {
-        console.log("Generating hero image with Gemini...");
+        console.log("Generating hero image with Gemini 2.0 Flash...");
 
-        const model = genAI.getGenerativeModel({ model: "imagen-3.0-generate-001" });
+        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
 
         const imagePrompt = `Make a hero image in landscape mode with no text, for an article in a digital newspaper about commercial real estate, specifically related to the article with the headline: ${newsItem.title}`;
 

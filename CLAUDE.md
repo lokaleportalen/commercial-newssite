@@ -4,12 +4,12 @@
 
 Next.js 16 full-stack newssite for Danish commercial real estate (Lokaleportalen.dk).
 
-**Stack:** Next.js 16, React 19, Better-Auth, PostgreSQL, Drizzle ORM, Tailwind v4, OpenAI GPT-4o, Google Gemini 3.0 Pro, Vitest
+**Stack:** Next.js 16, React 19, Better-Auth, PostgreSQL, Drizzle ORM, Tailwind v4, OpenAI GPT-4o, Google Gemini 2.0 Flash, Vitest
 
 **Key Features:**
 - Better-Auth authentication with roles (admin/user)
 - AI-powered article generation via OpenAI GPT-4o
-- AI-powered hero image generation via Google Gemini 3.0 Pro (Imagen)
+- AI-powered hero image generation via Google Gemini 2.0 Flash (experimental)
 - Weekly cron job for automated news gathering
 - Admin CMS for article management
 - ShadCN UI components with custom orange theme
@@ -144,7 +144,7 @@ lib/
 - Writing phase: Generates markdown article
 - Metadata phase: Creates slug, meta description, categories
 - Saves to database as "published"
-- Image generation phase: Gemini 3.0 Pro generates hero image based on headline
+- Image generation phase: Gemini 2.0 Flash generates hero image based on headline
 - Uploads image to Vercel Blob and updates article with image URL
 
 ---
@@ -435,7 +435,7 @@ Page (Server Component)
 3. Each news item sent to `/api/articles/process`
 4. OpenAI researches and writes full article
 5. Article saved to database with metadata
-6. Gemini 3.0 Pro generates hero image based on article headline
+6. Gemini 2.0 Flash generates hero image based on article headline
 7. Image uploaded to Vercel Blob and URL saved to article
 8. Response confirms success with article and image URLs
 
@@ -511,7 +511,8 @@ Page (Server Component)
 ### 2025-11-26: AI-Powered Hero Image Generation
 
 - **Image Generation Integration:**
-  - Integrated Google Gemini 3.0 Pro (Imagen) for automated hero image generation
+  - Integrated Google Gemini 2.0 Flash (experimental) for automated hero image generation
+  - Uses `gemini-2.0-flash-exp` model with native image generation capabilities
   - Added image generation step to article processing workflow (`/api/articles/process`)
   - Images generated based on article headlines with landscape orientation
   - Automatic upload to Vercel Blob storage
@@ -608,7 +609,7 @@ Page (Server Component)
    - Article detail pages
    - Category filtering
    - Search functionality
-   - ~~Automated hero image generation~~ ✅ Completed (using Gemini 3.0 Pro)
+   - ~~Automated hero image generation~~ ✅ Completed (using Gemini 2.0 Flash)
 
 3. **Admin Features:**
 
