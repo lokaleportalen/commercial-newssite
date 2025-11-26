@@ -4,11 +4,12 @@
 
 Next.js 16 full-stack newssite for Danish commercial real estate (Lokaleportalen.dk).
 
-**Stack:** Next.js 16, React 19, Better-Auth, PostgreSQL, Drizzle ORM, Tailwind v4, OpenAI GPT-4o, Vitest
+**Stack:** Next.js 16, React 19, Better-Auth, PostgreSQL, Drizzle ORM, Tailwind v4, OpenAI GPT-4o, Google Gemini 3 Pro Preview, Vitest
 
 **Key Features:**
 - Better-Auth authentication with roles (admin/user)
 - AI-powered article generation via OpenAI GPT-4o
+- AI-powered hero image generation via Google Gemini 3 Pro Preview
 - Weekly cron job for automated news gathering
 - Admin CMS for article management
 - ShadCN UI components with custom orange theme
@@ -143,6 +144,8 @@ lib/
 - Writing phase: Generates markdown article
 - Metadata phase: Creates slug, meta description, categories
 - Saves to database as "published"
+- Image generation phase: Gemini 3 Pro Preview generates hero image based on headline
+- Uploads image to Vercel Blob and updates article with image URL
 
 ---
 
@@ -183,6 +186,7 @@ See `components/` for all files. Tests in `test/` subdirectories.
 ```bash
 DATABASE_URL=postgresql://...
 OPENAI_API_KEY=sk-...
+GEMINI_API_KEY=...
 CRON_SECRET=$(openssl rand -base64 32)
 NEXT_PUBLIC_BASE_URL=http://localhost:3000
 ```
@@ -431,7 +435,9 @@ Page (Server Component)
 3. Each news item sent to `/api/articles/process`
 4. OpenAI researches and writes full article
 5. Article saved to database with metadata
-6. Response confirms success
+6. Gemini 3 Pro Preview generates hero image based on article headline
+7. Image uploaded to Vercel Blob and URL saved to article
+8. Response confirms success with article and image URLs
 
 ---
 
@@ -501,6 +507,27 @@ Page (Server Component)
 ---
 
 ## Recent Changes
+
+### 2025-11-26: AI-Powered Hero Image Generation
+
+- **Image Generation Integration:**
+  - Integrated Google Gemini 3 Pro Preview (Nano Banana) for automated hero image generation
+  - Uses `gemini-3-pro-preview` model with native image generation capabilities
+  - Added image generation step to article processing workflow (`/api/articles/process`)
+  - Images generated based on article headlines with landscape orientation
+  - Automatic upload to Vercel Blob storage
+  - Article records updated with image URLs
+  - Graceful fallback if Gemini API key not configured
+
+- **Dependencies:**
+  - Installed `@google/generative-ai` package
+  - Added `GEMINI_API_KEY` environment variable requirement
+
+- **Updated Documentation:**
+  - Updated stack and key features in Project Overview
+  - Added GEMINI_API_KEY to Configuration section
+  - Updated Article Generation Flow to include image generation step
+  - Updated API endpoint documentation for `/api/articles/process`
 
 ### 2025-11-25: Component Reorganization & Testing Infrastructure
 
@@ -582,7 +609,7 @@ Page (Server Component)
    - Article detail pages
    - Category filtering
    - Search functionality
-   - Image generation with DALL-E
+   - ~~Automated hero image generation~~ ✅ Completed (using Gemini 3 Pro Preview)
 
 3. **Admin Features:**
 
@@ -649,6 +676,14 @@ Page (Server Component)
 
 - Fixed with loading skeleton using `isPending` from `useSession()`
 - Ensure Better-Auth session middleware is configured
+
+**Images not generating for articles:**
+
+- Add `GEMINI_API_KEY` to `.env` file (get from Google AI Studio)
+- Restart development server
+- Check console logs for image generation errors
+- Image generation is optional - articles will save without images if key is missing
+- Verify Vercel Blob is configured and accessible
 
 ---
 

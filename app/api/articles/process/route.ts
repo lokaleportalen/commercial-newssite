@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
+import { put } from "@vercel/blob";
 import { db } from "@/database/db";
 import { article, category, articleCategory } from "@/database/schema";
 import { eq, or, ilike, inArray } from "drizzle-orm";
@@ -8,6 +10,9 @@ import { eq, or, ilike, inArray } from "drizzle-orm";
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
+
+// Initialize Gemini client
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
 
 export async function POST(request: NextRequest) {
   try {
@@ -267,11 +272,74 @@ Svar KUN med valid JSON i denne præcise struktur:
       }
     }
 
+    // Step 6: Generate hero image using Gemini 3 Pro Preview (Nano Banana)
+    let imageUrl: string | null = null;
+
+    if (process.env.GEMINI_API_KEY) {
+      try {
+        console.log("Generating hero image with Gemini 3 Pro Preview...");
+
+        const model = genAI.getGenerativeModel({ model: "gemini-3-pro-preview" });
+
+        const imagePrompt = `Make a hero image in landscape mode with no text, for an article in a digital newspaper about commercial real estate, specifically related to the article with the headline: ${newsItem.title}`;
+
+        const result = await model.generateContent({
+          contents: [
+            {
+              role: "user",
+              parts: [{ text: imagePrompt }],
+            },
+          ],
+          generationConfig: {
+            responseModalities: ["image"],
+          },
+        });
+
+        // Get the generated image data
+        const response = result.response;
+        const imagePart = response.candidates?.[0]?.content?.parts?.[0];
+
+        if (imagePart && "inlineData" in imagePart && imagePart.inlineData) {
+          console.log("Image generated successfully, uploading to Vercel Blob...");
+
+          // Convert base64 to buffer
+          const imageBuffer = Buffer.from(imagePart.inlineData.data, "base64");
+
+          // Generate unique filename
+          const filename = `article-${insertedArticle.id}-${Date.now()}.png`;
+
+          // Upload to Vercel Blob
+          const blob = await put(filename, imageBuffer, {
+            access: "public",
+            contentType: "image/png",
+          });
+
+          imageUrl = blob.url;
+
+          // Update article with image URL
+          await db
+            .update(article)
+            .set({ image: imageUrl })
+            .where(eq(article.id, insertedArticle.id));
+
+          console.log(`✓ Image uploaded and article updated: ${imageUrl}`);
+        } else {
+          console.warn("No image data returned from Gemini");
+        }
+      } catch (error) {
+        console.error("Error generating or uploading image:", error);
+        // Continue without image - don't fail the entire process
+      }
+    } else {
+      console.log("Skipping image generation - GEMINI_API_KEY not configured");
+    }
+
     return NextResponse.json({
       success: true,
       message: "Article processed and saved successfully",
       articleId: insertedArticle.id,
       slug: insertedArticle.slug,
+      imageUrl: imageUrl,
     });
   } catch (error) {
     console.error("Error processing article:", error);
