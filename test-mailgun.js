@@ -1,72 +1,61 @@
-/**
- * Simple Mailgun test script
- * Run with: node test-mailgun.js
- */
-
-const FormData = require("form-data");
-const Mailgun = require("mailgun.js");
-
-// Load environment variables
-require("dotenv").config();
+// Test Mailgun connection
+require('dotenv').config();
+const FormData = require('form-data');
+const Mailgun = require('mailgun.js');
 
 const mailgun = new Mailgun(FormData);
 
-const mg = mailgun.client({
-  username: "api",
-  key: process.env.MAILGUN_API_KEY || "",
-  url: "https://api.eu.mailgun.net",
+// Test with EU endpoint
+const mgEU = mailgun.client({
+  username: 'api',
+  key: process.env.MAILGUN_API_KEY,
+  url: 'https://api.eu.mailgun.net'
 });
 
-const domain = process.env.MAILGUN_DOMAIN || "";
-const fromEmail = process.env.FROM_EMAIL || "nyheder@news.lokaleportalen.dk";
-const fromName = process.env.FROM_NAME || "Nyheder";
+// Test with US endpoint
+const mgUS = mailgun.client({
+  username: 'api',
+  key: process.env.MAILGUN_API_KEY,
+  url: 'https://api.mailgun.net'
+});
 
-console.log("Testing Mailgun configuration...\n");
-console.log("Domain:", domain);
-console.log("From Email:", fromEmail);
-console.log("API Key:", process.env.MAILGUN_API_KEY ? "Set (hidden)" : "NOT SET");
-console.log("\n---\n");
+const domain = process.env.MAILGUN_DOMAIN;
 
-async function testMailgun() {
-  try {
-    // Test 1: Validate domain
-    console.log("Test 1: Validating domain...");
-    const domainInfo = await mg.domains.get(domain);
-    console.log("✅ Domain validated:", domainInfo.state);
-    console.log("   - State:", domainInfo.state);
-    console.log("   - Created:", domainInfo.created_at);
-    console.log("\n");
+console.log('Testing Mailgun configuration...\n');
+console.log('Domain:', domain);
+console.log('API Key (first 20 chars):', process.env.MAILGUN_API_KEY?.substring(0, 20) + '...');
+console.log('From Email:', process.env.FROM_EMAIL);
+console.log('\n---\n');
 
-    // Test 2: Send test email using postmaster (recommended for initial setup)
-    console.log("Test 2: Sending test email...");
-    const result = await mg.messages.create(domain, {
-      from: `Mailgun Test <postmaster@${domain}>`, // Use postmaster as recommended
-      to: ["ek@digitaldisruptionmedia.com"],
-      subject: "Mailgun Test Email",
-      html: "<h1>Test Email</h1><p>If you receive this, Mailgun is working correctly!</p>",
-      text: "Test Email - If you receive this, Mailgun is working correctly!",
-    });
-
-    console.log("✅ Email sent successfully!");
-    console.log("   - Message ID:", result.id);
-    console.log("   - Status:", result.status);
-    console.log("\n");
-    console.log("🎉 All tests passed! Check your inbox for the test email.");
-  } catch (error) {
-    console.error("❌ Test failed:", error.message);
-
+// Test EU endpoint
+console.log('Testing EU endpoint (https://api.eu.mailgun.net)...');
+mgEU.domains.get(domain)
+  .then(data => {
+    console.log('✅ EU endpoint works!');
+    console.log('Domain state:', data.state);
+    console.log('Sending DNS:', data.sending_dns_records?.length || 0, 'records');
+  })
+  .catch(error => {
+    console.log('❌ EU endpoint failed:', error.message);
     if (error.status === 401) {
-      console.error("\n💡 401 Unauthorized - Possible causes:");
-      console.error("   1. API key is incorrect");
-      console.error("   2. Using general API key instead of subdomain sending key");
-      console.error("   3. Domain not verified in Mailgun");
-    } else if (error.status === 404) {
-      console.error("\n💡 404 Not Found - Domain doesn't exist in Mailgun");
-      console.error("   - Check MAILGUN_DOMAIN is correct");
+      console.log('   Reason: Unauthorized - wrong API key or region');
     }
+  })
+  .finally(() => {
+    console.log('\n---\n');
 
-    console.error("\nFull error details:", error);
-  }
-}
-
-testMailgun();
+    // Test US endpoint
+    console.log('Testing US endpoint (https://api.mailgun.net)...');
+    mgUS.domains.get(domain)
+      .then(data => {
+        console.log('✅ US endpoint works!');
+        console.log('Domain state:', data.state);
+        console.log('Sending DNS:', data.sending_dns_records?.length || 0, 'records');
+      })
+      .catch(error => {
+        console.log('❌ US endpoint failed:', error.message);
+        if (error.status === 401) {
+          console.log('   Reason: Unauthorized - wrong API key or region');
+        }
+      });
+  });

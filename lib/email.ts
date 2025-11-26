@@ -1,16 +1,16 @@
-import FormData from "form-data";
-import Mailgun from "mailgun.js";
+import nodemailer from "nodemailer";
 
-// Initialize Mailgun client
-const mailgun = new Mailgun(FormData);
-
-const mg = mailgun.client({
-  username: "api",
-  key: process.env.MAILGUN_API_KEY,
-  url: "https://api.eu.mailgun.net",
+// Initialize SMTP transporter
+const transporter = nodemailer.createTransport({
+  host: process.env.SMTP_HOST || "smtp.eu.mailgun.org",
+  port: parseInt(process.env.SMTP_PORT || "587"),
+  secure: false, // true for 465, false for other ports
+  auth: {
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASSWORD,
+  },
 });
 
-const MAILGUN_DOMAIN = process.env.MAILGUN_DOMAIN || "";
 const FROM_EMAIL = process.env.FROM_EMAIL || "nyheder@lokaleportalen.dk";
 const FROM_NAME = process.env.FROM_NAME || "Nyheder";
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
@@ -32,10 +32,10 @@ export async function sendEmail({
   text,
 }: EmailOptions): Promise<{ success: boolean; error?: string }> {
   try {
-    // Check if Mailgun is configured
-    if (!process.env.MAILGUN_API_KEY || !MAILGUN_DOMAIN) {
+    // Check if SMTP is configured
+    if (!process.env.SMTP_USER || !process.env.SMTP_PASSWORD) {
       console.warn(
-        "Mailgun not configured. Email would be sent to:",
+        "SMTP not configured. Email would be sent to:",
         to,
         "Subject:",
         subject
@@ -46,15 +46,15 @@ export async function sendEmail({
       };
     }
 
-    const messageData = {
+    const mailOptions = {
       from: `${FROM_NAME} <${FROM_EMAIL}>`,
-      to: [to],
+      to,
       subject,
       html,
       text: text || stripHtml(html), // Fallback to stripped HTML if no text provided
     };
 
-    await mg.messages.create(MAILGUN_DOMAIN, messageData);
+    await transporter.sendMail(mailOptions);
 
     return { success: true };
   } catch (error) {
