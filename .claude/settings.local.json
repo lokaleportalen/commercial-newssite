@@ -18,7 +18,8 @@
       "Bash(git mv:*)",
       "Bash(npx shadcn@latest add:*)",
       "Bash(dir /b \"C:\\Users\\Emil\\projects\\bachelor\\commercial-newssite\\components\\ui\")",
-      "Bash(npm uninstall:*)"
+      "Bash(npm uninstall:*)",
+      "Bash(echo:*)"
     ],
     "deny": [],
     "ask": []
