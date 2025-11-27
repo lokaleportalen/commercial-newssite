@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenAI } from "@google/genai";
 import { put } from "@vercel/blob";
 import { db } from "@/database/db";
 import { article, category, articleCategory } from "@/database/schema";
@@ -12,7 +12,9 @@ const openai = new OpenAI({
 });
 
 // Initialize Gemini client
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
+const genAI = new GoogleGenAI({
+  apiKey: process.env.GEMINI_API_KEY,
+});
 
 export async function POST(request: NextRequest) {
   try {
@@ -71,14 +73,19 @@ export async function POST(request: NextRequest) {
         .limit(1);
 
       if (existingArticles.length > 0) {
-        console.log(`Duplicate article found: ${existingArticles[0].title} (ID: ${existingArticles[0].id})`);
-        return NextResponse.json({
-          success: false,
-          message: "Duplicate article detected",
-          duplicate: true,
-          existingArticleId: existingArticles[0].id,
-          existingArticleTitle: existingArticles[0].title,
-        }, { status: 200 }); // Return 200 to not break the cron job flow
+        console.log(
+          `Duplicate article found: ${existingArticles[0].title} (ID: ${existingArticles[0].id})`
+        );
+        return NextResponse.json(
+          {
+            success: false,
+            message: "Duplicate article detected",
+            duplicate: true,
+            existingArticleId: existingArticles[0].id,
+            existingArticleTitle: existingArticles[0].title,
+          },
+          { status: 200 }
+        ); // Return 200 to not break the cron job flow
       }
     }
 
@@ -103,9 +110,7 @@ Formatér dine research-resultater tydeligt med overskrifter og punkter.`;
 
     const researchResponse = await openai.responses.create({
       model: "gpt-5-mini",
-      tools: [
-        { type: "web_search" },
-      ],
+      tools: [{ type: "web_search" }],
       input: researchPrompt,
     });
 
@@ -267,68 +272,102 @@ Svar KUN med valid JSON i denne præcise struktur:
 
           await db.insert(articleCategory).values(articleCategoryValues);
 
-          console.log(`✓ Linked article to ${matchedCategories.length} categories`);
+          console.log(
+            `✓ Linked article to ${matchedCategories.length} categories`
+          );
         }
       }
     }
 
-    // Step 6: Generate hero image using Gemini 3 Pro Preview (Nano Banana)
+    // Step 6: Generate hero image using Gemini 3 Pro Image Preview
     let imageUrl: string | null = null;
 
     if (process.env.GEMINI_API_KEY) {
       try {
-        console.log("Generating hero image with Gemini 3 Pro Preview...");
-
-        const model = genAI.getGenerativeModel({ model: "gemini-3-pro-preview" });
+        console.log("Generating hero image with Gemini 3 Pro Image Preview...");
 
         const imagePrompt = `Make a hero image in landscape mode with no text, for an article in a digital newspaper about commercial real estate, specifically related to the article with the headline: ${newsItem.title}`;
 
-        const result = await model.generateContent({
-          contents: [
-            {
-              role: "user",
-              parts: [{ text: imagePrompt }],
-            },
-          ],
-          generationConfig: {
-            responseModalities: ["image"],
-          },
-        });
+        let response;
+        let retryCount = 0;
+        const maxRetries = 3;
 
-        // Get the generated image data
-        const response = result.response;
-        const imagePart = response.candidates?.[0]?.content?.parts?.[0];
+        // Retry logic for rate limits
+        while (retryCount < maxRetries) {
+          try {
+            response = await genAI.models.generateContent({
+              model: "gemini-3-pro-image-preview",
+              contents: imagePrompt,
+            });
+            break; // Success, exit retry loop
+          } catch (error: any) {
+            if (error?.status === 429 && retryCount < maxRetries - 1) {
+              // Rate limit hit, wait and retry
+              const retryDelay = error?.error?.details?.find(
+                (d: any) => d["@type"] === "type.googleapis.com/google.rpc.RetryInfo"
+              )?.retryDelay;
 
-        if (imagePart && "inlineData" in imagePart && imagePart.inlineData) {
-          console.log("Image generated successfully, uploading to Vercel Blob...");
+              // Parse delay (e.g., "51s" -> 51000ms) or use default 60s
+              const delayMs = retryDelay
+                ? parseInt(retryDelay) * 1000
+                : 60000;
 
-          // Convert base64 to buffer
-          const imageBuffer = Buffer.from(imagePart.inlineData.data, "base64");
+              console.log(`Rate limit hit, retrying in ${delayMs/1000}s... (attempt ${retryCount + 1}/${maxRetries})`);
+              await new Promise(resolve => setTimeout(resolve, delayMs));
+              retryCount++;
+            } else {
+              throw error; // Re-throw if not rate limit or max retries reached
+            }
+          }
+        }
 
-          // Generate unique filename
-          const filename = `article-${insertedArticle.id}-${Date.now()}.png`;
+        if (!response) {
+          throw new Error("Failed to generate image after retries");
+        }
 
-          // Upload to Vercel Blob
-          const blob = await put(filename, imageBuffer, {
-            access: "public",
-            contentType: "image/png",
-          });
+        // Get the generated image data from response parts
+        const parts = response.candidates?.[0]?.content?.parts;
 
-          imageUrl = blob.url;
+        if (parts) {
+          for (const part of parts) {
+            if (part.inlineData && part.inlineData.data) {
+              console.log(
+                "Image generated successfully, uploading to Vercel Blob..."
+              );
 
-          // Update article with image URL
-          await db
-            .update(article)
-            .set({ image: imageUrl })
-            .where(eq(article.id, insertedArticle.id));
+              // Convert base64 to buffer
+              const imageBuffer = Buffer.from(part.inlineData.data, "base64");
 
-          console.log(`✓ Image uploaded and article updated: ${imageUrl}`);
-        } else {
+              // Generate unique filename
+              const filename = `article-${
+                insertedArticle.id
+              }-${Date.now()}.png`;
+
+              // Upload to Vercel Blob
+              const blob = await put(filename, imageBuffer, {
+                access: "public",
+                contentType: "image/png",
+              });
+
+              imageUrl = blob.url;
+
+              // Update article with image URL
+              await db
+                .update(article)
+                .set({ image: imageUrl })
+                .where(eq(article.id, insertedArticle.id));
+
+              console.log(`✓ Image uploaded and article updated: ${imageUrl}`);
+              break; // Only process the first image
+            }
+          }
+        }
+
+        if (!imageUrl) {
           console.warn("No image data returned from Gemini");
         }
       } catch (error) {
         console.error("Error generating or uploading image:", error);
-        // Continue without image - don't fail the entire process
       }
     } else {
       console.log("Skipping image generation - GEMINI_API_KEY not configured");

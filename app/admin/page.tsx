@@ -6,6 +6,9 @@ import { authClient } from "@/lib/auth-client";
 import { ArticleList } from "@/components/admin/article-list";
 import { ArticleEditor } from "@/components/admin/article-editor";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
+import { Newspaper } from "lucide-react";
 
 export default function AdminDashboard() {
   const router = useRouter();
@@ -14,6 +17,7 @@ export default function AdminDashboard() {
   const [selectedArticleId, setSelectedArticleId] = useState<string | null>(
     null
   );
+  const [isTriggeringCron, setIsTriggeringCron] = useState(false);
 
   // Check if user is admin
   useEffect(() => {
@@ -42,6 +46,35 @@ export default function AdminDashboard() {
     }
   }, [session, isPending, router]);
 
+  const handleTriggerCron = async () => {
+    setIsTriggeringCron(true);
+    try {
+      const response = await fetch("/api/admin/trigger-cron", {
+        method: "POST",
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to trigger news fetch");
+      }
+
+      const result = await response.json();
+      const successCount = result.processedArticles?.filter((a: { success: boolean }) => a.success).length || 0;
+      const totalCount = result.totalItems || 0;
+
+      toast.success("News fetch completed!", {
+        description: `Successfully processed ${successCount} out of ${totalCount} articles.`,
+      });
+    } catch (error) {
+      console.error("Error triggering cron:", error);
+      toast.error("Failed to trigger news fetch", {
+        description: error instanceof Error ? error.message : "Unknown error",
+      });
+    } finally {
+      setIsTriggeringCron(false);
+    }
+  };
+
   if (isPending || isAdmin === null) {
     return (
       <div className="flex h-screen items-center justify-center">
@@ -58,32 +91,54 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="flex h-screen overflow-hidden">
-      {/* Sidebar - Article List */}
-      <div className="w-80 border-r bg-muted/30">
-        <ArticleList
-          selectedArticleId={selectedArticleId}
-          onSelectArticle={setSelectedArticleId}
-        />
+    <div className="flex h-screen flex-col overflow-hidden">
+      {/* Header with manual cron trigger */}
+      <div className="border-b bg-background px-6 py-3 flex items-center justify-between">
+        <div>
+          <h1 className="text-lg font-semibold">Admin Dashboard</h1>
+          <p className="text-sm text-muted-foreground">
+            Manage articles and content
+          </p>
+        </div>
+        <Button
+          onClick={handleTriggerCron}
+          disabled={isTriggeringCron}
+          size="sm"
+          variant="outline"
+        >
+          <Newspaper className="mr-2 h-4 w-4" />
+          {isTriggeringCron ? "Fetching news..." : "Fetch weekly news"}
+        </Button>
       </div>
 
-      {/* Main Content - Article Editor */}
-      <div className="flex-1 overflow-auto">
-        {selectedArticleId ? (
-          <ArticleEditor
-            articleId={selectedArticleId}
-            onClose={() => setSelectedArticleId(null)}
+      {/* Main content */}
+      <div className="flex flex-1 overflow-hidden">
+        {/* Sidebar - Article List */}
+        <div className="w-80 border-r bg-muted/30">
+          <ArticleList
+            selectedArticleId={selectedArticleId}
+            onSelectArticle={setSelectedArticleId}
           />
-        ) : (
-          <div className="flex h-full items-center justify-center text-muted-foreground">
-            <div className="text-center">
-              <h2 className="text-2xl font-semibold mb-2">
-                Select an article to edit
-              </h2>
-              <p>Choose an article from the list to view and edit it</p>
+        </div>
+
+        {/* Main Content - Article Editor */}
+        <div className="flex-1 overflow-auto">
+          {selectedArticleId ? (
+            <ArticleEditor
+              articleId={selectedArticleId}
+              onClose={() => setSelectedArticleId(null)}
+            />
+          ) : (
+            <div className="flex h-full items-center justify-center text-muted-foreground">
+              <div className="text-center">
+                <h2 className="text-2xl font-semibold mb-2">
+                  Select an article to edit
+                </h2>
+                <p>Choose an article from the list to view and edit it</p>
+              </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );
