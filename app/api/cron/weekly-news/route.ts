@@ -126,7 +126,13 @@ export async function GET(request: NextRequest) {
 
     // Send each news item to the article processing endpoint
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || request.nextUrl.origin;
-    const processedArticles: Array<{ success: boolean; title: string; id?: string; error?: string }> = [];
+    const processedArticles: Array<{
+      success: boolean;
+      title: string;
+      id?: string;
+      error?: string;
+      timeout?: boolean;
+    }> = [];
 
     // Delay between articles to avoid rate limiting (60 seconds)
     const ARTICLE_PROCESSING_DELAY = 60000;
@@ -136,17 +142,42 @@ export async function GET(request: NextRequest) {
       try {
         console.log(`Processing article: ${newsItem.title}`);
 
-        const response = await fetch(`${baseUrl}/api/articles/process`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${cronSecret}`,
-          },
-          body: JSON.stringify(newsItem),
-        });
+        let response;
+        let responseText;
 
-        // Read response as text first, then try to parse as JSON
-        const responseText = await response.text();
+        try {
+          response = await fetch(`${baseUrl}/api/articles/process`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${cronSecret}`,
+            },
+            body: JSON.stringify(newsItem),
+          });
+
+          // Read response as text first, then try to parse as JSON
+          responseText = await response.text();
+        } catch (fetchError: any) {
+          // Check if it's a timeout error
+          const isTimeout = fetchError?.message?.includes("timeout") ||
+                          fetchError?.code === "UND_ERR_HEADERS_TIMEOUT" ||
+                          fetchError?.code === "ETIMEDOUT";
+
+          if (isTimeout) {
+            // Timeout - but the article processing continues in the background
+            console.log(`⏰ Connection timeout for article "${newsItem.title}" - processing continues in background`);
+            processedArticles.push({
+              success: true, // Mark as success since processing continues
+              title: newsItem.title,
+              id: "unknown", // We don't have the ID due to timeout
+              timeout: true,
+            });
+            continue; // Skip to next article
+          } else {
+            // Some other error - re-throw
+            throw fetchError;
+          }
+        }
 
         if (!response.ok) {
           let errorMessage = "Unknown error";

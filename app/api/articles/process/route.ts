@@ -126,7 +126,7 @@ Formatér dine research-resultater tydeligt med overskrifter og punkter.`;
     console.log("Research completed, writing article...");
 
     // Step 2: Write a structured article based on the research
-    const articlePrompt = `Baseret på følgende research, skriv en omfattende, professionel nyhedsartikel på DANSK om denne erhvervsejendomshistorie:
+    const articlePrompt = `Du er en prisvindende dansk journalist. Baseret på følgende research, skriv en omfattende, professionel nyhedsartikel på DANSK om denne erhvervsejendomshistorie:
 
 Original nyhed:
 Titel: ${newsItem.title}
@@ -286,13 +286,13 @@ Svar KUN med valid JSON i denne præcise struktur:
       try {
         console.log("Generating hero image with Gemini 3 Pro Image Preview...");
 
-        const imagePrompt = `Make a hero image in landscape mode with no text, for an article in a digital newspaper about commercial real estate, specifically related to the article with the headline: ${newsItem.title}`;
+        const imagePrompt = `You are an award wining professional journalistic photographer. Your photos are realistic, proper photographies of the news story. Make a hero image in landscape mode with no text, for an article in a digital newspaper about commercial real estate, specifically related to the article with the headline: ${newsItem.title}`;
 
         let response;
         let retryCount = 0;
         const maxRetries = 3;
 
-        // Retry logic for rate limits
+        // Retry logic for rate limits, timeouts, and network errors
         while (retryCount < maxRetries) {
           try {
             response = await genAI.models.generateContent({
@@ -301,22 +301,62 @@ Svar KUN med valid JSON i denne præcise struktur:
             });
             break; // Success, exit retry loop
           } catch (error: any) {
-            if (error?.status === 429 && retryCount < maxRetries - 1) {
-              // Rate limit hit, wait and retry
-              const retryDelay = error?.error?.details?.find(
-                (d: any) => d["@type"] === "type.googleapis.com/google.rpc.RetryInfo"
-              )?.retryDelay;
+            const isLastRetry = retryCount >= maxRetries - 1;
 
-              // Parse delay (e.g., "51s" -> 51000ms) or use default 60s
-              const delayMs = retryDelay
-                ? parseInt(retryDelay) * 1000
-                : 60000;
+            // Check error type
+            const isRateLimit = error?.status === 429;
+            const isServiceUnavailable = error?.status === 503 ||
+                                        error?.error?.code === 503 ||
+                                        error?.message?.includes("overloaded");
+            const isTimeout =
+              error?.message?.includes("fetch failed") ||
+              error?.message?.includes("timeout") ||
+              error?.code === "ETIMEDOUT" ||
+              error?.code === "ECONNRESET";
+            const isNetworkError =
+              error?.message?.includes("network") ||
+              error?.code === "ECONNREFUSED" ||
+              error?.code === "ENOTFOUND";
 
-              console.log(`Rate limit hit, retrying in ${delayMs/1000}s... (attempt ${retryCount + 1}/${maxRetries})`);
-              await new Promise(resolve => setTimeout(resolve, delayMs));
+            // Retry on rate limits, service unavailable, timeouts, or network errors
+            if ((isRateLimit || isServiceUnavailable || isTimeout || isNetworkError) && !isLastRetry) {
+              let delayMs;
+              let reason;
+
+              if (isRateLimit) {
+                // Rate limit - use API's suggested delay or default 60s
+                const retryDelay = error?.error?.details?.find(
+                  (d: any) =>
+                    d["@type"] === "type.googleapis.com/google.rpc.RetryInfo"
+                )?.retryDelay;
+                delayMs = retryDelay ? parseInt(retryDelay) * 1000 : 60000;
+                reason = "Rate limit";
+              } else if (isServiceUnavailable) {
+                // Service overloaded - exponential backoff: 45s, 90s, 180s
+                delayMs = 45000 * Math.pow(2, retryCount);
+                reason = "Service overloaded";
+              } else if (isTimeout) {
+                // Timeout - exponential backoff: 30s, 60s, 120s
+                delayMs = 30000 * Math.pow(2, retryCount);
+                reason = "Timeout";
+              } else {
+                // Network error - shorter delay: 10s, 20s, 40s
+                delayMs = 10000 * Math.pow(2, retryCount);
+                reason = "Network error";
+              }
+
+              console.log(
+                `${reason} during image generation, retrying in ${
+                  delayMs / 1000
+                }s... (attempt ${retryCount + 1}/${maxRetries})`
+              );
+              console.log(`Error details: ${error?.message || error}`);
+
+              await new Promise((resolve) => setTimeout(resolve, delayMs));
               retryCount++;
             } else {
-              throw error; // Re-throw if not rate limit or max retries reached
+              // Not retryable or max retries reached
+              throw error;
             }
           }
         }

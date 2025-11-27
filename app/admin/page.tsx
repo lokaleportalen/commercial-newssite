@@ -48,29 +48,31 @@ export default function AdminDashboard() {
 
   const handleTriggerCron = async () => {
     setIsTriggeringCron(true);
+
     try {
-      const response = await fetch("/api/admin/trigger-cron", {
+      // Fire the request without waiting for completion
+      fetch("/api/admin/trigger-cron", {
         method: "POST",
+      }).catch((error) => {
+        // Ignore timeout errors - the job is still running
+        console.log("Cron job triggered (connection may timeout, but job continues):", error.message);
       });
 
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || "Failed to trigger news fetch");
-      }
-
-      const result = await response.json();
-      const successCount = result.processedArticles?.filter((a: { success: boolean }) => a.success).length || 0;
-      const totalCount = result.totalItems || 0;
-
-      toast.success("News fetch completed!", {
-        description: `Successfully processed ${successCount} out of ${totalCount} articles.`,
+      // Show immediate success feedback
+      toast.success("News fetch started!", {
+        description: "The job is running in the background. New articles will appear in 10-15 minutes.",
+        duration: 5000,
       });
+
+      // Keep button disabled for 5 minutes to prevent duplicate triggers
+      setTimeout(() => {
+        setIsTriggeringCron(false);
+      }, 300000); // 5 minutes
     } catch (error) {
       console.error("Error triggering cron:", error);
-      toast.error("Failed to trigger news fetch", {
+      toast.error("Failed to start news fetch", {
         description: error instanceof Error ? error.message : "Unknown error",
       });
-    } finally {
       setIsTriggeringCron(false);
     }
   };
@@ -104,10 +106,10 @@ export default function AdminDashboard() {
           onClick={handleTriggerCron}
           disabled={isTriggeringCron}
           size="sm"
-          variant="outline"
+          variant={isTriggeringCron ? "default" : "outline"}
         >
           <Newspaper className="mr-2 h-4 w-4" />
-          {isTriggeringCron ? "Fetching news..." : "Fetch weekly news"}
+          {isTriggeringCron ? "Job running..." : "Fetch weekly news"}
         </Button>
       </div>
 
