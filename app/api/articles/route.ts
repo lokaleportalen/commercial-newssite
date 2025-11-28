@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/database/db";
 import { article } from "@/database/schema";
-import { or, like, desc, eq } from "drizzle-orm";
+import { or, like, desc, eq, and } from "drizzle-orm";
 
 /**
  * GET /api/articles
@@ -21,13 +21,15 @@ export async function GET(request: NextRequest) {
         .select()
         .from(article)
         .where(
-          or(
-            like(article.title, `%${search}%`),
-            like(article.summary, `%${search}%`),
-            like(article.categories, `%${search}%`)
+          and(
+            or(
+              like(article.title, `%${search}%`),
+              like(article.summary, `%${search}%`),
+              like(article.categories, `%${search}%`)
+            ),
+            eq(article.status, "published")
           )
         )
-        .where(eq(article.status, "published"))
         .orderBy(desc(article.publishedDate));
     } else {
       // Get all published articles
