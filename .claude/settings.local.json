@@ -20,7 +20,8 @@
       "Bash(dir /b \"C:\\Users\\Emil\\projects\\bachelor\\commercial-newssite\\components\\ui\")",
       "Bash(npm uninstall:*)",
       "Bash(echo:*)",
-      "Bash(npm ls:*)"
+      "Bash(npm ls:*)",
+      "Bash(npm run build:*)"
     ],
     "deny": [],
     "ask": []
