@@ -19,7 +19,8 @@
       "Bash(npx shadcn@latest add:*)",
       "Bash(dir /b \"C:\\Users\\Emil\\projects\\bachelor\\commercial-newssite\\components\\ui\")",
       "Bash(npm uninstall:*)",
-      "Bash(echo:*)"
+      "Bash(echo:*)",
+      "Bash(npm ls:*)"
     ],
     "deny": [],
     "ask": []

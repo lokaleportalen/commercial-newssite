@@ -79,7 +79,7 @@ cd database && DATABASE_URL="postgresql://..." npx tsx seed/reset.ts
 
 **Weekly news processing uses Trigger.dev v4 for long-running AI tasks (no timeouts!)**
 
-**Scheduled Task:** `trigger/weekly-news.ts` - Runs every Monday at 9 AM UTC (native cron)
+**Scheduled Task:** `trigger/weekly-news.ts` - Runs every Wednesday at 6 AM Copenhagen time (native cron)
 **Article Processor:** `trigger/article-processor.ts` - Reusable helper for processing articles
 **Manual Trigger:** "Fetch weekly news" button in `/admin` dashboard OR POST `/api/admin/trigger-cron`
 
@@ -122,7 +122,7 @@ npx trigger.dev@latest deploy  # Deploy to Trigger.dev
 
 ## Recent Changes
 
-**2025-11-28:** Trigger.dev v4 integration for weekly news - scheduled tasks, no timeouts, automatic retries, manual trigger endpoint
+**2025-11-28:** Trigger.dev v4 integration for weekly news - scheduled tasks (Wednesdays 6 AM CET), Europe/Copenhagen timezone, no timeouts, automatic retries, manual trigger endpoint
 **2025-11-26:** Gemini 3 Pro image generation for articles, Vercel Blob upload
 **2025-11-25:** Component reorganization (article/, auth/, profile/, layout/), Vitest + RTL testing (120 tests), Admin CMS with CRUD API, roles system, image upload
 **Earlier:** Auth (Better-Auth), GPT-4o article generation, cron job, ShadCN UI, Drizzle ORM, category pages, hero section

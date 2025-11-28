@@ -15,9 +15,16 @@ export async function POST() {
     console.log("Manual weekly news task trigger initiated by admin");
 
     // Trigger the Trigger.dev task
+    // Scheduled tasks need a schedule-compatible payload when triggered manually
     const handle = await tasks.trigger<typeof weeklyNewsTask>(
       "weekly-news-fetch",
-      {} // Scheduled tasks don't need payload when triggered manually
+      {
+        type: "IMPERATIVE" as const,
+        timestamp: new Date(),
+        timezone: "Europe/Copenhagen",
+        scheduleId: "manual-trigger",
+        upcoming: [],
+      }
     );
 
     return NextResponse.json({

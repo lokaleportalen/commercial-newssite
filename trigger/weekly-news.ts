@@ -40,14 +40,12 @@ interface NewsItem {
 
 /**
  * Weekly scheduled task to fetch and process commercial real estate news
- * Runs every Monday at 9:00 AM UTC (10:00 AM CET / 11:00 AM CEST)
+ * Runs every Wednesday at 6:00 AM Copenhagen time (CET/CEST)
  */
 export const weeklyNewsTask = schedules.task({
   id: "weekly-news-fetch",
-  // Run every Monday at 9:00 AM UTC
-  cron: "0 9 * * 1",
-  // You can also specify timezone:
-  // cron: { pattern: "0 10 * * 1", timezone: "Europe/Copenhagen" }, // 10 AM Copenhagen time
+  // Run every Wednesday at 6:00 AM Copenhagen time
+  cron: { pattern: "0 6 * * 3", timezone: "Europe/Copenhagen" },
   maxDuration: 3600, // 1 hour max (overrides global config if needed)
   run: async (payload) => {
     logger.info("Starting weekly news fetch", {
