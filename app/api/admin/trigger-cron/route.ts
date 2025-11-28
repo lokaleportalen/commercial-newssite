@@ -1,41 +1,32 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth-helpers";
+import { tasks } from "@trigger.dev/sdk";
+import type { weeklyNewsTask } from "@/trigger/weekly-news";
 
+/**
+ * Manual trigger endpoint for weekly news task (Trigger.dev)
+ * Called by the "Fetch weekly news" button in admin dashboard
+ */
 export async function POST() {
   try {
     // Verify user is admin
     await requireAdmin();
 
-    // Get the base URL and cron secret
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
-    const cronSecret = process.env.CRON_SECRET;
+    console.log("Manual weekly news task trigger initiated by admin");
 
-    if (!cronSecret) {
-      return NextResponse.json(
-        { error: "CRON_SECRET not configured" },
-        { status: 500 }
-      );
-    }
+    // Trigger the Trigger.dev task
+    const handle = await tasks.trigger<typeof weeklyNewsTask>(
+      "weekly-news-fetch",
+      {} // Scheduled tasks don't need payload when triggered manually
+    );
 
-    // Trigger the cron job
-    console.log("Manual cron trigger initiated by admin");
-    const response = await fetch(`${baseUrl}/api/cron/weekly-news`, {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${cronSecret}`,
-      },
+    return NextResponse.json({
+      success: true,
+      message: "Weekly news task triggered successfully",
+      taskId: handle.id,
+      // You can monitor the task at: https://cloud.trigger.dev
+      monitorUrl: `https://cloud.trigger.dev/runs/${handle.id}`,
     });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      return NextResponse.json(
-        { error: errorData.error || "Failed to trigger cron job" },
-        { status: response.status }
-      );
-    }
-
-    const result = await response.json();
-    return NextResponse.json(result);
   } catch (error) {
     if (error instanceof Error && error.message.includes("Forbidden")) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
@@ -44,10 +35,10 @@ export async function POST() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    console.error("Error triggering cron job:", error);
+    console.error("Error triggering weekly news task:", error);
     return NextResponse.json(
       {
-        error: "Failed to trigger cron job",
+        error: "Failed to trigger weekly news task",
         details: error instanceof Error ? error.message : "Unknown error",
       },
       { status: 500 }
