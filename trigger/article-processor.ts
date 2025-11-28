@@ -1,10 +1,10 @@
-import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
 import { GoogleGenAI } from "@google/genai";
 import { put } from "@vercel/blob";
 import { db } from "@/database/db";
 import { article, category, articleCategory } from "@/database/schema";
 import { eq, or, ilike, inArray } from "drizzle-orm";
+import { logger } from "@trigger.dev/sdk";
 
 // Initialize OpenAI client
 const openai = new OpenAI({
@@ -16,43 +16,32 @@ const genAI = new GoogleGenAI({
   apiKey: process.env.GEMINI_API_KEY,
 });
 
-export async function POST(request: NextRequest) {
+interface NewsItem {
+  title: string;
+  summary: string;
+  sourceUrl?: string;
+  date?: string;
+}
+
+interface ProcessArticleResult {
+  success: boolean;
+  articleId?: string;
+  slug?: string;
+  imageUrl?: string | null;
+  error?: string;
+  duplicate?: boolean;
+}
+
+/**
+ * Process a single news item into a full article with AI-generated content and image
+ */
+export async function processArticle(newsItem: NewsItem): Promise<ProcessArticleResult> {
   try {
-    // Verify the request is authorized (check for cron secret)
-    const authHeader = request.headers.get("authorization");
-    const cronSecret = process.env.CRON_SECRET;
-
-    if (!cronSecret) {
-      console.error("CRON_SECRET not configured");
-      return NextResponse.json(
-        { error: "Server configuration error" },
-        { status: 500 }
-      );
-    }
-
-    if (authHeader !== `Bearer ${cronSecret}`) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    // Check if OpenAI API key is configured
-    if (!process.env.OPENAI_API_KEY) {
-      return NextResponse.json(
-        { error: "OpenAI API key not configured" },
-        { status: 500 }
-      );
-    }
-
-    // Parse the incoming news item
-    const newsItem = await request.json();
-
     if (!newsItem.title || !newsItem.summary) {
-      return NextResponse.json(
-        { error: "News item must include title and summary" },
-        { status: 400 }
-      );
+      throw new Error("News item must include title and summary");
     }
 
-    console.log(`Processing news item: ${newsItem.title}`);
+    logger.info(`Processing news item: ${newsItem.title}`);
 
     // Check for duplicate articles before processing
     const duplicateConditions = [];
@@ -73,19 +62,14 @@ export async function POST(request: NextRequest) {
         .limit(1);
 
       if (existingArticles.length > 0) {
-        console.log(
+        logger.warn(
           `Duplicate article found: ${existingArticles[0].title} (ID: ${existingArticles[0].id})`
         );
-        return NextResponse.json(
-          {
-            success: false,
-            message: "Duplicate article detected",
-            duplicate: true,
-            existingArticleId: existingArticles[0].id,
-            existingArticleTitle: existingArticles[0].title,
-          },
-          { status: 200 }
-        ); // Return 200 to not break the cron job flow
+        return {
+          success: false,
+          duplicate: true,
+          error: "Duplicate article - already exists",
+        };
       }
     }
 
@@ -106,7 +90,7 @@ Søg på nettet efter yderligere detaljer, kontekst og relateret information om 
 
 Formatér dine research-resultater tydeligt med overskrifter og punkter.`;
 
-    console.log("Researching news story with OpenAI...");
+    logger.info("Researching news story with OpenAI...");
 
     const researchResponse = await openai.responses.create({
       model: "gpt-5-mini",
@@ -117,13 +101,10 @@ Formatér dine research-resultater tydeligt med overskrifter og punkter.`;
     const researchFindings = researchResponse.output_text;
 
     if (!researchFindings) {
-      return NextResponse.json(
-        { error: "Failed to research news story" },
-        { status: 500 }
-      );
+      throw new Error("Failed to research news story");
     }
 
-    console.log("Research completed, writing article...");
+    logger.info("Research completed, writing article...");
 
     // Step 2: Write a structured article based on the research
     const articlePrompt = `Du er en prisvindende dansk journalist. Baseret på følgende research, skriv en omfattende, professionel nyhedsartikel på DANSK om denne erhvervsejendomshistorie:
@@ -161,13 +142,10 @@ Formatér artiklen i markdown med korrekte overskrifter (#, ##, ###).`;
     const articleContent = articleResponse.output_text;
 
     if (!articleContent) {
-      return NextResponse.json(
-        { error: "Failed to write article" },
-        { status: 500 }
-      );
+      throw new Error("Failed to write article");
     }
 
-    console.log("Article written, generating metadata...");
+    logger.info("Article written, generating metadata...");
 
     // Step 3: Generate metadata (slug, meta description, summary)
     const metadataPrompt = `Baseret på denne artikel, generer følgende metadata i JSON format:
@@ -215,7 +193,7 @@ Svar KUN med valid JSON i denne præcise struktur:
     try {
       metadata = JSON.parse(metadataText || "{}");
     } catch (error) {
-      console.error("Failed to parse metadata JSON:", error);
+      logger.warn("Failed to parse metadata JSON, using fallback", { error });
       // Fallback metadata
       metadata = {
         slug: newsItem.title
@@ -228,7 +206,7 @@ Svar KUN med valid JSON i denne præcise struktur:
       };
     }
 
-    console.log("Metadata generated, saving to database...");
+    logger.info("Metadata generated, saving to database...");
 
     // Step 4: Save the article to the database
     const [insertedArticle] = await db
@@ -246,7 +224,7 @@ Svar KUN med valid JSON i denne præcise struktur:
       })
       .returning();
 
-    console.log(`Article saved to database with ID: ${insertedArticle.id}`);
+    logger.info(`Article saved to database with ID: ${insertedArticle.id}`);
 
     // Step 5: Link article to categories using the junction table
     if (metadata.categories) {
@@ -272,7 +250,7 @@ Svar KUN med valid JSON i denne præcise struktur:
 
           await db.insert(articleCategory).values(articleCategoryValues);
 
-          console.log(
+          logger.info(
             `✓ Linked article to ${matchedCategories.length} categories`
           );
         }
@@ -284,7 +262,7 @@ Svar KUN med valid JSON i denne præcise struktur:
 
     if (process.env.GEMINI_API_KEY) {
       try {
-        console.log("Generating hero image with Gemini 3 Pro Image Preview...");
+        logger.info("Generating hero image with Gemini 3 Pro Image Preview...");
 
         const imagePrompt = `You are an award wining professional journalistic photographer. Your photos are realistic, proper photographies of the news story. Make a hero image in landscape mode with no text, for an article in a digital newspaper about commercial real estate, specifically related to the article with the headline: ${newsItem.title}`;
 
@@ -305,9 +283,10 @@ Svar KUN med valid JSON i denne præcise struktur:
 
             // Check error type
             const isRateLimit = error?.status === 429;
-            const isServiceUnavailable = error?.status === 503 ||
-                                        error?.error?.code === 503 ||
-                                        error?.message?.includes("overloaded");
+            const isServiceUnavailable =
+              error?.status === 503 ||
+              error?.error?.code === 503 ||
+              error?.message?.includes("overloaded");
             const isTimeout =
               error?.message?.includes("fetch failed") ||
               error?.message?.includes("timeout") ||
@@ -319,7 +298,13 @@ Svar KUN med valid JSON i denne præcise struktur:
               error?.code === "ENOTFOUND";
 
             // Retry on rate limits, service unavailable, timeouts, or network errors
-            if ((isRateLimit || isServiceUnavailable || isTimeout || isNetworkError) && !isLastRetry) {
+            if (
+              (isRateLimit ||
+                isServiceUnavailable ||
+                isTimeout ||
+                isNetworkError) &&
+              !isLastRetry
+            ) {
               let delayMs;
               let reason;
 
@@ -345,12 +330,12 @@ Svar KUN med valid JSON i denne præcise struktur:
                 reason = "Network error";
               }
 
-              console.log(
+              logger.warn(
                 `${reason} during image generation, retrying in ${
                   delayMs / 1000
                 }s... (attempt ${retryCount + 1}/${maxRetries})`
               );
-              console.log(`Error details: ${error?.message || error}`);
+              logger.debug(`Error details: ${error?.message || error}`);
 
               await new Promise((resolve) => setTimeout(resolve, delayMs));
               retryCount++;
@@ -371,7 +356,7 @@ Svar KUN med valid JSON i denne præcise struktur:
         if (parts) {
           for (const part of parts) {
             if (part.inlineData && part.inlineData.data) {
-              console.log(
+              logger.info(
                 "Image generated successfully, uploading to Vercel Blob..."
               );
 
@@ -397,37 +382,33 @@ Svar KUN med valid JSON i denne præcise struktur:
                 .set({ image: imageUrl })
                 .where(eq(article.id, insertedArticle.id));
 
-              console.log(`✓ Image uploaded and article updated: ${imageUrl}`);
+              logger.info(`✓ Image uploaded and article updated: ${imageUrl}`);
               break; // Only process the first image
             }
           }
         }
 
         if (!imageUrl) {
-          console.warn("No image data returned from Gemini");
+          logger.warn("No image data returned from Gemini");
         }
       } catch (error) {
-        console.error("Error generating or uploading image:", error);
+        logger.error("Error generating or uploading image", { error });
       }
     } else {
-      console.log("Skipping image generation - GEMINI_API_KEY not configured");
+      logger.info("Skipping image generation - GEMINI_API_KEY not configured");
     }
 
-    return NextResponse.json({
+    return {
       success: true,
-      message: "Article processed and saved successfully",
       articleId: insertedArticle.id,
       slug: insertedArticle.slug,
       imageUrl: imageUrl,
-    });
+    };
   } catch (error) {
-    console.error("Error processing article:", error);
-    return NextResponse.json(
-      {
-        error: "Failed to process article",
-        details: error instanceof Error ? error.message : "Unknown error",
-      },
-      { status: 500 }
-    );
+    logger.error("Error processing article", { error });
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error",
+    };
   }
 }
