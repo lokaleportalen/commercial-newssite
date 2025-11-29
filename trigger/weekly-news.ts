@@ -42,12 +42,12 @@ interface NewsItem {
 
 /**
  * Weekly scheduled task to fetch and process commercial real estate news
- * Runs every Wednesday at 6:00 AM Copenhagen time (CET/CEST)
+ * Runs every Sunday at 6:00 AM Copenhagen time (CET/CEST)
  */
 export const weeklyNewsTask = schedules.task({
   id: "weekly-news-fetch",
-  // Run every Wednesday at 6:00 AM Copenhagen time
-  cron: { pattern: "0 6 * * 3", timezone: "Europe/Copenhagen" },
+  // Run every Sunday at 6:00 AM Copenhagen time
+  cron: { pattern: "0 6 * * 0", timezone: "Europe/Copenhagen" },
   maxDuration: 3600, // 1 hour max (overrides global config if needed)
   run: async (payload) => {
     logger.info("Starting weekly news fetch", {
