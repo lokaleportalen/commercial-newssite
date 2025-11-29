@@ -10,7 +10,7 @@ const getOpenAIClient = () => {
 };
 
 // Fixed prompt for fetching commercial real estate news in Denmark
-const NEWS_PROMPT = `Find 10 nyheder fra ejendomsbranchen som har fået meget omtale den seneste uge - rank med de mest spændende, unikke og aktuelle først. Det skal være relevant for ejere af erhvervsejendomme (målgruppen er udlejere som bruger Lokaleportalen).
+const NEWS_PROMPT = `Find 10 nyheder fra ejendomsbranchen i Danmark, eller med relevans for Danmark, som har fået meget omtale den seneste uge - rank med de mest spændende, unikke og aktuelle først. Det skal være relevant for ejere af erhvervsejendomme (målgruppen er udlejere som bruger Lokaleportalen).
 
 KRITISK: Du SKAL returnere dit svar som RENT JSON uden nogen ekstra tekst, forklaringer eller kommentarer.
 
@@ -126,7 +126,9 @@ export const weeklyNewsTask = schedules.task({
     for (let i = 0; i < newsItems.length; i++) {
       const newsItem = newsItems[i];
 
-      logger.info(`Processing article ${i + 1}/${newsItems.length}: ${newsItem.title}`);
+      logger.info(
+        `Processing article ${i + 1}/${newsItems.length}: ${newsItem.title}`
+      );
 
       try {
         const result = await processArticle(newsItem);
@@ -164,7 +166,9 @@ export const weeklyNewsTask = schedules.task({
       // Add delay between articles (except after the last one)
       // Using wait.for() instead of setTimeout - doesn't count toward compute time!
       if (i < newsItems.length - 1) {
-        logger.info(`Waiting ${ARTICLE_PROCESSING_DELAY}s before processing next article...`);
+        logger.info(
+          `Waiting ${ARTICLE_PROCESSING_DELAY}s before processing next article...`
+        );
         await wait.for({ seconds: ARTICLE_PROCESSING_DELAY });
       }
     }

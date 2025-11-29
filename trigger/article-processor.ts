@@ -39,7 +39,9 @@ interface ProcessArticleResult {
 /**
  * Process a single news item into a full article with AI-generated content and image
  */
-export async function processArticle(newsItem: NewsItem): Promise<ProcessArticleResult> {
+export async function processArticle(
+  newsItem: NewsItem
+): Promise<ProcessArticleResult> {
   try {
     if (!newsItem.title || !newsItem.summary) {
       throw new Error("News item must include title and summary");
