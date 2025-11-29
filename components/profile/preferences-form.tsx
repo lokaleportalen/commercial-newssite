@@ -14,11 +14,25 @@ import {
 } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 
+// Available categories matching the database seed
+const CATEGORIES = [
+  { slug: "investering", name: "Investering", description: "Investeringer, salg og finansielle transaktioner" },
+  { slug: "byggeri", name: "Byggeri", description: "Byggeprojekter, udvikling og nybyggeri" },
+  { slug: "kontor", name: "Kontor", description: "Kontorlokaler og kontorejendomme" },
+  { slug: "lager", name: "Lager", description: "Lagerfaciliteter og lagerejendomme" },
+  { slug: "detailhandel", name: "Detailhandel", description: "Butikslokaler og detailhandelsejendomme" },
+  { slug: "logistik", name: "Logistik", description: "Logistikcentre og distributionsfaciliteter" },
+  { slug: "hotel", name: "Hotel", description: "Hotelejendomme og turismefaciliteter" },
+  { slug: "industri", name: "Industri", description: "Industriejendomme og produktionsfaciliteter" },
+  { slug: "bolig", name: "Bolig", description: "Boligejendomme og udlejningsejendomme" },
+  { slug: "baeredygtighed", name: "Bæredygtighed", description: "Grønne tiltag og energieffektivisering" },
+] as const;
+
 export function PreferencesForm() {
   const router = useRouter();
   const { data: session } = authClient.useSession();
-  const [newsCategory, setNewsCategory] = useState("all");
-  const [emailFrequency, setEmailFrequency] = useState("daily");
+  const [newsCategories, setNewsCategories] = useState<string[]>([]);
+  const [emailFrequency, setEmailFrequency] = useState("ugentligt");
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState("");
@@ -32,7 +46,9 @@ export function PreferencesForm() {
         const response = await fetch("/api/user/preferences");
         if (response.ok) {
           const data = await response.json();
-          if (data.newsCategory) setNewsCategory(data.newsCategory);
+          if (data.newsCategories && Array.isArray(data.newsCategories)) {
+            setNewsCategories(data.newsCategories);
+          }
           if (data.emailFrequency) setEmailFrequency(data.emailFrequency);
         }
       } catch (err) {
@@ -58,7 +74,7 @@ export function PreferencesForm() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          newsCategory,
+          newsCategories,
           emailFrequency,
         }),
       });
@@ -73,6 +89,16 @@ export function PreferencesForm() {
     } finally {
       setIsSaving(false);
     }
+  };
+
+  const handleCategoryToggle = (categorySlug: string) => {
+    setNewsCategories((prev) => {
+      if (prev.includes(categorySlug)) {
+        return prev.filter((slug) => slug !== categorySlug);
+      } else {
+        return [...prev, categorySlug];
+      }
+    });
   };
 
   const handleUnsubscribe = async () => {
@@ -153,69 +179,29 @@ export function PreferencesForm() {
                 <Label className="text-sm font-medium">
                   Nyhedskategorier
                   <span className="ml-1 text-xs font-normal text-muted-foreground">
-                    Jeg ønsker:
+                    Vælg de kategorier du er interesseret i (vælg ingen for alle nyheder)
                   </span>
                 </Label>
-                <div className="space-y-2">
-                  <label className="flex cursor-pointer items-center space-x-3 rounded-lg border p-3 hover:bg-accent/50">
-                    <input
-                      type="radio"
-                      name="newsCategory"
-                      value="all"
-                      checked={newsCategory === "all"}
-                      onChange={(e) => setNewsCategory(e.target.value)}
-                      className="h-4 w-4 border-gray-300 text-primary focus:ring-2 focus:ring-primary"
-                    />
-                    <span className="text-sm">Alle nyheder</span>
-                  </label>
-
-                  <label className="flex cursor-pointer items-center space-x-3 rounded-lg border p-3 hover:bg-accent/50">
-                    <input
-                      type="radio"
-                      name="newsCategory"
-                      value="investment"
-                      checked={newsCategory === "investment"}
-                      onChange={(e) => setNewsCategory(e.target.value)}
-                      className="h-4 w-4 border-gray-300 text-primary focus:ring-2 focus:ring-primary"
-                    />
-                    <span className="text-sm">Investeringsnyheder</span>
-                  </label>
-
-                  <label className="flex cursor-pointer items-center space-x-3 rounded-lg border p-3 hover:bg-accent/50">
-                    <input
-                      type="radio"
-                      name="newsCategory"
-                      value="construction"
-                      checked={newsCategory === "construction"}
-                      onChange={(e) => setNewsCategory(e.target.value)}
-                      className="h-4 w-4 border-gray-300 text-primary focus:ring-2 focus:ring-primary"
-                    />
-                    <span className="text-sm">Bygudvikling</span>
-                  </label>
-
-                  <label className="flex cursor-pointer items-center space-x-3 rounded-lg border p-3 hover:bg-accent/50">
-                    <input
-                      type="radio"
-                      name="newsCategory"
-                      value="new"
-                      checked={newsCategory === "new"}
-                      onChange={(e) => setNewsCategory(e.target.value)}
-                      className="h-4 w-4 border-gray-300 text-primary focus:ring-2 focus:ring-primary"
-                    />
-                    <span className="text-sm">D nyt</span>
-                  </label>
-
-                  <label className="flex cursor-pointer items-center space-x-3 rounded-lg border p-3 hover:bg-accent/50">
-                    <input
-                      type="radio"
-                      name="newsCategory"
-                      value="old"
-                      checked={newsCategory === "old"}
-                      onChange={(e) => setNewsCategory(e.target.value)}
-                      className="h-4 w-4 border-gray-300 text-primary focus:ring-2 focus:ring-primary"
-                    />
-                    <span className="text-sm">E nyt</span>
-                  </label>
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                  {CATEGORIES.map((category) => (
+                    <label
+                      key={category.slug}
+                      className="flex cursor-pointer items-start space-x-3 rounded-lg border p-3 hover:bg-accent/50"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={newsCategories.includes(category.slug)}
+                        onChange={() => handleCategoryToggle(category.slug)}
+                        className="mt-0.5 h-4 w-4 rounded border-gray-300 text-primary focus:ring-2 focus:ring-primary"
+                      />
+                      <div className="flex-1">
+                        <div className="text-sm font-medium">{category.name}</div>
+                        <div className="text-xs text-muted-foreground">
+                          {category.description}
+                        </div>
+                      </div>
+                    </label>
+                  ))}
                 </div>
               </div>
 
@@ -229,13 +215,13 @@ export function PreferencesForm() {
                     <input
                       type="radio"
                       name="emailFrequency"
-                      value="immediate"
-                      checked={emailFrequency === "immediate"}
+                      value="straks"
+                      checked={emailFrequency === "straks"}
                       onChange={(e) => setEmailFrequency(e.target.value)}
                       className="h-4 w-4 border-gray-300 text-primary focus:ring-2 focus:ring-primary"
                     />
                     <span className="text-sm">
-                      Send mig en mail hver gang der er en relevant nyhed
+                      Straks - Send mig en mail hver gang der er en relevant nyhed
                     </span>
                   </label>
 
@@ -243,13 +229,27 @@ export function PreferencesForm() {
                     <input
                       type="radio"
                       name="emailFrequency"
-                      value="daily"
-                      checked={emailFrequency === "daily"}
+                      value="ugentligt"
+                      checked={emailFrequency === "ugentligt"}
                       onChange={(e) => setEmailFrequency(e.target.value)}
                       className="h-4 w-4 border-gray-300 text-primary focus:ring-2 focus:ring-primary"
                     />
                     <span className="text-sm">
-                      Send mig relevante nyheder 1 gang om dagen
+                      Ugentligt - Ugentligt nyhedsbrev (onsdage kl. 9:00)
+                    </span>
+                  </label>
+
+                  <label className="flex cursor-pointer items-center space-x-3 rounded-lg border p-3 hover:bg-accent/50">
+                    <input
+                      type="radio"
+                      name="emailFrequency"
+                      value="aldrig"
+                      checked={emailFrequency === "aldrig"}
+                      onChange={(e) => setEmailFrequency(e.target.value)}
+                      className="h-4 w-4 border-gray-300 text-primary focus:ring-2 focus:ring-primary"
+                    />
+                    <span className="text-sm">
+                      Aldrig - Ingen emails (jeg læser nyheder på sitet)
                     </span>
                   </label>
                 </div>

@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, boolean } from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, json } from "drizzle-orm/pg-core";
 import { user } from "./auth-schema";
 
 export const userPreferences = pgTable("user_preferences", {
@@ -8,11 +8,16 @@ export const userPreferences = pgTable("user_preferences", {
     .unique()
     .references(() => user.id, { onDelete: "cascade" }),
 
-  // News category preferences (jeg ønsker)
-  newsCategory: text("news_category").notNull().default("all"), // all, investment, construction, new, old
+  // News category preferences (multiple categories supported)
+  // Array of category slugs: ["investering", "byggeri", "kontor", etc.]
+  newsCategories: json("news_categories")
+    .$type<string[]>()
+    .notNull()
+    .default([]),
 
   // Email frequency (hyppighed for nyheder)
-  emailFrequency: text("email_frequency").notNull().default("daily"), // daily, weekly, immediate
+  // Options: "straks" (immediate), "ugentligt" (weekly), "aldrig" (never)
+  emailFrequency: text("email_frequency").notNull().default("ugentligt"),
 
   // Timestamps
   createdAt: timestamp("created_at").defaultNow().notNull(),

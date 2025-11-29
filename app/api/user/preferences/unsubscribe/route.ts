@@ -19,10 +19,31 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Delete user preferences (which unsubscribes them)
-    await db
-      .delete(userPreferences)
-      .where(eq(userPreferences.userId, session.user.id));
+    // Set email frequency to "aldrig" (never) to unsubscribe
+    // Check if preferences exist
+    const existing = await db
+      .select()
+      .from(userPreferences)
+      .where(eq(userPreferences.userId, session.user.id))
+      .limit(1);
+
+    if (existing.length > 0) {
+      await db
+        .update(userPreferences)
+        .set({
+          emailFrequency: "aldrig",
+          updatedAt: new Date(),
+        })
+        .where(eq(userPreferences.userId, session.user.id));
+    } else {
+      // Create preferences with "aldrig" frequency
+      await db.insert(userPreferences).values({
+        id: crypto.randomUUID(),
+        userId: session.user.id,
+        newsCategories: [],
+        emailFrequency: "aldrig",
+      });
+    }
 
     return NextResponse.json({ success: true });
   } catch (error) {

@@ -27,13 +27,13 @@ export async function GET(request: NextRequest) {
 
     if (preferences.length === 0) {
       return NextResponse.json({
-        newsCategory: "all",
-        emailFrequency: "daily",
+        newsCategories: [],
+        emailFrequency: "ugentligt",
       });
     }
 
     return NextResponse.json({
-      newsCategory: preferences[0].newsCategory,
+      newsCategories: preferences[0].newsCategories,
       emailFrequency: preferences[0].emailFrequency,
     });
   } catch (error) {
@@ -59,11 +59,28 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { newsCategory, emailFrequency } = await request.json();
+    const { newsCategories, emailFrequency } = await request.json();
 
-    if (!newsCategory || !emailFrequency) {
+    if (!emailFrequency) {
       return NextResponse.json(
-        { error: "News category and email frequency are required" },
+        { error: "Email frequency is required" },
+        { status: 400 }
+      );
+    }
+
+    // Validate newsCategories is an array
+    if (newsCategories && !Array.isArray(newsCategories)) {
+      return NextResponse.json(
+        { error: "News categories must be an array" },
+        { status: 400 }
+      );
+    }
+
+    // Validate emailFrequency options
+    const validFrequencies = ["straks", "ugentligt", "aldrig"];
+    if (!validFrequencies.includes(emailFrequency)) {
+      return NextResponse.json(
+        { error: "Invalid email frequency" },
         { status: 400 }
       );
     }
@@ -80,7 +97,7 @@ export async function POST(request: NextRequest) {
       await db
         .update(userPreferences)
         .set({
-          newsCategory,
+          newsCategories: newsCategories || [],
           emailFrequency,
           updatedAt: new Date(),
         })
@@ -90,7 +107,7 @@ export async function POST(request: NextRequest) {
       await db.insert(userPreferences).values({
         id: crypto.randomUUID(),
         userId: session.user.id,
-        newsCategory,
+        newsCategories: newsCategories || [],
         emailFrequency,
       });
     }
