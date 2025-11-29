@@ -2,10 +2,12 @@ import { schedules, logger, wait } from "@trigger.dev/sdk";
 import OpenAI from "openai";
 import { processArticle } from "./article-processor";
 
-// Initialize OpenAI client
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+// Initialize OpenAI client lazily (fallback for build phase)
+const getOpenAIClient = () => {
+  return new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY || "",
+  });
+};
 
 // Fixed prompt for fetching commercial real estate news in Denmark
 const NEWS_PROMPT = `Find 10 nyheder fra ejendomsbranchen som har fået meget omtale den seneste uge - rank med de mest spændende, unikke og aktuelle først. Det skal være relevant for ejere af erhvervsejendomme (målgruppen er udlejere som bruger Lokaleportalen).
@@ -61,6 +63,7 @@ export const weeklyNewsTask = schedules.task({
     // Step 1: Fetch news list from OpenAI
     logger.info("Fetching weekly commercial real estate news from OpenAI...");
 
+    const openai = getOpenAIClient();
     const response = await openai.responses.create({
       model: "gpt-5-nano",
       tools: [{ type: "web_search" }],

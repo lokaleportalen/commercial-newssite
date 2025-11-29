@@ -6,15 +6,19 @@ import { article, category, articleCategory } from "@/database/schema";
 import { eq, or, ilike, inArray } from "drizzle-orm";
 import { logger } from "@trigger.dev/sdk";
 
-// Initialize OpenAI client
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+// Initialize OpenAI client lazily (fallback for build phase)
+const getOpenAIClient = () => {
+  return new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY || "",
+  });
+};
 
-// Initialize Gemini client
-const genAI = new GoogleGenAI({
-  apiKey: process.env.GEMINI_API_KEY,
-});
+// Initialize Gemini client lazily (fallback for build phase)
+const getGeminiClient = () => {
+  return new GoogleGenAI({
+    apiKey: process.env.GEMINI_API_KEY || "",
+  });
+};
 
 interface NewsItem {
   title: string;
@@ -92,6 +96,7 @@ Formatér dine research-resultater tydeligt med overskrifter og punkter.`;
 
     logger.info("Researching news story with OpenAI...");
 
+    const openai = getOpenAIClient();
     const researchResponse = await openai.responses.create({
       model: "gpt-5-mini",
       tools: [{ type: "web_search" }],
@@ -264,6 +269,7 @@ Svar KUN med valid JSON i denne præcise struktur:
       try {
         logger.info("Generating hero image with Gemini 3 Pro Image Preview...");
 
+        const genAI = getGeminiClient();
         const imagePrompt = `You are an award wining professional journalistic photographer. Your photos are realistic, proper photographies of the news story. Make a hero image in landscape mode with no text, for an article in a digital newspaper about commercial real estate, specifically related to the article with the headline: ${newsItem.title}`;
 
         let response;
