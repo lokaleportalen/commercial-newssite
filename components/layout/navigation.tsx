@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { Menu, X } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
+import { useUserRole } from "@/hooks/use-user-role";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -34,6 +35,7 @@ export function Navigation() {
   const router = useRouter();
   const pathname = usePathname();
   const { data: session, isPending } = authClient.useSession();
+  const { isAdmin } = useUserRole();
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   const handleSignOut = async () => {
@@ -46,8 +48,6 @@ export function Navigation() {
       },
     });
   };
-
-  const isAdmin = session?.user?.role === "admin";
 
   return (
     <nav className="border-b bg-background">
@@ -116,7 +116,7 @@ export function Navigation() {
           </div>
 
           {/* Mobile Burger Menu */}
-          <Drawer open={drawerOpen} onOpenChange={setDrawerOpen}>
+          <Drawer open={drawerOpen} onOpenChange={setDrawerOpen} direction="right">
             <DrawerTrigger asChild>
               <Button
                 variant="ghost"

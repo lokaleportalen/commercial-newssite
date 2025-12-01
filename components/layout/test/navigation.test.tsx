@@ -32,13 +32,20 @@ vi.mock('@/lib/auth-client', () => ({
   },
 }))
 
+// Mock useUserRole hook
+vi.mock('@/hooks/use-user-role', () => ({
+  useUserRole: vi.fn(),
+}))
+
 import { useRouter, usePathname } from 'next/navigation'
 import { authClient } from '@/lib/auth-client'
+import { useUserRole } from '@/hooks/use-user-role'
 
 const mockPush = vi.fn()
 const mockUsePathname = vi.mocked(usePathname)
 const mockUseSession = authClient.useSession as ReturnType<typeof vi.fn>
 const mockSignOut = authClient.signOut as ReturnType<typeof vi.fn>
+const mockUseUserRole = vi.mocked(useUserRole)
 
 vi.mocked(useRouter).mockReturnValue({
   push: mockPush,
@@ -48,6 +55,7 @@ describe('Navigation', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mockUsePathname.mockReturnValue('/')
+    mockUseUserRole.mockReturnValue({ role: null, isLoading: false, isAdmin: false })
   })
 
   it('renders navigation with logo and category links', () => {
@@ -318,11 +326,11 @@ describe('Navigation', () => {
           id: '1',
           name: 'Admin User',
           email: 'admin@example.com',
-          role: 'admin',
         },
       },
       isPending: false,
     })
+    mockUseUserRole.mockReturnValue({ role: 'admin', isLoading: false, isAdmin: true })
 
     render(<Navigation />)
 
