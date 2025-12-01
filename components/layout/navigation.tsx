@@ -71,16 +71,6 @@ export function Navigation() {
                     </NavigationMenuLink>
                   </NavigationMenuItem>
                 ))}
-                {isAdmin && (
-                  <NavigationMenuItem>
-                    <NavigationMenuLink
-                      href="/admin"
-                      className={navigationMenuTriggerStyle()}
-                    >
-                      Admin
-                    </NavigationMenuLink>
-                  </NavigationMenuItem>
-                )}
               </NavigationMenuList>
             </NavigationMenu>
           </div>
@@ -162,22 +152,6 @@ export function Navigation() {
                     {item.label}
                   </Link>
                 ))}
-
-                {/* Admin Link */}
-                {isAdmin && (
-                  <Link
-                    href="/admin"
-                    onClick={() => setDrawerOpen(false)}
-                    className={cn(
-                      "rounded-md px-4 py-3 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground",
-                      pathname === "/admin"
-                        ? "bg-accent text-accent-foreground"
-                        : "text-foreground"
-                    )}
-                  >
-                    Admin
-                  </Link>
-                )}
 
                 <Separator className="my-2" />
 
