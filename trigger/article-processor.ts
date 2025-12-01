@@ -124,7 +124,7 @@ Research-resultater:
 ${researchFindings}
 
 Skriv en velstruktureret artikel med:
-1. En engagerende overskrift (# heading) - kun én h1
+1. En engagerende overskrift (# heading) - kun én h1. Du skal finde på din egen, og ikke kopiere en eksisterende.
 2. Et overbevisende indledende afsnit
 3. Klare brødtekst-sektioner med 2-3 underoverskrifter (## heading) - maksimalt 3
 4. Brug kun ### overskrifter hvis det er absolut nødvendigt
