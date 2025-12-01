@@ -141,14 +141,14 @@ export function SearchDialog({ open, onOpenChange }: SearchDialogProps) {
                       className="flex w-full items-center gap-3 rounded-lg border p-3 text-left transition-colors hover:bg-accent"
                     >
                       {/* Thumbnail */}
-                      <div className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-md bg-muted">
+                      <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-md bg-muted">
                         {article.image ? (
                           <Image
                             src={article.image}
                             alt={article.title}
                             fill
                             className="object-cover"
-                            sizes="64px"
+                            sizes="128px"
                           />
                         ) : (
                           <div className="flex h-full w-full items-center justify-center">
