@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Search, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -16,7 +16,7 @@ interface Article {
   categories: string | null;
 }
 
-export default function SearchResultsPage() {
+function SearchResultsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const queryParam = searchParams.get("q") || "";
@@ -149,5 +149,27 @@ export default function SearchResultsPage() {
         )}
       </main>
     </div>
+  );
+}
+
+export default function SearchResultsPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex-1">
+        <div className="border-b bg-muted/30">
+          <div className="container mx-auto px-4 py-8 max-w-6xl">
+            <h1 className="text-3xl font-bold mb-6">Søgeresultater</h1>
+            <div className="max-w-2xl h-12 animate-pulse rounded-md bg-muted" />
+          </div>
+        </div>
+        <main className="container mx-auto px-4 py-12 max-w-6xl">
+          <div className="flex items-center justify-center py-16">
+            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          </div>
+        </main>
+      </div>
+    }>
+      <SearchResultsContent />
+    </Suspense>
   );
 }
