@@ -122,6 +122,7 @@ npx trigger.dev@latest deploy  # Deploy to Trigger.dev
 
 ## Recent Changes
 
+**2025-12-01:** Article paywall implementation - unauthenticated users see preview (first 400 chars) with blurred content and sign-up CTA, authenticated users see full articles
 **2025-11-28:** Trigger.dev v4 integration for weekly news - scheduled tasks (Wednesdays 6 AM CET), Europe/Copenhagen timezone, no timeouts, automatic retries, manual trigger endpoint
 **2025-11-26:** Gemini 3 Pro image generation for articles, Vercel Blob upload
 **2025-11-25:** Component reorganization (article/, auth/, profile/, layout/), Vitest + RTL testing (120 tests), Admin CMS with CRUD API, roles system, image upload
@@ -130,7 +131,7 @@ npx trigger.dev@latest deploy  # Deploy to Trigger.dev
 ## Future Enhancements
 
 **Auth:** OAuth, password reset, email verification
-**Articles:** Listing/detail pages, category filtering, search, ~~image generation~~ ✅
+**Articles:** Listing/detail pages, category filtering, search, ~~image generation~~ ✅, ~~paywall~~ ✅
 **Admin:** ~~Panel/editing/publishing~~ ✅, analytics, bulk actions, scheduling
 **Technical:** Form validation (zod), protected routes, error boundaries, RSS, duplicate detection
 **SEO:** Metadata, image optimization, static generation, sitemap
@@ -146,7 +147,7 @@ npx trigger.dev@latest deploy  # Deploy to Trigger.dev
 
 ---
 
-Last Updated: 2025-11-28
+Last Updated: 2025-12-01
 
 
 <!-- TRIGGER.DEV config START -->

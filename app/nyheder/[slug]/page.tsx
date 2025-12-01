@@ -5,8 +5,9 @@ import { notFound } from "next/navigation";
 import Image from "next/image";
 import { format } from "date-fns";
 import { da } from "date-fns/locale";
-import ReactMarkdown from "react-markdown";
 import { CategoryLink } from "@/components/article/category-link";
+import { ArticleContent } from "@/components/article/article-content";
+import { getCurrentUser } from "@/lib/auth-helpers";
 import type { Metadata } from "next";
 
 interface ArticlePageProps {
@@ -58,6 +59,10 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
   if (!articleData) {
     notFound();
   }
+
+  // Check authentication status
+  const user = await getCurrentUser();
+  const isAuthenticated = !!user;
 
   // Parse categories
   const categoryList = articleData.categories
@@ -112,9 +117,10 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
             />
           </div>
         )}
-        <div className="prose max-w-none">
-          <ReactMarkdown>{articleData.content}</ReactMarkdown>
-        </div>
+        <ArticleContent
+          content={articleData.content}
+          isAuthenticated={isAuthenticated}
+        />
       </div>
     </article>
   );
