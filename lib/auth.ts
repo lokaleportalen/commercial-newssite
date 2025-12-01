@@ -11,24 +11,17 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
   },
-  hooks: {
-    after: [
-      {
-        matcher: (context) => {
-          return context.path === "/sign-up/email" && context.method === "POST";
-        },
-        handler: async (context) => {
-          const user = context.context?.returnedData as {
-            user?: { email: string; name: string };
-          };
-
-          if (user?.user?.email && user?.user?.name) {
-            // Send welcome email asynchronously
+  databaseHooks: {
+    user: {
+      create: {
+        after: async (user) => {
+          // Send welcome email after user is created
+          if (user.email && user.name) {
             sendEmail({
-              to: user.user.email,
+              to: user.email,
               ...getWelcomeEmail({
-                userName: user.user.name,
-                userEmail: user.user.email,
+                userName: user.name,
+                userEmail: user.email,
               }),
             }).catch((error) => {
               console.error("Failed to send welcome email:", error);
@@ -36,6 +29,6 @@ export const auth = betterAuth({
           }
         },
       },
-    ],
+    },
   },
 });
