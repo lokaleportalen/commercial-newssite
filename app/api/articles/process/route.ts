@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
+import { GoogleGenAI } from "@google/genai";
+import { put } from "@vercel/blob";
 import { db } from "@/database/db";
 import { article, category, articleCategory } from "@/database/schema";
 import { eq, or, ilike, inArray } from "drizzle-orm";
@@ -7,6 +9,11 @@ import { eq, or, ilike, inArray } from "drizzle-orm";
 // Initialize OpenAI client
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
+});
+
+// Initialize Gemini client
+const genAI = new GoogleGenAI({
+  apiKey: process.env.GEMINI_API_KEY,
 });
 
 export async function POST(request: NextRequest) {
@@ -66,14 +73,19 @@ export async function POST(request: NextRequest) {
         .limit(1);
 
       if (existingArticles.length > 0) {
-        console.log(`Duplicate article found: ${existingArticles[0].title} (ID: ${existingArticles[0].id})`);
-        return NextResponse.json({
-          success: false,
-          message: "Duplicate article detected",
-          duplicate: true,
-          existingArticleId: existingArticles[0].id,
-          existingArticleTitle: existingArticles[0].title,
-        }, { status: 200 }); // Return 200 to not break the cron job flow
+        console.log(
+          `Duplicate article found: ${existingArticles[0].title} (ID: ${existingArticles[0].id})`
+        );
+        return NextResponse.json(
+          {
+            success: false,
+            message: "Duplicate article detected",
+            duplicate: true,
+            existingArticleId: existingArticles[0].id,
+            existingArticleTitle: existingArticles[0].title,
+          },
+          { status: 200 }
+        ); // Return 200 to not break the cron job flow
       }
     }
 
@@ -98,9 +110,7 @@ Formatér dine research-resultater tydeligt med overskrifter og punkter.`;
 
     const researchResponse = await openai.responses.create({
       model: "gpt-5-mini",
-      tools: [
-        { type: "web_search" },
-      ],
+      tools: [{ type: "web_search" }],
       input: researchPrompt,
     });
 
@@ -116,7 +126,7 @@ Formatér dine research-resultater tydeligt med overskrifter og punkter.`;
     console.log("Research completed, writing article...");
 
     // Step 2: Write a structured article based on the research
-    const articlePrompt = `Baseret på følgende research, skriv en omfattende, professionel nyhedsartikel på DANSK om denne erhvervsejendomshistorie:
+    const articlePrompt = `Du er en prisvindende dansk journalist. Baseret på følgende research, skriv en omfattende, professionel nyhedsartikel på DANSK om denne erhvervsejendomshistorie:
 
 Original nyhed:
 Titel: ${newsItem.title}
@@ -262,7 +272,9 @@ Svar KUN med valid JSON i denne præcise struktur:
 
           await db.insert(articleCategory).values(articleCategoryValues);
 
-          console.log(`✓ Linked article to ${matchedCategories.length} categories`);
+          console.log(
+            `✓ Linked article to ${matchedCategories.length} categories`
+          );
         }
       }
     }
@@ -270,24 +282,33 @@ Svar KUN med valid JSON i denne præcise struktur:
     // Step 6: Send immediate notifications to subscribed users
     try {
       console.log("Sending immediate notifications to subscribed users...");
-      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
+      const baseUrl =
+        process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
 
-      const notificationResponse = await fetch(`${baseUrl}/api/articles/send-notifications`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${cronSecret}`,
-        },
-        body: JSON.stringify({
-          articleId: insertedArticle.id,
-        }),
-      });
+      const notificationResponse = await fetch(
+        `${baseUrl}/api/articles/send-notifications`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${cronSecret}`,
+          },
+          body: JSON.stringify({
+            articleId: insertedArticle.id,
+          }),
+        }
+      );
 
       if (!notificationResponse.ok) {
-        console.error("Failed to send immediate notifications:", await notificationResponse.text());
+        console.error(
+          "Failed to send immediate notifications:",
+          await notificationResponse.text()
+        );
       } else {
         const notificationResult = await notificationResponse.json();
-        console.log(`✓ Sent ${notificationResult.emailsSent} immediate notifications`);
+        console.log(
+          `✓ Sent ${notificationResult.emailsSent} immediate notifications`
+        );
       }
     } catch (error) {
       console.error("Error sending immediate notifications:", error);
@@ -299,6 +320,7 @@ Svar KUN med valid JSON i denne præcise struktur:
       message: "Article processed and saved successfully",
       articleId: insertedArticle.id,
       slug: insertedArticle.slug,
+      imageUrl: imageUrl,
     });
   } catch (error) {
     console.error("Error processing article:", error);

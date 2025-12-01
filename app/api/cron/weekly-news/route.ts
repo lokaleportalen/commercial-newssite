@@ -126,35 +126,98 @@ export async function GET(request: NextRequest) {
 
     // Send each news item to the article processing endpoint
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || request.nextUrl.origin;
-    const processedArticles: Array<{ success: boolean; title: string; id?: string; error?: string }> = [];
+    const processedArticles: Array<{
+      success: boolean;
+      title: string;
+      id?: string;
+      error?: string;
+      timeout?: boolean;
+    }> = [];
 
-    for (const newsItem of newsItems) {
+    // Delay between articles to avoid rate limiting (60 seconds)
+    const ARTICLE_PROCESSING_DELAY = 60000;
+
+    for (let i = 0; i < newsItems.length; i++) {
+      const newsItem = newsItems[i];
       try {
         console.log(`Processing article: ${newsItem.title}`);
 
-        const response = await fetch(`${baseUrl}/api/articles/process`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${cronSecret}`,
-          },
-          body: JSON.stringify(newsItem),
-        });
+        let response;
+        let responseText;
+
+        try {
+          response = await fetch(`${baseUrl}/api/articles/process`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${cronSecret}`,
+            },
+            body: JSON.stringify(newsItem),
+          });
+
+          // Read response as text first, then try to parse as JSON
+          responseText = await response.text();
+        } catch (fetchError: any) {
+          // Check if it's a timeout error
+          const isTimeout = fetchError?.message?.includes("timeout") ||
+                          fetchError?.code === "UND_ERR_HEADERS_TIMEOUT" ||
+                          fetchError?.code === "ETIMEDOUT";
+
+          if (isTimeout) {
+            // Timeout - but the article processing continues in the background
+            console.log(`⏰ Connection timeout for article "${newsItem.title}" - processing continues in background`);
+            processedArticles.push({
+              success: true, // Mark as success since processing continues
+              title: newsItem.title,
+              id: "unknown", // We don't have the ID due to timeout
+              timeout: true,
+            });
+            continue; // Skip to next article
+          } else {
+            // Some other error - re-throw
+            throw fetchError;
+          }
+        }
 
         if (!response.ok) {
-          const errorData = await response.json();
+          let errorMessage = "Unknown error";
+          try {
+            const errorData = JSON.parse(responseText);
+            errorMessage = errorData.error || errorData.message || "Unknown error";
+          } catch (parseError) {
+            // Response is not JSON (likely HTML error page)
+            errorMessage = `Server error (${response.status}): ${responseText.substring(0, 200)}`;
+          }
           processedArticles.push({
             success: false,
             title: newsItem.title,
-            error: errorData.error || "Unknown error",
+            error: errorMessage,
           });
         } else {
-          const result = await response.json();
-          processedArticles.push({
-            success: true,
-            title: newsItem.title,
-            id: result.articleId,
-          });
+          try {
+            const result = JSON.parse(responseText);
+
+            // Handle duplicate articles (success: false but 200 status)
+            if (result.duplicate) {
+              processedArticles.push({
+                success: false,
+                title: newsItem.title,
+                error: "Duplicate article - already exists",
+              });
+            } else {
+              processedArticles.push({
+                success: true,
+                title: newsItem.title,
+                id: result.articleId,
+              });
+            }
+          } catch (parseError) {
+            processedArticles.push({
+              success: false,
+              title: newsItem.title,
+              error: `Invalid JSON response: ${responseText.substring(0, 200)}`,
+            });
+          }
         }
       } catch (error) {
         console.error(`Error processing article ${newsItem.title}:`, error);
@@ -163,6 +226,12 @@ export async function GET(request: NextRequest) {
           title: newsItem.title,
           error: error instanceof Error ? error.message : "Unknown error",
         });
+      }
+
+      // Add delay between articles (except after the last one)
+      if (i < newsItems.length - 1) {
+        console.log(`Waiting ${ARTICLE_PROCESSING_DELAY/1000}s before processing next article...`);
+        await new Promise(resolve => setTimeout(resolve, ARTICLE_PROCESSING_DELAY));
       }
     }
 

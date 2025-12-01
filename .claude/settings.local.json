@@ -19,7 +19,11 @@
       "Bash(npx shadcn@latest add:*)",
       "Bash(dir /b \"C:\\Users\\Emil\\projects\\bachelor\\commercial-newssite\\components\\ui\")",
       "Bash(node test-mailgun.js)",
-      "Bash(node test-smtp.js:*)"
+      "Bash(node test-smtp.js:*)",
+      "Bash(npm uninstall:*)",
+      "Bash(echo:*)",
+      "Bash(npm ls:*)",
+      "Bash(npm run build:*)"
     ],
     "deny": [],
     "ask": []
