@@ -460,4 +460,86 @@ describe('Navigation', () => {
     const desktopNav = document.querySelector('nav .hidden.md\\:flex')
     expect(desktopNav).toBeInTheDocument()
   })
+
+  it('renders search button in desktop navigation', () => {
+    mockUseSession.mockReturnValue({ data: null, isPending: false })
+
+    render(<Navigation />)
+
+    const searchButton = screen.getByLabelText(/søg/i)
+    expect(searchButton).toBeInTheDocument()
+  })
+
+  it('opens search dialog when clicking desktop search button', async () => {
+    const user = userEvent.setup()
+    mockUseSession.mockReturnValue({ data: null, isPending: false })
+
+    render(<Navigation />)
+
+    const searchButton = screen.getByLabelText(/søg/i)
+    await user.click(searchButton)
+
+    await waitFor(() => {
+      // SearchDialog should open
+      expect(screen.getByText('Søg i artikler')).toBeInTheDocument()
+    })
+  })
+
+  it('displays search button in mobile drawer', async () => {
+    const user = userEvent.setup()
+    mockUseSession.mockReturnValue({ data: null, isPending: false })
+
+    render(<Navigation />)
+
+    const menuButton = screen.getByLabelText(/åbn menu/i)
+    await user.click(menuButton)
+
+    await waitFor(() => {
+      const drawer = screen.getByRole('dialog')
+      expect(drawer).toBeInTheDocument()
+    })
+
+    // Should have search button in drawer
+    const searchButtons = screen.getAllByText(/søg/i)
+    expect(searchButtons.length).toBeGreaterThan(0)
+  })
+
+  it('opens search dialog from mobile drawer and closes drawer', async () => {
+    const user = userEvent.setup()
+    mockUseSession.mockReturnValue({ data: null, isPending: false })
+
+    render(<Navigation />)
+
+    const menuButton = screen.getByLabelText(/åbn menu/i)
+    await user.click(menuButton)
+
+    await waitFor(() => {
+      expect(screen.getByText('Menu')).toBeInTheDocument()
+    })
+
+    // Find and click search button in drawer
+    const searchButtons = screen.getAllByText(/søg/i)
+    const drawerSearchButton = searchButtons.find(btn =>
+      btn.closest('button')?.classList.contains('justify-start')
+    )
+
+    expect(drawerSearchButton).toBeInTheDocument()
+
+    if (drawerSearchButton) {
+      await user.click(drawerSearchButton)
+    }
+
+    await waitFor(() => {
+      // Drawer should close
+      const drawer = screen.queryByText('Menu')?.closest('[role="dialog"]')
+      if (drawer) {
+        expect(drawer).toHaveAttribute('data-state', 'closed')
+      }
+    })
+
+    await waitFor(() => {
+      // Search dialog should open
+      expect(screen.getByText('Søg i artikler')).toBeInTheDocument()
+    })
+  })
 })
