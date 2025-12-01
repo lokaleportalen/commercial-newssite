@@ -45,13 +45,13 @@ export function ArticleCard({
       <Card className="h-full overflow-hidden transition-shadow hover:shadow-lg p-0 gap-0 group">
         {/* Image - 1/4 width */}
         <div className="flex h-full">
-          <div className="relative w-1/4 min-h-[80px] overflow-hidden bg-muted flex-shrink-0">
+          <div className="relative w-1/4 min-h-20 overflow-hidden bg-muted shrink-0">
             {image ? (
               <Image
                 src={image}
                 alt={title}
                 fill
-                className="object-cover transition-transform group-hover:scale-105"
+                className="object-cover transition-transform"
                 sizes="150px"
               />
             ) : (
@@ -95,7 +95,7 @@ export function ArticleCard({
               src={image}
               alt={title}
               fill
-              className="object-cover transition-transform group-hover:scale-105"
+              className="object-cover transition-transform"
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
             />
           ) : (

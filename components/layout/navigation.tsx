@@ -99,7 +99,6 @@ export function Navigation() {
                 <Button variant="ghost" asChild>
                   <Link href="/profile">Profil</Link>
                 </Button>
-                <Separator orientation="vertical" className="h-6" />
                 <Button variant="ghost" onClick={handleSignOut}>
                   Log ud
                 </Button>

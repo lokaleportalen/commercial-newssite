@@ -11,13 +11,12 @@ export function HeroBanner() {
       <div className="container mx-auto px-4 py-8 md:py-10 max-w-7xl">
         <div className="max-w-4xl mx-auto text-center">
           <h1 className="text-2xl md:text-3xl font-semibold text-foreground mb-2">
-            Find en{" "}
-            <span className="text-primary">lejer eller køber</span>{" "}
-            til dine{" "}
-            <span className="text-primary">erhvervslokaler</span>
+            Find en <span className="text-primary">lejer eller køber</span> til
+            dine <span className="text-primary">erhvervslokaler</span>
           </h1>
           <p className="text-muted-foreground text-base md:text-lg">
-            Søg og få adgang til flere tusinde af ledige og kommende erhvervslokaler
+            Klik her for at se markedets mest aktive lejere og købere -
+            opdateres dagligt
           </p>
         </div>
       </div>
