@@ -116,7 +116,11 @@ export function Navigation() {
           </div>
 
           {/* Mobile Burger Menu */}
-          <Drawer open={drawerOpen} onOpenChange={setDrawerOpen} direction="right">
+          <Drawer
+            open={drawerOpen}
+            onOpenChange={setDrawerOpen}
+            direction="right"
+          >
             <DrawerTrigger asChild>
               <Button
                 variant="ghost"
@@ -127,7 +131,7 @@ export function Navigation() {
                 <Menu className="h-6 w-6" />
               </Button>
             </DrawerTrigger>
-            <DrawerContent>
+            <DrawerContent className="flex flex-col">
               <DrawerHeader className="relative">
                 <DrawerTitle>Menu</DrawerTitle>
                 <DrawerClose asChild>
@@ -141,7 +145,7 @@ export function Navigation() {
                   </Button>
                 </DrawerClose>
               </DrawerHeader>
-              <div className="flex flex-col gap-2 p-4">
+              <div className="flex flex-col gap-2 p-4 h-full">
                 {/* Navigation Links */}
                 {menuItems.map((item) => (
                   <Link
@@ -178,48 +182,51 @@ export function Navigation() {
                 <Separator className="my-2" />
 
                 {/* Auth Buttons */}
-                {isPending ? (
-                  <div className="flex flex-col gap-2">
-                    <div className="h-11 animate-pulse rounded-md bg-muted" />
-                    <div className="h-11 animate-pulse rounded-md bg-muted" />
-                  </div>
-                ) : session?.user ? (
-                  <>
-                    <Button
-                      variant="ghost"
-                      asChild
-                      className="justify-start"
-                    >
-                      <Link href="/profile" onClick={() => setDrawerOpen(false)}>
-                        Profil
-                      </Link>
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      onClick={handleSignOut}
-                      className="justify-start"
-                    >
-                      Log ud
-                    </Button>
-                  </>
-                ) : (
-                  <>
-                    <Button
-                      variant="ghost"
-                      asChild
-                      className="justify-start"
-                    >
-                      <Link href="/login" onClick={() => setDrawerOpen(false)}>
-                        Log ind
-                      </Link>
-                    </Button>
-                    <Button asChild className="justify-start">
-                      <Link href="/signup" onClick={() => setDrawerOpen(false)}>
-                        Opret konto
-                      </Link>
-                    </Button>
-                  </>
-                )}
+                <div className="mt-auto flex flex-col">
+                  {isPending ? (
+                    <div className="flex flex-col gap-2">
+                      <div className="h-11 animate-pulse rounded-md bg-muted" />
+                      <div className="h-11 animate-pulse rounded-md bg-muted" />
+                    </div>
+                  ) : session?.user ? (
+                    <>
+                      <Button variant="ghost" asChild className="justify-start">
+                        <Link
+                          href="/profile"
+                          onClick={() => setDrawerOpen(false)}
+                        >
+                          Profil
+                        </Link>
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        onClick={handleSignOut}
+                        className="justify-start"
+                      >
+                        Log ud
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      <Button variant="ghost" asChild className="justify-start">
+                        <Link
+                          href="/login"
+                          onClick={() => setDrawerOpen(false)}
+                        >
+                          Log ind
+                        </Link>
+                      </Button>
+                      <Button asChild className="justify-start">
+                        <Link
+                          href="/signup"
+                          onClick={() => setDrawerOpen(false)}
+                        >
+                          Opret konto
+                        </Link>
+                      </Button>
+                    </>
+                  )}
+                </div>
               </div>
             </DrawerContent>
           </Drawer>
