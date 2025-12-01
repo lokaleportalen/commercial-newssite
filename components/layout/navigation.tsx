@@ -3,11 +3,12 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
-import { Menu, X } from "lucide-react";
+import { Menu, X, Search } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
 import { useUserRole } from "@/hooks/use-user-role";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { SearchDialog } from "@/components/layout/search-dialog";
 import {
   NavigationMenu,
   NavigationMenuItem,
@@ -37,6 +38,7 @@ export function Navigation() {
   const { data: session, isPending } = authClient.useSession();
   const { isAdmin } = useUserRole();
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
 
   const handleSignOut = async () => {
     await authClient.signOut({
@@ -85,8 +87,17 @@ export function Navigation() {
             </NavigationMenu>
           </div>
 
-          {/* Desktop Auth Buttons */}
+          {/* Desktop Search and Auth Buttons */}
           <div className="hidden md:flex items-center gap-4">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setSearchOpen(true)}
+              aria-label="Søg"
+            >
+              <Search className="h-5 w-5" />
+            </Button>
+            <Separator orientation="vertical" className="h-6" />
             {isPending ? (
               // Loading skeleton - reserve space to prevent layout shift
               <div className="flex items-center gap-4">
@@ -181,6 +192,21 @@ export function Navigation() {
 
                 <Separator className="my-2" />
 
+                {/* Search Button */}
+                <Button
+                  variant="ghost"
+                  className="justify-start"
+                  onClick={() => {
+                    setDrawerOpen(false);
+                    setSearchOpen(true);
+                  }}
+                >
+                  <Search className="mr-2 h-5 w-5" />
+                  Søg
+                </Button>
+
+                <Separator className="my-2" />
+
                 {/* Auth Buttons */}
                 <div className="mt-auto flex flex-col">
                   {isPending ? (
@@ -232,6 +258,9 @@ export function Navigation() {
           </Drawer>
         </div>
       </div>
+
+      {/* Search Dialog */}
+      <SearchDialog open={searchOpen} onOpenChange={setSearchOpen} />
     </nav>
   );
 }
