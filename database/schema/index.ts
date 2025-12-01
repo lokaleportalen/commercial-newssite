@@ -4,3 +4,4 @@ export * from "./categories-schema";
 export * from "./user-preferences-schema";
 export * from "./roles-schema";
 export * from "./ai-prompts-schema";
+export * from "./ai-prompt-versions-schema";

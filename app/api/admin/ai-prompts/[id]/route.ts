@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth-helpers";
 import { db } from "@/database/db";
-import { aiPrompt } from "@/database/schema";
-import { eq } from "drizzle-orm";
+import { aiPrompt, aiPromptVersion } from "@/database/schema";
+import { eq, desc } from "drizzle-orm";
 
 type RouteContext = {
   params: Promise<{ id: string }>;
@@ -54,7 +54,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
 
 /**
  * PUT /api/admin/ai-prompts/[id]
- * Update an AI prompt
+ * Update an AI prompt (archives old version before updating)
  */
 export async function PUT(request: NextRequest, context: RouteContext) {
   try {
@@ -64,7 +64,7 @@ export async function PUT(request: NextRequest, context: RouteContext) {
     const { id } = await context.params;
     const body = await request.json();
 
-    const { key, name, description, model, section, prompt } = body;
+    const { key, name, description, model, section, prompt, changeDescription } = body;
 
     // Validate required fields
     if (!name || !model || !section || !prompt) {
@@ -72,6 +72,62 @@ export async function PUT(request: NextRequest, context: RouteContext) {
         { error: "Name, model, section, and prompt are required" },
         { status: 400 }
       );
+    }
+
+    // Fetch the current prompt to archive it
+    const currentPrompts = await db
+      .select()
+      .from(aiPrompt)
+      .where(eq(aiPrompt.id, id))
+      .limit(1);
+
+    if (!currentPrompts || currentPrompts.length === 0) {
+      return NextResponse.json(
+        { error: "AI prompt not found" },
+        { status: 404 }
+      );
+    }
+
+    const currentPrompt = currentPrompts[0];
+
+    // Check if the prompt has actually changed
+    const hasChanges =
+      currentPrompt.prompt !== prompt ||
+      currentPrompt.name !== name ||
+      currentPrompt.model !== model ||
+      currentPrompt.section !== section ||
+      currentPrompt.description !== description;
+
+    if (hasChanges) {
+      // Get the latest version number for this prompt
+      const latestVersions = await db
+        .select()
+        .from(aiPromptVersion)
+        .where(eq(aiPromptVersion.promptId, id))
+        .orderBy(desc(aiPromptVersion.createdAt))
+        .limit(1);
+
+      // Calculate next version number
+      let nextVersion = "1.0";
+      if (latestVersions.length > 0) {
+        const currentVersion = latestVersions[0].versionNumber;
+        const versionParts = currentVersion.split(".");
+        const major = parseInt(versionParts[0] || "1");
+        const minor = parseInt(versionParts[1] || "0");
+        nextVersion = `${major}.${minor + 1}`;
+      }
+
+      // Archive the current version
+      await db.insert(aiPromptVersion).values({
+        promptId: id,
+        name: currentPrompt.name,
+        description: currentPrompt.description,
+        model: currentPrompt.model,
+        section: currentPrompt.section,
+        prompt: currentPrompt.prompt,
+        versionNumber: nextVersion,
+        changeDescription: changeDescription || null,
+      });
     }
 
     // Update the prompt
@@ -89,15 +145,13 @@ export async function PUT(request: NextRequest, context: RouteContext) {
       .where(eq(aiPrompt.id, id))
       .returning();
 
-    if (!updatedPrompts || updatedPrompts.length === 0) {
-      return NextResponse.json(
-        { error: "AI prompt not found" },
-        { status: 404 }
-      );
-    }
-
     return NextResponse.json(
-      { prompt: updatedPrompts[0], message: "AI prompt updated successfully" },
+      {
+        prompt: updatedPrompts[0],
+        message: hasChanges
+          ? "AI prompt updated and previous version archived"
+          : "AI prompt updated (no changes detected)",
+      },
       { status: 200 }
     );
   } catch (error) {
