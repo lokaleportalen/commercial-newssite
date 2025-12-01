@@ -8,7 +8,8 @@ import { ArticleEditor } from "@/components/admin/article-editor";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { Newspaper } from "lucide-react";
+import { Newspaper, Sparkles } from "lucide-react";
+import Link from "next/link";
 
 export default function AdminDashboard() {
   const router = useRouter();
@@ -102,15 +103,23 @@ export default function AdminDashboard() {
             Manage articles and content
           </p>
         </div>
-        <Button
-          onClick={handleTriggerCron}
-          disabled={isTriggeringCron}
-          size="sm"
-          variant={isTriggeringCron ? "default" : "outline"}
-        >
-          <Newspaper className="mr-2 h-4 w-4" />
-          {isTriggeringCron ? "Job running..." : "Fetch weekly news"}
-        </Button>
+        <div className="flex items-center gap-2">
+          <Link href="/admin/ai-prompts">
+            <Button size="sm" variant="outline">
+              <Sparkles className="mr-2 h-4 w-4" />
+              AI Prompts
+            </Button>
+          </Link>
+          <Button
+            onClick={handleTriggerCron}
+            disabled={isTriggeringCron}
+            size="sm"
+            variant={isTriggeringCron ? "default" : "outline"}
+          >
+            <Newspaper className="mr-2 h-4 w-4" />
+            {isTriggeringCron ? "Job running..." : "Fetch weekly news"}
+          </Button>
+        </div>
       </div>
 
       {/* Main content */}

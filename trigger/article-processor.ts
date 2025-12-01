@@ -5,6 +5,7 @@ import { db } from "@/database/db";
 import { article, category, articleCategory } from "@/database/schema";
 import { eq, or, ilike, inArray } from "drizzle-orm";
 import { logger } from "@trigger.dev/sdk";
+import { getCachedAiPrompt, getAiPromptWithVars } from "@/lib/ai-prompts";
 
 // Initialize OpenAI client lazily (fallback for build phase)
 const getOpenAIClient = () => {
@@ -80,7 +81,20 @@ export async function processArticle(
     }
 
     // Step 1: Research the news story using OpenAI with web search
-    const researchPrompt = `Researche og indsaml detaljeret information om følgende nyhedshistorie fra ejendomsbranchen i Danmark:
+    logger.info("Researching news story with OpenAI...");
+
+    // Get research prompt from database
+    const researchPrompt = await getAiPromptWithVars("article_research", {
+      title: newsItem.title,
+      summary: newsItem.summary,
+      sourceUrl: newsItem.sourceUrl || "",
+      date: newsItem.date || "",
+    });
+
+    // Fallback if database prompt not found
+    const finalResearchPrompt =
+      researchPrompt ||
+      `Researche og indsaml detaljeret information om følgende nyhedshistorie fra ejendomsbranchen i Danmark:
 
 Titel: ${newsItem.title}
 Resumé: ${newsItem.summary}
@@ -96,13 +110,17 @@ Søg på nettet efter yderligere detaljer, kontekst og relateret information om 
 
 Formatér dine research-resultater tydeligt med overskrifter og punkter.`;
 
-    logger.info("Researching news story with OpenAI...");
+    if (!researchPrompt) {
+      logger.warn(
+        "Using fallback research prompt - database prompt not found"
+      );
+    }
 
     const openai = getOpenAIClient();
     const researchResponse = await openai.responses.create({
       model: "gpt-5-mini",
       tools: [{ type: "web_search" }],
-      input: researchPrompt,
+      input: finalResearchPrompt,
     });
 
     const researchFindings = researchResponse.output_text;
@@ -114,7 +132,17 @@ Formatér dine research-resultater tydeligt med overskrifter og punkter.`;
     logger.info("Research completed, writing article...");
 
     // Step 2: Write a structured article based on the research
-    const articlePrompt = `Du er en prisvindende dansk journalist. Baseret på følgende research, skriv en omfattende, professionel nyhedsartikel på DANSK om denne erhvervsejendomshistorie:
+    // Get article writing prompt from database
+    const articlePrompt = await getAiPromptWithVars("article_writing", {
+      title: newsItem.title,
+      summary: newsItem.summary,
+      researchFindings: researchFindings,
+    });
+
+    // Fallback if database prompt not found
+    const finalArticlePrompt =
+      articlePrompt ||
+      `Du er en prisvindende dansk journalist. Baseret på følgende research, skriv en omfattende, professionel nyhedsartikel på DANSK om denne erhvervsejendomshistorie:
 
 Original nyhed:
 Titel: ${newsItem.title}
@@ -141,9 +169,15 @@ VIGTIGT:
 
 Formatér artiklen i markdown med korrekte overskrifter (#, ##, ###).`;
 
+    if (!articlePrompt) {
+      logger.warn(
+        "Using fallback article writing prompt - database prompt not found"
+      );
+    }
+
     const articleResponse = await openai.responses.create({
       model: "gpt-5-mini",
-      input: articlePrompt,
+      input: finalArticlePrompt,
     });
 
     const articleContent = articleResponse.output_text;
@@ -155,7 +189,15 @@ Formatér artiklen i markdown med korrekte overskrifter (#, ##, ###).`;
     logger.info("Article written, generating metadata...");
 
     // Step 3: Generate metadata (slug, meta description, summary)
-    const metadataPrompt = `Baseret på denne artikel, generer følgende metadata i JSON format:
+    // Get metadata prompt from database
+    const metadataPrompt = await getAiPromptWithVars("article_metadata", {
+      articleContent: articleContent,
+    });
+
+    // Fallback if database prompt not found
+    const finalMetadataPrompt =
+      metadataPrompt ||
+      `Baseret på denne artikel, generer følgende metadata i JSON format:
 
 Artikel:
 ${articleContent}
@@ -184,9 +226,15 @@ Svar KUN med valid JSON i denne præcise struktur:
   "categories": "Kategori1, Kategori2"
 }`;
 
+    if (!metadataPrompt) {
+      logger.warn(
+        "Using fallback metadata prompt - database prompt not found"
+      );
+    }
+
     const metadataResponse = await openai.responses.create({
       model: "gpt-5-mini",
-      input: metadataPrompt,
+      input: finalMetadataPrompt,
     });
 
     const metadataText = metadataResponse.output_text;
@@ -272,7 +320,22 @@ Svar KUN med valid JSON i denne præcise struktur:
         logger.info("Generating hero image with Gemini 3 Pro Image Preview...");
 
         const genAI = getGeminiClient();
-        const imagePrompt = `You are an award wining professional journalistic photographer. Your photos are realistic, proper photographies of the news story. Make a hero image in landscape mode with no text, for an article in a digital newspaper about commercial real estate, specifically related to the article with the headline: ${newsItem.title}`;
+
+        // Get image generation prompt from database
+        const imagePrompt = await getAiPromptWithVars("image_generation", {
+          title: newsItem.title,
+        });
+
+        // Fallback if database prompt not found
+        const finalImagePrompt =
+          imagePrompt ||
+          `You are an award wining professional journalistic photographer. Your photos are realistic, proper photographies of the news story. Make a hero image in landscape mode with no text, for an article in a digital newspaper about commercial real estate, specifically related to the article with the headline: ${newsItem.title}`;
+
+        if (!imagePrompt) {
+          logger.warn(
+            "Using fallback image prompt - database prompt not found"
+          );
+        }
 
         let response;
         let retryCount = 0;
@@ -283,7 +346,7 @@ Svar KUN med valid JSON i denne præcise struktur:
           try {
             response = await genAI.models.generateContent({
               model: "gemini-3-pro-image-preview",
-              contents: imagePrompt,
+              contents: finalImagePrompt,
             });
             break; // Success, exit retry loop
           } catch (error: any) {
