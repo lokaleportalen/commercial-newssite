@@ -8,6 +8,7 @@ import { da } from "date-fns/locale";
 import { CategoryLink } from "@/components/article/category-link";
 import { ArticleContent } from "@/components/article/article-content";
 import { getCurrentUser } from "@/lib/auth-helpers";
+import { getContentPreview } from "@/lib/content-helpers";
 import type { Metadata } from "next";
 
 interface ArticlePageProps {
@@ -64,6 +65,11 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
   const user = await getCurrentUser();
   const isAuthenticated = !!user;
 
+  // Only send preview content to client if not authenticated (security)
+  const contentToSend = isAuthenticated
+    ? articleData.content
+    : getContentPreview(articleData.content, 400);
+
   // Parse categories
   const categoryList = articleData.categories
     ? articleData.categories.split(",").map((cat) => cat.trim())
@@ -118,7 +124,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
           </div>
         )}
         <ArticleContent
-          content={articleData.content}
+          content={contentToSend}
           isAuthenticated={isAuthenticated}
         />
       </div>
