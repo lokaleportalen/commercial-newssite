@@ -1,6 +1,7 @@
 import { schedules, logger, wait } from "@trigger.dev/sdk";
 import OpenAI from "openai";
 import { processArticle } from "./article-processor";
+import { getCachedAiPrompt } from "@/lib/ai-prompts";
 
 // Initialize OpenAI client lazily (fallback for build phase)
 const getOpenAIClient = () => {
@@ -9,8 +10,9 @@ const getOpenAIClient = () => {
   });
 };
 
-// Fixed prompt for fetching commercial real estate news in Denmark
-const NEWS_PROMPT = `Find 10 nyheder fra ejendomsbranchen i Danmark, eller med relevans for Danmark, som har fået meget omtale den seneste uge - rank med de mest spændende, unikke og aktuelle først. Det skal være relevant for ejere af erhvervsejendomme (målgruppen er udlejere som bruger Lokaleportalen).
+// Fallback prompt for fetching commercial real estate news in Denmark
+// This is used if the database prompt is not available
+const FALLBACK_NEWS_PROMPT = `Find 10 nyheder fra ejendomsbranchen i Danmark, eller med relevans for Danmark, som har fået meget omtale den seneste uge - rank med de mest spændende, unikke og aktuelle først. Det skal være relevant for ejere af erhvervsejendomme (målgruppen er udlejere som bruger Lokaleportalen).
 
 KRITISK: Du SKAL returnere dit svar som RENT JSON uden nogen ekstra tekst, forklaringer eller kommentarer.
 
@@ -63,11 +65,21 @@ export const weeklyNewsTask = schedules.task({
     // Step 1: Fetch news list from OpenAI
     logger.info("Fetching weekly commercial real estate news from OpenAI...");
 
+    // Get the prompt from database, fallback to hardcoded if not found
+    const newsPrompt =
+      (await getCachedAiPrompt("news_fetch")) || FALLBACK_NEWS_PROMPT;
+
+    if (newsPrompt === FALLBACK_NEWS_PROMPT) {
+      logger.warn(
+        "Using fallback news prompt - database prompt not found. Please configure AI prompts in admin panel."
+      );
+    }
+
     const openai = getOpenAIClient();
     const response = await openai.responses.create({
       model: "gpt-5-nano",
       tools: [{ type: "web_search" }],
-      input: NEWS_PROMPT,
+      input: newsPrompt,
     });
 
     const newsListJson = response.output_text;
