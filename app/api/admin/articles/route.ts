@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth-helpers";
 import { db } from "@/database/db";
-import { article } from "@/database/schema";
-import { or, like, desc } from "drizzle-orm";
+import { article, aiPrompt } from "@/database/schema";
+import { or, like, desc, eq } from "drizzle-orm";
 
 /**
  * GET /api/admin/articles
@@ -16,13 +16,17 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;
     const search = searchParams.get("search");
 
-    let articles;
+    let articlesData;
 
     if (search) {
       // Search articles by title, summary, or categories
-      articles = await db
-        .select()
+      articlesData = await db
+        .select({
+          article: article,
+          prompt: aiPrompt,
+        })
         .from(article)
+        .leftJoin(aiPrompt, eq(article.promptId, aiPrompt.id))
         .where(
           or(
             like(article.title, `%${search}%`),
@@ -33,11 +37,21 @@ export async function GET(request: NextRequest) {
         .orderBy(desc(article.createdAt));
     } else {
       // Get all articles
-      articles = await db
-        .select()
+      articlesData = await db
+        .select({
+          article: article,
+          prompt: aiPrompt,
+        })
         .from(article)
+        .leftJoin(aiPrompt, eq(article.promptId, aiPrompt.id))
         .orderBy(desc(article.createdAt));
     }
+
+    // Transform the data to include prompt info
+    const articles = articlesData.map((row) => ({
+      ...row.article,
+      prompt: row.prompt,
+    }));
 
     return NextResponse.json({ articles }, { status: 200 });
   } catch (error) {

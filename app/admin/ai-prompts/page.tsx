@@ -6,6 +6,8 @@ import { authClient } from "@/lib/auth-client";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AiPromptList } from "@/components/admin/ai-prompt-list";
 import { AiPromptEditor } from "@/components/admin/ai-prompt-editor";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft } from "lucide-react";
 
 export default function AiPromptsAdminPage() {
   const router = useRouter();
@@ -58,15 +60,22 @@ export default function AiPromptsAdminPage() {
   return (
     <div className="flex h-screen flex-col overflow-hidden">
       {/* Header */}
-      <div className="border-b bg-background px-6 py-3">
+      <div className="border-b bg-background px-6 py-3 flex justify-between items-center">
         <div>
           <h1 className="text-lg font-semibold">AI Prompts Management</h1>
           <p className="text-sm text-muted-foreground">
             Configure AI prompts for article generation and image creation
           </p>
         </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => router.push("/admin")}
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Back to Dashboard
+        </Button>
       </div>
-
       {/* Main content */}
       <div className="flex flex-1 overflow-hidden">
         {/* Sidebar - Prompt List */}

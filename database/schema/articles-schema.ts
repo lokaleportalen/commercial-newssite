@@ -1,4 +1,5 @@
 import { pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import { aiPrompt } from "./ai-prompts-schema";
 
 export const article = pgTable("article", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -18,4 +19,7 @@ export const article = pgTable("article", {
     .defaultNow()
     .$onUpdate(() => new Date())
     .notNull(),
+  promptId: uuid("prompt_id").references(() => aiPrompt.id, {
+    onDelete: "set null",
+  }), // Track which AI prompt was used to generate this article
 });

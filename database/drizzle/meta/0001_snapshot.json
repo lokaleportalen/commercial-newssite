@@ -1,6 +1,6 @@
 {
-  "id": "2a626e77-e59e-4957-ae9b-6c682cdbd963",
-  "prevId": "00000000-0000-0000-0000-000000000000",
+  "id": "a418609e-006b-4eaf-9829-9b583d4a11ee",
+  "prevId": "2a626e77-e59e-4957-ae9b-6c682cdbd963",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -403,10 +403,30 @@
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
+        },
+        "prompt_id": {
+          "name": "prompt_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
         }
       },
       "indexes": {},
-      "foreignKeys": {},
+      "foreignKeys": {
+        "article_prompt_id_ai_prompt_id_fk": {
+          "name": "article_prompt_id_ai_prompt_id_fk",
+          "tableFrom": "article",
+          "tableTo": "ai_prompt",
+          "columnsFrom": [
+            "prompt_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        }
+      },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
         "article_slug_unique": {

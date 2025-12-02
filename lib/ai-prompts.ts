@@ -2,12 +2,16 @@ import { db } from "@/database/db";
 import { aiPrompt } from "@/database/schema";
 import { eq } from "drizzle-orm";
 
+type AiPromptRow = typeof aiPrompt.$inferSelect;
+
 /**
- * Get an AI prompt by its key
+ * Get an AI prompt object by its key (includes ID and all fields)
  * @param key - The unique key for the prompt (e.g., "news_fetch", "article_research")
- * @returns The prompt text or null if not found
+ * @returns The full prompt object or null if not found
  */
-export async function getAiPrompt(key: string): Promise<string | null> {
+export async function getAiPromptObject(
+  key: string
+): Promise<AiPromptRow | null> {
   try {
     const prompts = await db
       .select()
@@ -20,11 +24,21 @@ export async function getAiPrompt(key: string): Promise<string | null> {
       return null;
     }
 
-    return prompts[0].prompt;
+    return prompts[0];
   } catch (error) {
     console.error(`Error fetching AI prompt with key "${key}":`, error);
     return null;
   }
+}
+
+/**
+ * Get an AI prompt by its key
+ * @param key - The unique key for the prompt (e.g., "news_fetch", "article_research")
+ * @returns The prompt text or null if not found
+ */
+export async function getAiPrompt(key: string): Promise<string | null> {
+  const promptObj = await getAiPromptObject(key);
+  return promptObj?.prompt || null;
 }
 
 /**

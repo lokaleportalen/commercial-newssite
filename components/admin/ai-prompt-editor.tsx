@@ -18,7 +18,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { X, History, RotateCcw } from "lucide-react";
+import { X, History, RotateCcw, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import {
   Sheet,
@@ -70,7 +70,8 @@ export function AiPromptEditor({ promptId, onClose }: AiPromptEditorProps) {
   const [hasChanges, setHasChanges] = useState(false);
   const [versions, setVersions] = useState<AiPromptVersion[]>([]);
   const [isLoadingVersions, setIsLoadingVersions] = useState(false);
-  const [selectedVersion, setSelectedVersion] = useState<AiPromptVersion | null>(null);
+  const [selectedVersion, setSelectedVersion] =
+    useState<AiPromptVersion | null>(null);
   const [isRestoring, setIsRestoring] = useState(false);
 
   // Fetch prompt data
@@ -119,7 +120,9 @@ export function AiPromptEditor({ promptId, onClose }: AiPromptEditorProps) {
   const fetchVersions = async () => {
     try {
       setIsLoadingVersions(true);
-      const response = await fetch(`/api/admin/ai-prompts/${promptId}/versions`);
+      const response = await fetch(
+        `/api/admin/ai-prompts/${promptId}/versions`
+      );
       if (response.ok) {
         const data = await response.json();
         setVersions(data.versions);
@@ -163,11 +166,14 @@ export function AiPromptEditor({ promptId, onClose }: AiPromptEditorProps) {
   const handleRestoreVersion = async (versionId: string) => {
     try {
       setIsRestoring(true);
-      const response = await fetch(`/api/admin/ai-prompts/${promptId}/restore`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ versionId }),
-      });
+      const response = await fetch(
+        `/api/admin/ai-prompts/${promptId}/restore`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ versionId }),
+        }
+      );
 
       if (response.ok) {
         const data = await response.json();
@@ -248,11 +254,7 @@ export function AiPromptEditor({ promptId, onClose }: AiPromptEditorProps) {
           <div className="flex items-center gap-2">
             <Sheet>
               <SheetTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={fetchVersions}
-                >
+                <Button variant="outline" size="sm" onClick={fetchVersions}>
                   <History className="mr-2 h-4 w-4" />
                   Version History
                 </Button>
@@ -289,7 +291,9 @@ export function AiPromptEditor({ promptId, onClose }: AiPromptEditorProps) {
                                 <Badge variant="outline">
                                   v{version.versionNumber}
                                 </Badge>
-                                <Badge variant={getModelBadgeColor(version.model)}>
+                                <Badge
+                                  variant={getModelBadgeColor(version.model)}
+                                >
                                   {version.model}
                                 </Badge>
                                 <span className="text-xs text-muted-foreground">
@@ -331,11 +335,15 @@ export function AiPromptEditor({ promptId, onClose }: AiPromptEditorProps) {
                                 <Button
                                   variant="default"
                                   size="sm"
-                                  onClick={() => handleRestoreVersion(version.id)}
+                                  onClick={() =>
+                                    handleRestoreVersion(version.id)
+                                  }
                                   disabled={isRestoring}
                                 >
                                   <RotateCcw className="mr-2 h-3 w-3" />
-                                  {isRestoring ? "Restoring..." : "Restore This Version"}
+                                  {isRestoring
+                                    ? "Restoring..."
+                                    : "Restore This Version"}
                                 </Button>
                               </div>
                             </div>

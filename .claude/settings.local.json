@@ -21,7 +21,8 @@
       "Bash(npm uninstall:*)",
       "Bash(echo:*)",
       "Bash(npm ls:*)",
-      "Bash(npm run build:*)"
+      "Bash(npm run build:*)",
+      "Bash(npm run push:*)"
     ],
     "deny": [],
     "ask": []

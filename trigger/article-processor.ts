@@ -5,7 +5,11 @@ import { db } from "@/database/db";
 import { article, category, articleCategory } from "@/database/schema";
 import { eq, or, ilike, inArray } from "drizzle-orm";
 import { logger } from "@trigger.dev/sdk";
-import { getCachedAiPrompt, getAiPromptWithVars } from "@/lib/ai-prompts";
+import {
+  getCachedAiPrompt,
+  getAiPromptWithVars,
+  getAiPromptObject,
+} from "@/lib/ai-prompts";
 
 // Initialize OpenAI client lazily (fallback for build phase)
 const getOpenAIClient = () => {
@@ -133,11 +137,13 @@ Formatér dine research-resultater tydeligt med overskrifter og punkter.`;
 
     // Step 2: Write a structured article based on the research
     // Get article writing prompt from database
-    const articlePrompt = await getAiPromptWithVars("article_writing", {
-      title: newsItem.title,
-      summary: newsItem.summary,
-      researchFindings: researchFindings,
-    });
+    const articlePromptObj = await getAiPromptObject("article_writing");
+    const articlePrompt = articlePromptObj
+      ? articlePromptObj.prompt
+          .replace(/\{\{title\}\}/g, newsItem.title)
+          .replace(/\{\{summary\}\}/g, newsItem.summary)
+          .replace(/\{\{researchFindings\}\}/g, researchFindings)
+      : null;
 
     // Fallback if database prompt not found
     const finalArticlePrompt =
@@ -276,6 +282,7 @@ Svar KUN med valid JSON i denne præcise struktur:
         categories: metadata.categories,
         status: "published",
         publishedDate: new Date(),
+        promptId: articlePromptObj?.id || null,
       })
       .returning();
 
