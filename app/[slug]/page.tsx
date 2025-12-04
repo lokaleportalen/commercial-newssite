@@ -4,6 +4,7 @@ import { eq, desc, sql, like } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import { ArticleCard } from "@/components/article/article-card";
 import { Pagination } from "@/components/article/pagination";
+import { Breadcrumbs } from "@/components/layout/breadcrumbs";
 import type { Metadata } from "next";
 
 const ARTICLES_PER_PAGE = 15;
@@ -90,6 +91,12 @@ export default async function CategoryPage({
       {/* Category Header */}
       <header className="bg-muted/50 border-b">
         <div className="container mx-auto px-4 py-12 max-w-6xl">
+          {/* Breadcrumbs */}
+          <Breadcrumbs
+            items={[{ label: categoryData.name }]}
+            className="mb-6"
+          />
+
           <h1 className="text-4xl md:text-5xl font-bold mb-4">
             {categoryData.name}
           </h1>

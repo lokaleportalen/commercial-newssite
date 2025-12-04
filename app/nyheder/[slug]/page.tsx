@@ -1,5 +1,5 @@
 import { db } from "@/database/db";
-import { article } from "@/database/schema";
+import { article, category } from "@/database/schema";
 import { eq } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import Image from "next/image";
@@ -7,6 +7,7 @@ import { format } from "date-fns";
 import { da } from "date-fns/locale";
 import { CategoryLink } from "@/components/article/category-link";
 import { ArticleContent } from "@/components/article/article-content";
+import { Breadcrumbs } from "@/components/layout/breadcrumbs";
 import { getCurrentUser } from "@/lib/auth-helpers";
 import type { Metadata } from "next";
 
@@ -69,6 +70,17 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
     ? articleData.categories.split(",").map((cat) => cat.trim())
     : [];
 
+  // Fetch primary category for breadcrumb
+  let primaryCategory = null;
+  if (categoryList.length > 0) {
+    const [categoryData] = await db
+      .select()
+      .from(category)
+      .where(eq(category.name, categoryList[0]))
+      .limit(1);
+    primaryCategory = categoryData;
+  }
+
   // Format date in Danish
   const formattedDate = format(articleData.publishedDate, "d. MMMM yyyy", {
     locale: da,
@@ -78,6 +90,22 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
     <article className="min-h-screen">
       <header className="bg-muted/50 border-b">
         <div className="container mx-auto px-4 py-12 max-w-4xl">
+          {/* Breadcrumbs */}
+          <Breadcrumbs
+            items={
+              primaryCategory
+                ? [
+                    {
+                      label: primaryCategory.name,
+                      href: `/${primaryCategory.slug}`,
+                    },
+                    { label: articleData.title },
+                  ]
+                : [{ label: articleData.title }]
+            }
+            className="mb-6"
+          />
+
           {categoryList.length > 0 && (
             <div className="flex flex-wrap gap-2 mb-4">
               {categoryList.map((category, index) => (

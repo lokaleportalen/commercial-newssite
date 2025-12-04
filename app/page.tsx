@@ -5,6 +5,7 @@ import { HeroBanner } from "@/components/article/hero-banner";
 import { HeroSection } from "@/components/article/hero-section";
 import { ArticleCard } from "@/components/article/article-card";
 import { Pagination } from "@/components/article/pagination";
+import { CategoryGrid } from "@/components/layout/category-grid";
 
 const HERO_ARTICLES_COUNT = 4;
 
@@ -58,6 +59,9 @@ export default async function Home({ searchParams }: HomeProps) {
       {isFirstPage && heroArticles.length > 0 && (
         <HeroSection articles={heroArticles} />
       )}
+
+      {/* Category Grid - Only on first page */}
+      {isFirstPage && <CategoryGrid />}
 
       <main className="container mx-auto px-4 py-12 max-w-6xl">
         {!hasContent ? (
