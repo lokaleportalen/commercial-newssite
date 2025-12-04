@@ -8,6 +8,7 @@ import { da } from "date-fns/locale";
 import { CategoryLink } from "@/components/article/category-link";
 import { ArticleContent } from "@/components/article/article-content";
 import { getCurrentUser } from "@/lib/auth-helpers";
+import { getArticleCategories } from "@/lib/category-helpers";
 import type { Metadata } from "next";
 
 interface ArticlePageProps {
@@ -64,10 +65,8 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
   const user = await getCurrentUser();
   const isAuthenticated = !!user;
 
-  // Parse categories
-  const categoryList = articleData.categories
-    ? articleData.categories.split(",").map((cat) => cat.trim())
-    : [];
+  // Fetch categories from junction table
+  const categories = await getArticleCategories(articleData.id);
 
   // Format date in Danish
   const formattedDate = format(articleData.publishedDate, "d. MMMM yyyy", {
@@ -78,10 +77,10 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
     <article className="min-h-screen">
       <header className="bg-muted/50 border-b">
         <div className="container mx-auto px-4 py-12 max-w-4xl">
-          {categoryList.length > 0 && (
+          {categories.length > 0 && (
             <div className="flex flex-wrap gap-2 mb-4">
-              {categoryList.map((category, index) => (
-                <CategoryLink key={index} category={category} variant="badge" />
+              {categories.map((category) => (
+                <CategoryLink key={category.id} category={category.name} variant="badge" />
               ))}
             </div>
           )}

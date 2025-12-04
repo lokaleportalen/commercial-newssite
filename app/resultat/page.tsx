@@ -5,6 +5,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { Search, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { ArticleCard } from "@/components/article/article-card";
+import type { Category } from "@/lib/category-helpers";
 
 interface Article {
   id: string;
@@ -13,7 +14,7 @@ interface Article {
   summary: string | null;
   image: string | null;
   publishedDate: Date;
-  categories: string | null;
+  categories: Category[];
 }
 
 function SearchResultsContent() {

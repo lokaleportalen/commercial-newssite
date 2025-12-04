@@ -4,6 +4,7 @@ import { format } from "date-fns";
 import { da } from "date-fns/locale";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { ArticleCategories } from "@/components/article/article-categories";
+import type { Category } from "@/lib/category-helpers";
 
 interface ArticleCardProps {
   title: string;
@@ -11,7 +12,7 @@ interface ArticleCardProps {
   summary: string | null;
   image: string | null;
   publishedDate: Date;
-  categories: string | null;
+  categories: Category[];
   variant?: "default" | "small";
 }
 
@@ -30,11 +31,6 @@ export function ArticleCard({
       ? summary.substring(0, 150).trim() + "..."
       : summary
     : "";
-
-  // Parse categories from comma-separated string
-  const categoryList = categories
-    ? categories.split(",").map((cat) => cat.trim())
-    : [];
 
   // Format date in Danish
   const formattedDate = format(publishedDate, "d. MMMM yyyy", { locale: da });
@@ -64,7 +60,7 @@ export function ArticleCard({
           {/* Content - 3/4 width */}
           <div className="flex flex-col p-3 flex-1">
             {/* Category */}
-            <ArticleCategories categories={categoryList} />
+            <ArticleCategories categories={categories.map(c => c.name)} />
 
             {/* Title */}
             <Link href={`/nyheder/${slug}`} className="mb-2">
@@ -108,7 +104,7 @@ export function ArticleCard({
 
       <div className="flex flex-col p-4 flex-1">
         {/* Categories */}
-        <ArticleCategories categories={categoryList} />
+        <ArticleCategories categories={categories.map(c => c.name)} />
 
         {/* Title */}
         <Link href={`/nyheder/${slug}`}>

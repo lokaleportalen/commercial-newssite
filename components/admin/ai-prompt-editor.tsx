@@ -203,12 +203,6 @@ export function AiPromptEditor({ promptId, onClose }: AiPromptEditorProps) {
     }
   };
 
-  const getModelBadgeColor = (model: string) => {
-    if (model?.includes("gpt")) return "default";
-    if (model?.includes("gemini")) return "secondary";
-    return "outline";
-  };
-
   if (isLoading) {
     return (
       <div className="p-8 space-y-4">
@@ -235,9 +229,6 @@ export function AiPromptEditor({ promptId, onClose }: AiPromptEditorProps) {
         <div className="flex items-start justify-between gap-4">
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-2">
-              <Badge variant={getModelBadgeColor(formData.model!)}>
-                {formData.model}
-              </Badge>
               <Badge variant="outline">{formData.section}</Badge>
               <span className="text-sm text-muted-foreground">
                 Updated {new Date(prompt.updatedAt).toLocaleDateString()}
@@ -291,11 +282,7 @@ export function AiPromptEditor({ promptId, onClose }: AiPromptEditorProps) {
                                 <Badge variant="outline">
                                   v{version.versionNumber}
                                 </Badge>
-                                <Badge
-                                  variant={getModelBadgeColor(version.model)}
-                                >
-                                  {version.model}
-                                </Badge>
+                                <Badge variant="outline">{version.model}</Badge>
                                 <span className="text-xs text-muted-foreground">
                                   {new Date(version.createdAt).toLocaleString()}
                                 </span>
