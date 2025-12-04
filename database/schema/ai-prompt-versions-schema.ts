@@ -1,5 +1,6 @@
-import { pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, uuid, index, unique } from "drizzle-orm/pg-core";
 import { aiPrompt } from "./ai-prompts-schema";
+import { user } from "./auth-schema";
 
 export const aiPromptVersion = pgTable("ai_prompt_version", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -19,5 +20,13 @@ export const aiPromptVersion = pgTable("ai_prompt_version", {
   changeDescription: text("change_description"), // Optional description of what changed
 
   createdAt: timestamp("created_at").defaultNow().notNull(),
-  createdBy: text("created_by"), // Could link to user table in future
-});
+  updatedAt: timestamp("updated_at") // FIX: Added missing updatedAt column
+    .defaultNow()
+    .$onUpdate(() => new Date())
+    .notNull(),
+  createdBy: text("created_by") // FIX: Added FK constraint to user table
+    .references(() => user.id, { onDelete: "set null" }),
+}, (table) => ({
+  promptIdIdx: index("idx_ai_prompt_version_prompt_id").on(table.promptId),
+  promptVersionUnique: unique("uq_ai_prompt_version_prompt_version").on(table.promptId, table.versionNumber), // FIX: Added unique constraint
+}));

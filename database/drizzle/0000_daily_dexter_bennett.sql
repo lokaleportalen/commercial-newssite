@@ -19,7 +19,7 @@ CREATE TABLE "session" (
 	"expires_at" timestamp NOT NULL,
 	"token" text NOT NULL,
 	"created_at" timestamp DEFAULT now() NOT NULL,
-	"updated_at" timestamp NOT NULL,
+	"updated_at" timestamp DEFAULT now() NOT NULL,
 	"ip_address" text,
 	"user_agent" text,
 	"user_id" text NOT NULL,
@@ -56,11 +56,12 @@ CREATE TABLE "article" (
 	"meta_description" text,
 	"image" text,
 	"source_url" text,
-	"categories" text,
 	"status" text DEFAULT 'draft' NOT NULL,
 	"published_date" timestamp DEFAULT now() NOT NULL,
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"updated_at" timestamp DEFAULT now() NOT NULL,
+	"prompt_id" uuid,
+	"search_vector" text,
 	CONSTRAINT "article_slug_unique" UNIQUE("slug")
 );
 --> statement-breakpoint
@@ -78,6 +79,7 @@ CREATE TABLE "category" (
 	"description" text,
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"updated_at" timestamp DEFAULT now() NOT NULL,
+	"search_vector" text,
 	CONSTRAINT "category_name_unique" UNIQUE("name"),
 	CONSTRAINT "category_slug_unique" UNIQUE("slug")
 );
@@ -125,13 +127,31 @@ CREATE TABLE "ai_prompt_version" (
 	"version_number" text NOT NULL,
 	"change_description" text,
 	"created_at" timestamp DEFAULT now() NOT NULL,
-	"created_by" text
+	"updated_at" timestamp DEFAULT now() NOT NULL,
+	"created_by" text,
+	CONSTRAINT "uq_ai_prompt_version_prompt_version" UNIQUE("prompt_id","version_number")
 );
 --> statement-breakpoint
 ALTER TABLE "account" ADD CONSTRAINT "account_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "session" ADD CONSTRAINT "session_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "article" ADD CONSTRAINT "article_prompt_id_ai_prompt_id_fk" FOREIGN KEY ("prompt_id") REFERENCES "public"."ai_prompt"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "article_category" ADD CONSTRAINT "article_category_article_id_article_id_fk" FOREIGN KEY ("article_id") REFERENCES "public"."article"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "article_category" ADD CONSTRAINT "article_category_category_id_category_id_fk" FOREIGN KEY ("category_id") REFERENCES "public"."category"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "user_preferences" ADD CONSTRAINT "user_preferences_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "role" ADD CONSTRAINT "role_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "ai_prompt_version" ADD CONSTRAINT "ai_prompt_version_prompt_id_ai_prompt_id_fk" FOREIGN KEY ("prompt_id") REFERENCES "public"."ai_prompt"("id") ON DELETE cascade ON UPDATE no action;
+ALTER TABLE "ai_prompt_version" ADD CONSTRAINT "ai_prompt_version_prompt_id_ai_prompt_id_fk" FOREIGN KEY ("prompt_id") REFERENCES "public"."ai_prompt"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "ai_prompt_version" ADD CONSTRAINT "ai_prompt_version_created_by_user_id_fk" FOREIGN KEY ("created_by") REFERENCES "public"."user"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
+CREATE INDEX "idx_session_user_id" ON "session" USING btree ("user_id");--> statement-breakpoint
+CREATE INDEX "idx_session_token" ON "session" USING btree ("token");--> statement-breakpoint
+CREATE INDEX "idx_user_email" ON "user" USING btree ("email");--> statement-breakpoint
+CREATE INDEX "idx_article_status" ON "article" USING btree ("status");--> statement-breakpoint
+CREATE INDEX "idx_article_published_date" ON "article" USING btree ("published_date" DESC NULLS LAST);--> statement-breakpoint
+CREATE INDEX "idx_article_status_published" ON "article" USING btree ("status","published_date" DESC NULLS LAST);--> statement-breakpoint
+CREATE INDEX "idx_article_prompt_id" ON "article" USING btree ("prompt_id");--> statement-breakpoint
+CREATE INDEX "idx_article_search_vector" ON "article" USING gin (to_tsvector('danish', COALESCE(title, '') || ' ' || COALESCE(summary, '') || ' ' || COALESCE(content, '')));--> statement-breakpoint
+CREATE INDEX "idx_article_category_category_id" ON "article_category" USING btree ("category_id");--> statement-breakpoint
+CREATE INDEX "idx_article_category_article_id" ON "article_category" USING btree ("article_id");--> statement-breakpoint
+CREATE INDEX "idx_category_search_vector" ON "category" USING gin (to_tsvector('danish', COALESCE(name, '') || ' ' || COALESCE(description, '')));--> statement-breakpoint
+CREATE INDEX "idx_user_preferences_user_id" ON "user_preferences" USING btree ("user_id");--> statement-breakpoint
+CREATE INDEX "idx_role_user_id" ON "role" USING btree ("user_id");--> statement-breakpoint
+CREATE INDEX "idx_ai_prompt_version_prompt_id" ON "ai_prompt_version" USING btree ("prompt_id");

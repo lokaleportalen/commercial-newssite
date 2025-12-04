@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, index } from "drizzle-orm/pg-core";
 import { user } from "./auth-schema";
 
 export const role = pgTable("role", {
@@ -13,4 +13,6 @@ export const role = pgTable("role", {
     .defaultNow()
     .$onUpdate(() => new Date())
     .notNull(),
-});
+}, (table) => ({
+  userIdIdx: index("idx_role_user_id").on(table.userId),
+}));

@@ -29,6 +29,12 @@ import {
 import { MoreVertical, Upload, X, Archive, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
+type Category = {
+  id: string;
+  name: string;
+  slug: string;
+};
+
 type Article = {
   id: string;
   title: string;
@@ -38,7 +44,7 @@ type Article = {
   metaDescription: string | null;
   image: string | null;
   sourceUrl: string | null;
-  categories: string | null;
+  categories: Category[] | string | null;
   status: string;
   publishedDate: Date;
   createdAt: Date;
@@ -60,7 +66,20 @@ export function ArticleEditor({ articleId, onClose }: ArticleEditorProps) {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showArchiveDialog, setShowArchiveDialog] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [categoriesDisplay, setCategoriesDisplay] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Helper function to convert categories to display string
+  const categoriesToString = (
+    categories: Category[] | string | null
+  ): string => {
+    if (!categories) return "";
+    if (typeof categories === "string") return categories;
+    if (Array.isArray(categories)) {
+      return categories.map((cat) => cat.name).join(", ");
+    }
+    return "";
+  };
 
   // Fetch article data
   useEffect(() => {
@@ -72,6 +91,7 @@ export function ArticleEditor({ articleId, onClose }: ArticleEditorProps) {
           const data = await response.json();
           setArticle(data.article);
           setFormData(data.article);
+          setCategoriesDisplay(categoriesToString(data.article.categories));
           setHasChanges(false);
         } else {
           toast.error("Failed to load article");
@@ -103,6 +123,12 @@ export function ArticleEditor({ articleId, onClose }: ArticleEditorProps) {
   const handleFieldChange = (field: keyof Article, value: any) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
     setHasChanges(true);
+  };
+
+  const handleCategoriesChange = (value: string) => {
+    setCategoriesDisplay(value);
+    // Store as string in formData - the API will handle the conversion
+    handleFieldChange("categories", value);
   };
 
   const handleImageUpload = async (file: File) => {
@@ -144,6 +170,7 @@ export function ArticleEditor({ articleId, onClose }: ArticleEditorProps) {
         const data = await response.json();
         setArticle(data.article);
         setFormData(data.article);
+        setCategoriesDisplay(categoriesToString(data.article.categories));
         setHasChanges(false);
         toast.success("Article saved successfully");
       } else {
@@ -160,6 +187,7 @@ export function ArticleEditor({ articleId, onClose }: ArticleEditorProps) {
   const handleCancel = () => {
     if (article) {
       setFormData(article);
+      setCategoriesDisplay(categoriesToString(article.categories));
       setHasChanges(false);
       toast.info("Changes cancelled");
     }
@@ -433,10 +461,14 @@ export function ArticleEditor({ articleId, onClose }: ArticleEditorProps) {
             <Label htmlFor="categories">Categories</Label>
             <Input
               id="categories"
-              value={formData.categories || ""}
-              onChange={(e) => handleFieldChange("categories", e.target.value)}
+              value={categoriesDisplay}
+              onChange={(e) => handleCategoriesChange(e.target.value)}
               placeholder="Comma-separated categories"
             />
+            <p className="text-xs text-muted-foreground">
+              Enter category names separated by commas (e.g., Tech, News,
+              Sports)
+            </p>
           </div>
 
           {/* Source URL */}

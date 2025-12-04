@@ -240,7 +240,6 @@ Svar KUN med valid JSON i denne præcise struktur:
         summary: metadata.summary,
         metaDescription: metadata.metaDescription,
         sourceUrl: newsItem.sourceUrl || null,
-        categories: metadata.categories,
         status: "published",
         publishedDate: new Date(),
       })

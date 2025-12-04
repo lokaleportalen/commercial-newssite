@@ -5,6 +5,7 @@ import { HeroBanner } from "@/components/article/hero-banner";
 import { HeroSection } from "@/components/article/hero-section";
 import { ArticleCard } from "@/components/article/article-card";
 import { Pagination } from "@/components/article/pagination";
+import { getArticleCategoriesBulk } from "@/lib/category-helpers";
 
 const HERO_ARTICLES_COUNT = 4;
 
@@ -49,14 +50,30 @@ export default async function Home({ searchParams }: HomeProps) {
   const gridArticlesCount = Math.max(0, totalCount - HERO_ARTICLES_COUNT);
   const totalPages = Math.ceil(gridArticlesCount / ARTICLES_PER_PAGE);
 
+  // Fetch categories for all articles in bulk
+  const allArticles = [...heroArticles, ...gridArticles];
+  const articleIds = allArticles.map((a) => a.id);
+  const categoriesMap = await getArticleCategoriesBulk(articleIds);
+
+  // Merge categories into articles
+  const heroArticlesWithCategories = heroArticles.map((art) => ({
+    ...art,
+    categories: categoriesMap.get(art.id) || [],
+  }));
+
+  const gridArticlesWithCategories = gridArticles.map((art) => ({
+    ...art,
+    categories: categoriesMap.get(art.id) || [],
+  }));
+
   const hasContent = heroArticles.length > 0 || gridArticles.length > 0;
 
   return (
     <div className="flex-1">
       <HeroBanner />
 
-      {isFirstPage && heroArticles.length > 0 && (
-        <HeroSection articles={heroArticles} />
+      {isFirstPage && heroArticlesWithCategories.length > 0 && (
+        <HeroSection articles={heroArticlesWithCategories} />
       )}
 
       <main className="container mx-auto px-4 py-12 max-w-6xl">
@@ -70,9 +87,9 @@ export default async function Home({ searchParams }: HomeProps) {
           <>
             <h2 className="text-3xl font-bold mb-8">Seneste Nyt</h2>
 
-            {gridArticles.length > 0 && (
+            {gridArticlesWithCategories.length > 0 && (
               <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {gridArticles.map((articleItem) => (
+                {gridArticlesWithCategories.map((articleItem) => (
                   <ArticleCard
                     key={articleItem.id}
                     title={articleItem.title}

@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ArticleCard } from "@/components/article/article-card";
 import { CategoryLink } from "@/components/article/category-link";
+import type { Category } from "@/lib/category-helpers";
 
 interface Article {
   id: string;
@@ -12,7 +13,7 @@ interface Article {
   summary: string | null;
   image: string | null;
   publishedDate: Date;
-  categories: string | null;
+  categories: Category[];
 }
 
 interface HeroSectionProps {
@@ -25,8 +26,8 @@ export function HeroSection({ articles }: HeroSectionProps) {
   const featuredArticle = articles[0];
   const sideArticles = articles.slice(1, 4);
 
-  const featuredCategory = featuredArticle.categories
-    ? featuredArticle.categories.split(",")[0].trim()
+  const featuredCategory = featuredArticle.categories.length > 0
+    ? featuredArticle.categories[0].name
     : null;
 
   return (
