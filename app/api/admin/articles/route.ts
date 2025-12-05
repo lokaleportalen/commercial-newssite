@@ -101,3 +101,133 @@ export async function GET(request: NextRequest) {
     );
   }
 }
+
+/**
+ * POST /api/admin/articles
+ * Create a new article
+ */
+export async function POST(request: NextRequest) {
+  try {
+    // Check if user is admin
+    await requireAdmin();
+
+    const body = await request.json();
+    const { title, slug, content, summary, metaDescription, image, sourceUrl, categories, status } = body;
+
+    // Validate required fields
+    if (!title || !slug || !content) {
+      return NextResponse.json(
+        { error: "Title, slug, and content are required" },
+        { status: 400 }
+      );
+    }
+
+    // Create the article
+    const [newArticle] = await db
+      .insert(article)
+      .values({
+        title,
+        slug,
+        content,
+        summary: summary || null,
+        metaDescription: metaDescription || null,
+        image: image || null,
+        sourceUrl: sourceUrl || null,
+        status: status || "draft",
+        publishedDate: new Date(),
+      })
+      .returning();
+
+    // Handle categories if provided
+    if (categories) {
+      const categoryNames = typeof categories === "string"
+        ? categories.split(",").map((c: string) => c.trim()).filter((c: string) => c)
+        : Array.isArray(categories)
+        ? categories
+        : [];
+
+      if (categoryNames.length > 0) {
+        // Get or create categories
+        for (const categoryName of categoryNames) {
+          // Check if category exists
+          const [existingCategory] = await db
+            .select()
+            .from(category)
+            .where(eq(category.name, categoryName))
+            .limit(1);
+
+          let categoryId: string;
+
+          if (existingCategory) {
+            categoryId = existingCategory.id;
+          } else {
+            // Create new category
+            const categorySlug = categoryName
+              .toLowerCase()
+              .replace(/\s+/g, "-")
+              .replace(/[^\w-]/g, "");
+            const [newCategory] = await db
+              .insert(category)
+              .values({
+                name: categoryName,
+                slug: categorySlug,
+              })
+              .returning();
+            categoryId = newCategory.id;
+          }
+
+          // Link article to category
+          await db.insert(articleCategory).values({
+            articleId: newArticle.id,
+            categoryId,
+          });
+        }
+      }
+    }
+
+    // Fetch the created article with categories
+    const [articleData] = await db
+      .select({
+        article: article,
+        prompt: aiPrompt,
+      })
+      .from(article)
+      .leftJoin(aiPrompt, eq(article.promptId, aiPrompt.id))
+      .where(eq(article.id, newArticle.id));
+
+    const categoriesMap = await getArticleCategoriesBulk([newArticle.id]);
+    const articleWithCategories = {
+      ...articleData.article,
+      prompt: articleData.prompt,
+      categories: categoriesMap.get(newArticle.id) || [],
+    };
+
+    return NextResponse.json(
+      { article: articleWithCategories },
+      { status: 201 }
+    );
+  } catch (error) {
+    console.error("Error creating article:", error);
+
+    if (error instanceof Error) {
+      if (error.message === "Unauthorized") {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      }
+      if (error.message.includes("Forbidden")) {
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      }
+      // Check for unique constraint violation (duplicate slug)
+      if (error.message.includes("unique") || error.message.includes("duplicate")) {
+        return NextResponse.json(
+          { error: "An article with this slug already exists" },
+          { status: 409 }
+        );
+      }
+    }
+
+    return NextResponse.json(
+      { error: "Failed to create article" },
+      { status: 500 }
+    );
+  }
+}

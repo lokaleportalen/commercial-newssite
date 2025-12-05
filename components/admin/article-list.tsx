@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useImperativeHandle, forwardRef } from "react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -28,17 +28,18 @@ type ArticleListProps = {
   onSelectArticle: (id: string) => void;
 };
 
-export function ArticleList({
-  selectedArticleId,
-  onSelectArticle,
-}: ArticleListProps) {
-  const [articles, setArticles] = useState<Article[]>([]);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [isLoading, setIsLoading] = useState(true);
+export type ArticleListRef = {
+  refresh: () => void;
+};
 
-  // Fetch articles
-  useEffect(() => {
-    async function fetchArticles() {
+export const ArticleList = forwardRef<ArticleListRef, ArticleListProps>(
+  function ArticleList({ selectedArticleId, onSelectArticle }, ref) {
+    const [articles, setArticles] = useState<Article[]>([]);
+    const [searchQuery, setSearchQuery] = useState("");
+    const [isLoading, setIsLoading] = useState(true);
+
+    // Fetch articles
+    const fetchArticles = async () => {
       try {
         setIsLoading(true);
         const response = await fetch("/api/admin/articles");
@@ -51,10 +52,16 @@ export function ArticleList({
       } finally {
         setIsLoading(false);
       }
-    }
+    };
 
-    fetchArticles();
-  }, []);
+    useEffect(() => {
+      fetchArticles();
+    }, []);
+
+    // Expose refresh method via ref
+    useImperativeHandle(ref, () => ({
+      refresh: fetchArticles,
+    }));
 
   // Filter articles based on search query
   const filteredArticles = useMemo(() => {
@@ -178,4 +185,4 @@ export function ArticleList({
       </div>
     </div>
   );
-}
+});
