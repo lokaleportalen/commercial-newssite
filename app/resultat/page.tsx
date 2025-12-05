@@ -2,9 +2,11 @@
 
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { Search, Loader2 } from "lucide-react";
+import { Search, Loader2, SlidersHorizontal } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import { ArticleCard } from "@/components/article/article-card";
+import { cn } from "@/lib/utils";
 
 interface Article {
   id: string;
@@ -16,17 +18,46 @@ interface Article {
   categories: string | null;
 }
 
+interface Category {
+  id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  articleCount: number;
+}
+
 function SearchResultsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const queryParam = searchParams.get("q") || "";
+  const categoryParam = searchParams.get("category") || "all";
+  const sortParam = searchParams.get("sort") || "date-desc";
 
   const [query, setQuery] = useState(queryParam);
+  const [selectedCategory, setSelectedCategory] = useState(categoryParam);
+  const [selectedSort, setSelectedSort] = useState(sortParam);
   const [results, setResults] = useState<Article[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
 
-  // Fetch results when query param changes
+  // Fetch categories on mount
+  useEffect(() => {
+    async function fetchCategories() {
+      try {
+        const response = await fetch("/api/categories");
+        if (response.ok) {
+          const data = await response.json();
+          setCategories(data.categories);
+        }
+      } catch (error) {
+        console.error("Error fetching categories:", error);
+      }
+    }
+    fetchCategories();
+  }, []);
+
+  // Fetch results when params change
   useEffect(() => {
     const fetchResults = async () => {
       if (queryParam.length < 4) {
@@ -38,9 +69,14 @@ function SearchResultsContent() {
       setLoading(true);
       setSearched(true);
       try {
-        const response = await fetch(
-          `/api/articles?search=${encodeURIComponent(queryParam)}`
-        );
+        const params = new URLSearchParams();
+        params.set("search", queryParam);
+        if (selectedCategory !== "all") {
+          params.set("category", selectedCategory);
+        }
+        params.set("sort", selectedSort);
+
+        const response = await fetch(`/api/articles?${params.toString()}`);
         if (response.ok) {
           const data = await response.json();
           // Convert date strings to Date objects
@@ -58,14 +94,50 @@ function SearchResultsContent() {
     };
 
     fetchResults();
-  }, [queryParam]);
+  }, [queryParam, selectedCategory, selectedSort]);
 
   // Update URL when search is submitted
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (query.trim()) {
-      router.push(`/resultat?q=${encodeURIComponent(query.trim())}`);
+      const params = new URLSearchParams();
+      params.set("q", query.trim());
+      if (selectedCategory !== "all") {
+        params.set("category", selectedCategory);
+      }
+      if (selectedSort !== "date-desc") {
+        params.set("sort", selectedSort);
+      }
+      router.push(`/resultat?${params.toString()}`);
     }
+  };
+
+  // Handle category filter change
+  const handleCategoryChange = (category: string) => {
+    setSelectedCategory(category);
+    const params = new URLSearchParams();
+    params.set("q", queryParam);
+    if (category !== "all") {
+      params.set("category", category);
+    }
+    if (selectedSort !== "date-desc") {
+      params.set("sort", selectedSort);
+    }
+    router.push(`/resultat?${params.toString()}`);
+  };
+
+  // Handle sort change
+  const handleSortChange = (sort: string) => {
+    setSelectedSort(sort);
+    const params = new URLSearchParams();
+    params.set("q", queryParam);
+    if (selectedCategory !== "all") {
+      params.set("category", selectedCategory);
+    }
+    if (sort !== "date-desc") {
+      params.set("sort", sort);
+    }
+    router.push(`/resultat?${params.toString()}`);
   };
 
   return (
@@ -97,6 +169,77 @@ function SearchResultsContent() {
       </div>
 
       <main className="container mx-auto px-4 py-12 max-w-6xl">
+        {/* Filters and Sort */}
+        {searched && queryParam.length >= 4 && (
+          <div className="mb-8 space-y-4">
+            {/* Category Filter */}
+            <div>
+              <div className="flex items-center gap-2 mb-3">
+                <SlidersHorizontal className="h-4 w-4 text-muted-foreground" />
+                <h3 className="text-sm font-medium">Filtrer efter kategori</h3>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <Badge
+                  variant={selectedCategory === "all" ? "default" : "outline"}
+                  className="cursor-pointer"
+                  onClick={() => handleCategoryChange("all")}
+                >
+                  Alle kategorier
+                </Badge>
+                {categories.map((category) => (
+                  <Badge
+                    key={category.id}
+                    variant={
+                      selectedCategory === category.name ? "default" : "outline"
+                    }
+                    className="cursor-pointer"
+                    onClick={() => handleCategoryChange(category.name)}
+                  >
+                    {category.name}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+
+            {/* Sort Options */}
+            <div>
+              <div className="flex items-center gap-2 mb-3">
+                <h3 className="text-sm font-medium">Sorter</h3>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <Badge
+                  variant={selectedSort === "date-desc" ? "default" : "outline"}
+                  className="cursor-pointer"
+                  onClick={() => handleSortChange("date-desc")}
+                >
+                  Nyeste først
+                </Badge>
+                <Badge
+                  variant={selectedSort === "date-asc" ? "default" : "outline"}
+                  className="cursor-pointer"
+                  onClick={() => handleSortChange("date-asc")}
+                >
+                  Ældste først
+                </Badge>
+                <Badge
+                  variant={selectedSort === "title-asc" ? "default" : "outline"}
+                  className="cursor-pointer"
+                  onClick={() => handleSortChange("title-asc")}
+                >
+                  Titel A-Å
+                </Badge>
+                <Badge
+                  variant={selectedSort === "title-desc" ? "default" : "outline"}
+                  className="cursor-pointer"
+                  onClick={() => handleSortChange("title-desc")}
+                >
+                  Titel Å-A
+                </Badge>
+              </div>
+            </div>
+          </div>
+        )}
+
         {loading && (
           <div className="flex items-center justify-center py-16">
             <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
@@ -108,7 +251,7 @@ function SearchResultsContent() {
             <Search className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
             <h2 className="text-2xl font-semibold mb-2">Ingen resultater fundet</h2>
             <p className="text-muted-foreground">
-              Prøv at søge med andre ord eller udtryk
+              Prøv at søge med andre ord eller udtryk{selectedCategory !== "all" && ", eller vælg en anden kategori"}
             </p>
           </div>
         )}
@@ -129,6 +272,9 @@ function SearchResultsContent() {
               <p className="text-muted-foreground">
                 {results.length} {results.length === 1 ? "resultat" : "resultater"}{" "}
                 fundet for <span className="font-medium text-foreground">&quot;{queryParam}&quot;</span>
+                {selectedCategory !== "all" && (
+                  <span> i kategori <span className="font-medium text-foreground">{selectedCategory}</span></span>
+                )}
               </p>
             </div>
 
