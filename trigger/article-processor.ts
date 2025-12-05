@@ -115,9 +115,7 @@ Søg på nettet efter yderligere detaljer, kontekst og relateret information om 
 Formatér dine research-resultater tydeligt med overskrifter og punkter.`;
 
     if (!researchPrompt) {
-      logger.warn(
-        "Using fallback research prompt - database prompt not found"
-      );
+      logger.warn("Using fallback research prompt - database prompt not found");
     }
 
     const openai = getOpenAIClient();
@@ -233,9 +231,7 @@ Svar KUN med valid JSON i denne præcise struktur:
 }`;
 
     if (!metadataPrompt) {
-      logger.warn(
-        "Using fallback metadata prompt - database prompt not found"
-      );
+      logger.warn("Using fallback metadata prompt - database prompt not found");
     }
 
     const metadataResponse = await openai.responses.create({
