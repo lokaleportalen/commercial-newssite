@@ -112,7 +112,7 @@ export async function POST(request: NextRequest) {
     await requireAdmin();
 
     const body = await request.json();
-    const { title, slug, content, summary, metaDescription, image, sourceUrl, categories, status } = body;
+    const { title, slug, content, summary, metaDescription, image, sources, categories, status } = body;
 
     // Validate required fields
     if (!title || !slug || !content) {
@@ -120,6 +120,16 @@ export async function POST(request: NextRequest) {
         { error: "Title, slug, and content are required" },
         { status: 400 }
       );
+    }
+
+    // Process sources - ensure it's an array
+    let sourcesArray: string[] = [];
+    if (sources) {
+      if (Array.isArray(sources)) {
+        sourcesArray = sources.filter(s => typeof s === 'string' && s.trim().length > 0);
+      } else if (typeof sources === 'string') {
+        sourcesArray = sources.split('\n').map(s => s.trim()).filter(s => s.length > 0);
+      }
     }
 
     // Create the article
@@ -132,7 +142,7 @@ export async function POST(request: NextRequest) {
         summary: summary || null,
         metaDescription: metaDescription || null,
         image: image || null,
-        sourceUrl: sourceUrl || null,
+        sources: sourcesArray,
         status: status || "draft",
         publishedDate: new Date(),
       })

@@ -43,7 +43,7 @@ type Article = {
   summary: string | null;
   metaDescription: string | null;
   image: string | null;
-  sourceUrl: string | null;
+  sources: string[] | null;
   categories: Category[] | string | null;
   status: string;
   publishedDate: Date;
@@ -67,6 +67,7 @@ export function ArticleEditor({ articleId, onClose }: ArticleEditorProps) {
   const [showArchiveDialog, setShowArchiveDialog] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [categoriesDisplay, setCategoriesDisplay] = useState("");
+  const [sourcesDisplay, setSourcesDisplay] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Helper function to convert categories to display string
@@ -92,6 +93,11 @@ export function ArticleEditor({ articleId, onClose }: ArticleEditorProps) {
           setArticle(data.article);
           setFormData(data.article);
           setCategoriesDisplay(categoriesToString(data.article.categories));
+          setSourcesDisplay(
+            Array.isArray(data.article.sources)
+              ? data.article.sources.join('\n')
+              : ''
+          );
           setHasChanges(false);
         } else {
           toast.error("Failed to load article");
@@ -129,6 +135,16 @@ export function ArticleEditor({ articleId, onClose }: ArticleEditorProps) {
     setCategoriesDisplay(value);
     // Store as string in formData - the API will handle the conversion
     handleFieldChange("categories", value);
+  };
+
+  const handleSourcesChange = (value: string) => {
+    setSourcesDisplay(value);
+    // Convert newline-separated string to array
+    const sourcesArray = value
+      .split('\n')
+      .map(s => s.trim())
+      .filter(s => s.length > 0);
+    handleFieldChange("sources", sourcesArray);
   };
 
   const handleImageUpload = async (file: File) => {
@@ -188,6 +204,11 @@ export function ArticleEditor({ articleId, onClose }: ArticleEditorProps) {
     if (article) {
       setFormData(article);
       setCategoriesDisplay(categoriesToString(article.categories));
+      setSourcesDisplay(
+        Array.isArray(article.sources)
+          ? article.sources.join('\n')
+          : ''
+      );
       setHasChanges(false);
       toast.info("Changes cancelled");
     }
@@ -471,15 +492,19 @@ export function ArticleEditor({ articleId, onClose }: ArticleEditorProps) {
             </p>
           </div>
 
-          {/* Source URL */}
+          {/* Sources */}
           <div className="space-y-2">
-            <Label htmlFor="sourceUrl">Source URL</Label>
-            <Input
-              id="sourceUrl"
-              value={formData.sourceUrl || ""}
-              onChange={(e) => handleFieldChange("sourceUrl", e.target.value)}
-              placeholder="Original news source URL"
+            <Label htmlFor="sources">Sources</Label>
+            <Textarea
+              id="sources"
+              value={sourcesDisplay}
+              onChange={(e) => handleSourcesChange(e.target.value)}
+              placeholder="Enter source URLs, one per line"
+              rows={5}
             />
+            <p className="text-xs text-muted-foreground">
+              Enter each source URL on a new line
+            </p>
           </div>
         </div>
       </div>

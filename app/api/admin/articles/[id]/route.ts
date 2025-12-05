@@ -93,7 +93,7 @@ export async function PUT(
       summary,
       metaDescription,
       image,
-      sourceUrl,
+      sources,
       categories,
       status,
     } = body;
@@ -106,6 +106,18 @@ export async function PUT(
       );
     }
 
+    // Process sources - ensure it's an array
+    let sourcesArray: string[] | undefined = undefined;
+    if (sources !== undefined) {
+      if (Array.isArray(sources)) {
+        sourcesArray = sources.filter(s => typeof s === 'string' && s.trim().length > 0);
+      } else if (typeof sources === 'string') {
+        sourcesArray = sources.split('\n').map(s => s.trim()).filter(s => s.length > 0);
+      } else {
+        sourcesArray = [];
+      }
+    }
+
     // Update article fields (excluding categories which are handled separately)
     const updatedArticles = await db
       .update(article)
@@ -116,7 +128,7 @@ export async function PUT(
         summary,
         metaDescription,
         image,
-        sourceUrl,
+        ...(sourcesArray !== undefined && { sources: sourcesArray }),
         status,
         updatedAt: new Date(),
       })

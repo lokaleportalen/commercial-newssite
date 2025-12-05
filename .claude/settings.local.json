@@ -22,7 +22,9 @@
       "Bash(echo:*)",
       "Bash(npm ls:*)",
       "Bash(npm run build:*)",
-      "Bash(npm run push:*)"
+      "Bash(npm run push:*)",
+      "Bash(npx drizzle-kit version)",
+      "Bash(npx drizzle-kit push:*)"
     ],
     "deny": [],
     "ask": []
