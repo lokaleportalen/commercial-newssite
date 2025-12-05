@@ -7,6 +7,8 @@ import { format } from "date-fns";
 import { da } from "date-fns/locale";
 import { CategoryLink } from "@/components/article/category-link";
 import { ArticleContent } from "@/components/article/article-content";
+import { RelatedArticles } from "@/components/article/related-articles";
+import { ShareButtons } from "@/components/article/share-buttons";
 import { Breadcrumbs } from "@/components/layout/breadcrumbs";
 import { getCurrentUser } from "@/lib/auth-helpers";
 import type { Metadata } from "next";
@@ -86,6 +88,10 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
     locale: da,
   });
 
+  // Construct full URL for sharing
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
+  const articleUrl = `${baseUrl}/nyheder/${articleData.slug}`;
+
   return (
     <article className="min-h-screen">
       <header className="bg-muted/50 border-b">
@@ -149,7 +155,17 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
           content={articleData.content}
           isAuthenticated={isAuthenticated}
         />
+
+        {/* Share Buttons */}
+        <ShareButtons
+          title={articleData.title}
+          url={articleUrl}
+          summary={articleData.summary}
+        />
       </div>
+
+      {/* Related Articles */}
+      <RelatedArticles articleId={articleData.id} />
     </article>
   );
 }
