@@ -114,10 +114,10 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { title, slug, content, summary, metaDescription, image, sources, categories, status } = body;
 
-    // Validate required fields
-    if (!title || !slug || !content) {
+    // Validate required fields (allow empty for draft creation)
+    if (title === undefined || slug === undefined || content === undefined) {
       return NextResponse.json(
-        { error: "Title, slug, and content are required" },
+        { error: "Title, slug, and content fields are required" },
         { status: 400 }
       );
     }

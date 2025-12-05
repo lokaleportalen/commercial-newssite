@@ -54,9 +54,10 @@ type Article = {
 type ArticleEditorProps = {
   articleId: string;
   onClose: () => void;
+  onArticleCreated?: (articleId: string) => void;
 };
 
-export function ArticleEditor({ articleId, onClose }: ArticleEditorProps) {
+export function ArticleEditor({ articleId, onClose, onArticleCreated }: ArticleEditorProps) {
   const router = useRouter();
   const [article, setArticle] = useState<Article | null>(null);
   const [formData, setFormData] = useState<Partial<Article>>({});
@@ -82,9 +83,53 @@ export function ArticleEditor({ articleId, onClose }: ArticleEditorProps) {
     return "";
   };
 
+  // Helper function to generate URL-friendly slug from title
+  const generateSlug = (title: string): string => {
+    return title
+      .toLowerCase()
+      .trim()
+      // Replace Danish characters
+      .replace(/æ/g, "ae")
+      .replace(/ø/g, "oe")
+      .replace(/å/g, "aa")
+      // Replace spaces and special chars with hyphens
+      .replace(/[^\w\s-]/g, "")
+      .replace(/\s+/g, "-")
+      // Remove multiple consecutive hyphens
+      .replace(/-+/g, "-")
+      // Remove leading/trailing hyphens
+      .replace(/^-+|-+$/g, "");
+  };
+
   // Fetch article data
   useEffect(() => {
     async function fetchArticle() {
+      // Handle new article creation (not saved to DB yet)
+      if (articleId === "new") {
+        const newArticle: Article = {
+          id: "new",
+          title: "",
+          slug: "",
+          content: "",
+          summary: null,
+          metaDescription: null,
+          image: null,
+          sources: null,
+          categories: null,
+          status: "draft",
+          publishedDate: new Date(),
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        };
+        setArticle(newArticle);
+        setFormData(newArticle);
+        setCategoriesDisplay("");
+        setSourcesDisplay("");
+        setHasChanges(false);
+        setIsLoading(false);
+        return;
+      }
+
       try {
         setIsLoading(true);
         const response = await fetch(`/api/admin/articles/${articleId}`);
@@ -127,7 +172,16 @@ export function ArticleEditor({ articleId, onClose }: ArticleEditorProps) {
   }, [hasChanges]);
 
   const handleFieldChange = (field: keyof Article, value: any) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
+    setFormData((prev) => {
+      const newData = { ...prev, [field]: value };
+
+      // Auto-generate slug from title
+      if (field === "title") {
+        newData.slug = generateSlug(value);
+      }
+
+      return newData;
+    });
     setHasChanges(true);
   };
 
@@ -176,10 +230,27 @@ export function ArticleEditor({ articleId, onClose }: ArticleEditorProps) {
   const handleSave = async () => {
     try {
       setIsSaving(true);
-      const response = await fetch(`/api/admin/articles/${articleId}`, {
-        method: "PUT",
+
+      // Validate required fields
+      if (!formData.title || !formData.content) {
+        toast.error("Title and content are required");
+        setIsSaving(false);
+        return;
+      }
+
+      const isNewArticle = articleId === "new";
+      const url = isNewArticle
+        ? "/api/admin/articles"
+        : `/api/admin/articles/${articleId}`;
+      const method = isNewArticle ? "POST" : "PUT";
+
+      const response = await fetch(url, {
+        method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          ...formData,
+          categories: categoriesDisplay,
+        }),
       });
 
       if (response.ok) {
@@ -187,10 +258,21 @@ export function ArticleEditor({ articleId, onClose }: ArticleEditorProps) {
         setArticle(data.article);
         setFormData(data.article);
         setCategoriesDisplay(categoriesToString(data.article.categories));
+        setSourcesDisplay(
+          Array.isArray(data.article.sources)
+            ? data.article.sources.join('\n')
+            : ''
+        );
         setHasChanges(false);
-        toast.success("Article saved successfully");
+        toast.success(isNewArticle ? "Article created successfully" : "Article saved successfully");
+
+        // If this was a new article, notify parent component
+        if (isNewArticle && data.article.id) {
+          onArticleCreated?.(data.article.id);
+        }
       } else {
-        toast.error("Failed to save article");
+        const error = await response.json();
+        toast.error(error.error || "Failed to save article");
       }
     } catch (error) {
       console.error("Error saving article:", error);
@@ -201,7 +283,11 @@ export function ArticleEditor({ articleId, onClose }: ArticleEditorProps) {
   };
 
   const handleCancel = () => {
-    if (article) {
+    if (articleId === "new") {
+      // Close the editor for new unsaved articles
+      onClose();
+      toast.info("Article creation cancelled");
+    } else if (article) {
       setFormData(article);
       setCategoriesDisplay(categoriesToString(article.categories));
       setSourcesDisplay(
@@ -304,6 +390,18 @@ export function ArticleEditor({ articleId, onClose }: ArticleEditorProps) {
                 Updated {new Date(article.updatedAt).toLocaleDateString()}
               </span>
             </div>
+            {formData.slug && (
+              <div className="text-sm text-muted-foreground">
+                <a
+                  href={`/${formData.slug}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:underline hover:text-foreground transition-colors"
+                >
+                  {typeof window !== 'undefined' ? window.location.origin : ''}/<span className="font-medium">{formData.slug}</span>
+                </a>
+              </div>
+            )}
           </div>
 
           <div className="flex items-center gap-2">
@@ -322,28 +420,30 @@ export function ArticleEditor({ articleId, onClose }: ArticleEditorProps) {
               />
             </div>
 
-            {/* Actions Menu */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="icon">
-                  <MoreVertical className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => setShowArchiveDialog(true)}>
-                  <Archive className="mr-2 h-4 w-4" />
-                  Archive
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  onClick={() => setShowDeleteDialog(true)}
-                  className="text-destructive"
-                >
-                  <Trash2 className="mr-2 h-4 w-4" />
-                  Delete
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            {/* Actions Menu - Only show for existing articles */}
+            {articleId !== "new" && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="icon">
+                    <MoreVertical className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => setShowArchiveDialog(true)}>
+                    <Archive className="mr-2 h-4 w-4" />
+                    Archive
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    onClick={() => setShowDeleteDialog(true)}
+                    className="text-destructive"
+                  >
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Delete
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
 
             <Button variant="outline" size="icon" onClick={onClose}>
               <X className="h-4 w-4" />
@@ -379,17 +479,6 @@ export function ArticleEditor({ articleId, onClose }: ArticleEditorProps) {
               value={formData.title || ""}
               onChange={(e) => handleFieldChange("title", e.target.value)}
               placeholder="Article title"
-            />
-          </div>
-
-          {/* Slug */}
-          <div className="space-y-2">
-            <Label htmlFor="slug">URL Slug *</Label>
-            <Input
-              id="slug"
-              value={formData.slug || ""}
-              onChange={(e) => handleFieldChange("slug", e.target.value)}
-              placeholder="article-url-slug"
             />
           </div>
 

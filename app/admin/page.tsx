@@ -19,7 +19,6 @@ export default function AdminDashboard() {
     null
   );
   const [isTriggeringCron, setIsTriggeringCron] = useState(false);
-  const [isCreatingArticle, setIsCreatingArticle] = useState(false);
   const articleListRef = useRef<ArticleListRef>(null);
 
   // Check if user is admin
@@ -53,26 +52,31 @@ export default function AdminDashboard() {
     setIsTriggeringCron(true);
 
     try {
-      // Fire the request without waiting for completion
-      fetch("/api/admin/trigger-cron", {
+      const response = await fetch("/api/admin/trigger-cron", {
         method: "POST",
-      }).catch((error) => {
-        // Ignore timeout errors - the job is still running
-        console.log("Cron job triggered (connection may timeout, but job continues):", error.message);
       });
 
-      // Show immediate success feedback
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.details || error.error || "Failed to trigger task");
+      }
+
+      const data = await response.json();
+
       toast.success("News fetch started!", {
-        description: "The job is running in the background. New articles will appear in 10-15 minutes.",
+        description: "The job is running on Trigger.dev. New articles will appear when processing completes.",
         duration: 5000,
       });
+
+      console.log("Trigger.dev task started:", data.taskId);
+      console.log("Monitor at:", data.monitorUrl);
 
       // Keep button disabled for 5 minutes to prevent duplicate triggers
       setTimeout(() => {
         setIsTriggeringCron(false);
       }, 300000); // 5 minutes
     } catch (error) {
-      console.error("Error triggering cron:", error);
+      console.error("Error triggering weekly news task:", error);
       toast.error("Failed to start news fetch", {
         description: error instanceof Error ? error.message : "Unknown error",
       });
@@ -80,41 +84,15 @@ export default function AdminDashboard() {
     }
   };
 
-  const handleCreateArticle = async () => {
-    setIsCreatingArticle(true);
+  const handleCreateArticle = () => {
+    // Open editor with special "new" ID - article will be created when user saves
+    setSelectedArticleId("new");
+  };
 
-    try {
-      // Create a new article with minimal required fields
-      const newSlug = `ny-artikel-${Date.now()}`;
-      const response = await fetch("/api/admin/articles", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          title: "Ny artikel",
-          slug: newSlug,
-          content: "Skriv artikelindhold her...",
-          status: "draft",
-        }),
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        toast.success("Artikel oprettet!");
-        setSelectedArticleId(data.article.id);
-        // Trigger a refresh of the article list
-        articleListRef.current?.refresh();
-      } else {
-        const error = await response.json();
-        toast.error("Kunne ikke oprette artikel", {
-          description: error.error || "Unknown error",
-        });
-      }
-    } catch (error) {
-      console.error("Error creating article:", error);
-      toast.error("Fejl ved oprettelse af artikel");
-    } finally {
-      setIsCreatingArticle(false);
-    }
+  const handleArticleCreated = (newArticleId: string) => {
+    // Switch to the newly created article and refresh the list
+    setSelectedArticleId(newArticleId);
+    articleListRef.current?.refresh();
   };
 
   if (isPending || isAdmin === null) {
@@ -145,12 +123,11 @@ export default function AdminDashboard() {
         <div className="flex items-center gap-2">
           <Button
             onClick={handleCreateArticle}
-            disabled={isCreatingArticle}
             size="sm"
             variant="default"
           >
             <Plus className="mr-2 h-4 w-4" />
-            {isCreatingArticle ? "Opretter..." : "Tilføj artikel"}
+            Tilføj artikel
           </Button>
           <Link href="/admin/ai-prompts">
             <Button size="sm" variant="outline">
@@ -187,6 +164,7 @@ export default function AdminDashboard() {
             <ArticleEditor
               articleId={selectedArticleId}
               onClose={() => setSelectedArticleId(null)}
+              onArticleCreated={handleArticleCreated}
             />
           ) : (
             <div className="flex h-full items-center justify-center text-muted-foreground">
