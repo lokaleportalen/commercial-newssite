@@ -148,50 +148,14 @@ export async function POST(request: NextRequest) {
       })
       .returning();
 
-    // Handle categories if provided
-    if (categories) {
-      const categoryNames = typeof categories === "string"
-        ? categories.split(",").map((c: string) => c.trim()).filter((c: string) => c)
-        : Array.isArray(categories)
-        ? categories
-        : [];
-
-      if (categoryNames.length > 0) {
-        // Get or create categories
-        for (const categoryName of categoryNames) {
-          // Check if category exists
-          const [existingCategory] = await db
-            .select()
-            .from(category)
-            .where(eq(category.name, categoryName))
-            .limit(1);
-
-          let categoryId: string;
-
-          if (existingCategory) {
-            categoryId = existingCategory.id;
-          } else {
-            // Create new category
-            const categorySlug = categoryName
-              .toLowerCase()
-              .replace(/\s+/g, "-")
-              .replace(/[^\w-]/g, "");
-            const [newCategory] = await db
-              .insert(category)
-              .values({
-                name: categoryName,
-                slug: categorySlug,
-              })
-              .returning();
-            categoryId = newCategory.id;
-          }
-
-          // Link article to category
-          await db.insert(articleCategory).values({
-            articleId: newArticle.id,
-            categoryId,
-          });
-        }
+    // Handle categories if provided (expecting array of category IDs)
+    if (categories && Array.isArray(categories) && categories.length > 0) {
+      // Link article to categories
+      for (const categoryId of categories) {
+        await db.insert(articleCategory).values({
+          articleId: newArticle.id,
+          categoryId,
+        });
       }
     }
 

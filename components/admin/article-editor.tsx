@@ -26,6 +26,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { CategorySelect } from "@/components/admin/category-select";
 import { MoreVertical, Upload, X, Archive, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -44,7 +45,7 @@ type Article = {
   metaDescription: string | null;
   image: string | null;
   sources: string[] | null;
-  categories: Category[] | string | null;
+  categories: Category[];
   status: string;
   publishedDate: Date;
   createdAt: Date;
@@ -67,21 +68,8 @@ export function ArticleEditor({ articleId, onClose, onArticleCreated }: ArticleE
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showArchiveDialog, setShowArchiveDialog] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
-  const [categoriesDisplay, setCategoriesDisplay] = useState("");
   const [sourcesDisplay, setSourcesDisplay] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  // Helper function to convert categories to display string
-  const categoriesToString = (
-    categories: Category[] | string | null
-  ): string => {
-    if (!categories) return "";
-    if (typeof categories === "string") return categories;
-    if (Array.isArray(categories)) {
-      return categories.map((cat) => cat.name).join(", ");
-    }
-    return "";
-  };
 
   // Helper function to generate URL-friendly slug from title
   const generateSlug = (title: string): string => {
@@ -115,7 +103,7 @@ export function ArticleEditor({ articleId, onClose, onArticleCreated }: ArticleE
           metaDescription: null,
           image: null,
           sources: null,
-          categories: null,
+          categories: [],
           status: "draft",
           publishedDate: new Date(),
           createdAt: new Date(),
@@ -123,7 +111,6 @@ export function ArticleEditor({ articleId, onClose, onArticleCreated }: ArticleE
         };
         setArticle(newArticle);
         setFormData(newArticle);
-        setCategoriesDisplay("");
         setSourcesDisplay("");
         setHasChanges(false);
         setIsLoading(false);
@@ -137,7 +124,6 @@ export function ArticleEditor({ articleId, onClose, onArticleCreated }: ArticleE
           const data = await response.json();
           setArticle(data.article);
           setFormData(data.article);
-          setCategoriesDisplay(categoriesToString(data.article.categories));
           setSourcesDisplay(
             Array.isArray(data.article.sources)
               ? data.article.sources.join('\n')
@@ -185,10 +171,8 @@ export function ArticleEditor({ articleId, onClose, onArticleCreated }: ArticleE
     setHasChanges(true);
   };
 
-  const handleCategoriesChange = (value: string) => {
-    setCategoriesDisplay(value);
-    // Store as string in formData - the API will handle the conversion
-    handleFieldChange("categories", value);
+  const handleCategoriesChange = (categories: Category[]) => {
+    handleFieldChange("categories", categories);
   };
 
   const handleSourcesChange = (value: string) => {
@@ -249,7 +233,7 @@ export function ArticleEditor({ articleId, onClose, onArticleCreated }: ArticleE
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...formData,
-          categories: categoriesDisplay,
+          categories: formData.categories?.map((c) => c.id) || [],
         }),
       });
 
@@ -257,7 +241,6 @@ export function ArticleEditor({ articleId, onClose, onArticleCreated }: ArticleE
         const data = await response.json();
         setArticle(data.article);
         setFormData(data.article);
-        setCategoriesDisplay(categoriesToString(data.article.categories));
         setSourcesDisplay(
           Array.isArray(data.article.sources)
             ? data.article.sources.join('\n')
@@ -289,7 +272,6 @@ export function ArticleEditor({ articleId, onClose, onArticleCreated }: ArticleE
       toast.info("Article creation cancelled");
     } else if (article) {
       setFormData(article);
-      setCategoriesDisplay(categoriesToString(article.categories));
       setSourcesDisplay(
         Array.isArray(article.sources)
           ? article.sources.join('\n')
@@ -568,16 +550,14 @@ export function ArticleEditor({ articleId, onClose, onArticleCreated }: ArticleE
 
           {/* Categories */}
           <div className="space-y-2">
-            <Label htmlFor="categories">Categories</Label>
-            <Input
-              id="categories"
-              value={categoriesDisplay}
-              onChange={(e) => handleCategoriesChange(e.target.value)}
-              placeholder="Comma-separated categories"
+            <Label htmlFor="categories">Categories (max 3)</Label>
+            <CategorySelect
+              selectedCategories={formData.categories || []}
+              onCategoriesChange={handleCategoriesChange}
+              maxCategories={3}
             />
             <p className="text-xs text-muted-foreground">
-              Enter category names separated by commas (e.g., Tech, News,
-              Sports)
+              Search and select up to 3 categories for this article
             </p>
           </div>
 
