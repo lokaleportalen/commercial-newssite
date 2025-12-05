@@ -12,7 +12,7 @@ export const article = pgTable("article", {
   image: text("image"),
   sources: jsonb("sources").$type<string[]>().default([]), // Array of source URLs
   // Categories now handled via article_category junction table
-  status: text("status").notNull().default("draft"), // draft, published, archived
+  status: text("status").notNull().default("draft"), // draft, published
   publishedDate: timestamp("published_date").defaultNow().notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at")

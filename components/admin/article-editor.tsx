@@ -10,13 +10,6 @@ import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Label } from "@/components/ui/label";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-  DropdownMenuSeparator,
-} from "@/components/ui/dropdown-menu";
-import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -27,7 +20,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { CategorySelect } from "@/components/admin/category-select";
-import { MoreVertical, Upload, X, Archive, Trash2 } from "lucide-react";
+import { Upload, X, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 type Category = {
@@ -58,7 +51,11 @@ type ArticleEditorProps = {
   onArticleCreated?: (articleId: string) => void;
 };
 
-export function ArticleEditor({ articleId, onClose, onArticleCreated }: ArticleEditorProps) {
+export function ArticleEditor({
+  articleId,
+  onClose,
+  onArticleCreated,
+}: ArticleEditorProps) {
   const router = useRouter();
   const [article, setArticle] = useState<Article | null>(null);
   const [formData, setFormData] = useState<Partial<Article>>({});
@@ -66,27 +63,28 @@ export function ArticleEditor({ articleId, onClose, onArticleCreated }: ArticleE
   const [isSaving, setIsSaving] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [showArchiveDialog, setShowArchiveDialog] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [sourcesDisplay, setSourcesDisplay] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Helper function to generate URL-friendly slug from title
   const generateSlug = (title: string): string => {
-    return title
-      .toLowerCase()
-      .trim()
-      // Replace Danish characters
-      .replace(/æ/g, "ae")
-      .replace(/ø/g, "oe")
-      .replace(/å/g, "aa")
-      // Replace spaces and special chars with hyphens
-      .replace(/[^\w\s-]/g, "")
-      .replace(/\s+/g, "-")
-      // Remove multiple consecutive hyphens
-      .replace(/-+/g, "-")
-      // Remove leading/trailing hyphens
-      .replace(/^-+|-+$/g, "");
+    return (
+      title
+        .toLowerCase()
+        .trim()
+        // Replace Danish characters
+        .replace(/æ/g, "ae")
+        .replace(/ø/g, "oe")
+        .replace(/å/g, "aa")
+        // Replace spaces and special chars with hyphens
+        .replace(/[^\w\s-]/g, "")
+        .replace(/\s+/g, "-")
+        // Remove multiple consecutive hyphens
+        .replace(/-+/g, "-")
+        // Remove leading/trailing hyphens
+        .replace(/^-+|-+$/g, "")
+    );
   };
 
   // Fetch article data
@@ -126,8 +124,8 @@ export function ArticleEditor({ articleId, onClose, onArticleCreated }: ArticleE
           setFormData(data.article);
           setSourcesDisplay(
             Array.isArray(data.article.sources)
-              ? data.article.sources.join('\n')
-              : ''
+              ? data.article.sources.join("\n")
+              : ""
           );
           setHasChanges(false);
         } else {
@@ -179,9 +177,9 @@ export function ArticleEditor({ articleId, onClose, onArticleCreated }: ArticleE
     setSourcesDisplay(value);
     // Convert newline-separated string to array
     const sourcesArray = value
-      .split('\n')
-      .map(s => s.trim())
-      .filter(s => s.length > 0);
+      .split("\n")
+      .map((s) => s.trim())
+      .filter((s) => s.length > 0);
     handleFieldChange("sources", sourcesArray);
   };
 
@@ -243,11 +241,15 @@ export function ArticleEditor({ articleId, onClose, onArticleCreated }: ArticleE
         setFormData(data.article);
         setSourcesDisplay(
           Array.isArray(data.article.sources)
-            ? data.article.sources.join('\n')
-            : ''
+            ? data.article.sources.join("\n")
+            : ""
         );
         setHasChanges(false);
-        toast.success(isNewArticle ? "Article created successfully" : "Article saved successfully");
+        toast.success(
+          isNewArticle
+            ? "Article created successfully"
+            : "Article saved successfully"
+        );
 
         // If this was a new article, notify parent component
         if (isNewArticle && data.article.id) {
@@ -273,35 +275,11 @@ export function ArticleEditor({ articleId, onClose, onArticleCreated }: ArticleE
     } else if (article) {
       setFormData(article);
       setSourcesDisplay(
-        Array.isArray(article.sources)
-          ? article.sources.join('\n')
-          : ''
+        Array.isArray(article.sources) ? article.sources.join("\n") : ""
       );
       setHasChanges(false);
       toast.info("Changes cancelled");
     }
-  };
-
-  const handleArchive = async () => {
-    try {
-      const response = await fetch(`/api/admin/articles/${articleId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...formData, status: "archived" }),
-      });
-
-      if (response.ok) {
-        toast.success("Article archived successfully");
-        onClose();
-        router.refresh();
-      } else {
-        toast.error("Failed to archive article");
-      }
-    } catch (error) {
-      console.error("Error archiving article:", error);
-      toast.error("Error archiving article");
-    }
-    setShowArchiveDialog(false);
   };
 
   const handleDelete = async () => {
@@ -328,8 +306,6 @@ export function ArticleEditor({ articleId, onClose, onArticleCreated }: ArticleE
     switch (status) {
       case "published":
         return "success";
-      case "archived":
-        return "secondary";
       default:
         return "warning";
     }
@@ -362,11 +338,7 @@ export function ArticleEditor({ articleId, onClose, onArticleCreated }: ArticleE
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-2">
               <Badge variant={getStatusVariant(formData.status!)}>
-                {formData.status === "published"
-                  ? "Published"
-                  : formData.status === "archived"
-                  ? "Archived"
-                  : "Draft"}
+                {formData.status === "published" ? "Published" : "Draft"}
               </Badge>
               <span className="text-sm text-muted-foreground">
                 Updated {new Date(article.updatedAt).toLocaleDateString()}
@@ -380,7 +352,8 @@ export function ArticleEditor({ articleId, onClose, onArticleCreated }: ArticleE
                   rel="noopener noreferrer"
                   className="hover:underline hover:text-foreground transition-colors"
                 >
-                  {typeof window !== 'undefined' ? window.location.origin : ''}/<span className="font-medium">{formData.slug}</span>
+                  {typeof window !== "undefined" ? window.location.origin : ""}/
+                  <span className="font-medium">{formData.slug}</span>
                 </a>
               </div>
             )}
@@ -398,33 +371,19 @@ export function ArticleEditor({ articleId, onClose, onArticleCreated }: ArticleE
                 onCheckedChange={(checked) =>
                   handleFieldChange("status", checked ? "published" : "draft")
                 }
-                disabled={formData.status === "archived"}
               />
             </div>
 
-            {/* Actions Menu - Only show for existing articles */}
+            {/* Delete button - Only show for existing articles */}
             {articleId !== "new" && (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="icon">
-                    <MoreVertical className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => setShowArchiveDialog(true)}>
-                    <Archive className="mr-2 h-4 w-4" />
-                    Archive
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    onClick={() => setShowDeleteDialog(true)}
-                    className="text-destructive"
-                  >
-                    <Trash2 className="mr-2 h-4 w-4" />
-                    Delete
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => setShowDeleteDialog(true)}
+                className="text-destructive hover:text-destructive hover:bg-destructive/10"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
             )}
 
             <Button variant="outline" size="icon" onClick={onClose}>
@@ -582,7 +541,7 @@ export function ArticleEditor({ articleId, onClose, onArticleCreated }: ArticleE
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogTitle>Delete Article?</AlertDialogTitle>
             <AlertDialogDescription>
               This will permanently delete the article. This action cannot be
               undone.
@@ -595,25 +554,6 @@ export function ArticleEditor({ articleId, onClose, onArticleCreated }: ArticleE
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      {/* Archive Dialog */}
-      <AlertDialog open={showArchiveDialog} onOpenChange={setShowArchiveDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Archive Article?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will archive the article and hide it from public view. You
-              can restore it later if needed.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleArchive}>
-              Archive
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
