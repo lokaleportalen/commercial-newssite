@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
-import { Menu, X, Search } from "lucide-react";
+import { Menu, X, Search, ChevronDown } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
 import { useUserRole } from "@/hooks/use-user-role";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,8 @@ import {
   NavigationMenuItem,
   NavigationMenuLink,
   NavigationMenuList,
+  NavigationMenuTrigger,
+  NavigationMenuContent,
   navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu";
 import {
@@ -27,11 +29,13 @@ import {
 import { cn } from "@/lib/utils";
 import Image from "next/image";
 
-const menuItems = [
-  { href: "/", label: "Alle nyheder" },
-  { href: "/investering", label: "Investering" },
-  { href: "/byggeri", label: "Byggeri" },
-];
+interface Category {
+  id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  articleCount: number;
+}
 
 export function Navigation() {
   const router = useRouter();
@@ -40,6 +44,33 @@ export function Navigation() {
   const { isAdmin } = useUserRole();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  // Fetch categories on mount
+  useEffect(() => {
+    async function fetchCategories() {
+      try {
+        const response = await fetch("/api/categories");
+        if (response.ok) {
+          const data = await response.json();
+          setCategories(data.categories);
+        }
+      } catch (error) {
+        console.error("Error fetching categories:", error);
+      }
+    }
+    fetchCategories();
+  }, []);
+
+  // Handle scroll for sticky navigation shadow
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 10);
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   const handleSignOut = async () => {
     await authClient.signOut({
@@ -53,7 +84,12 @@ export function Navigation() {
   };
 
   return (
-    <nav className="border-b bg-background">
+    <nav
+      className={cn(
+        "sticky top-0 z-50 border-b bg-background transition-shadow",
+        isScrolled && "shadow-md"
+      )}
+    >
       <div className="mx-auto max-w-6xl px-4">
         <div className="flex h-16 items-center justify-between">
           <div className="flex items-center gap-8">
@@ -74,16 +110,42 @@ export function Navigation() {
             {/* Desktop Navigation */}
             <NavigationMenu className="hidden md:flex">
               <NavigationMenuList>
-                {menuItems.map((item) => (
-                  <NavigationMenuItem key={item.href}>
-                    <NavigationMenuLink
-                      href={item.href}
-                      className={navigationMenuTriggerStyle()}
-                    >
-                      {item.label}
-                    </NavigationMenuLink>
-                  </NavigationMenuItem>
-                ))}
+                {/* Alle nyheder */}
+                <NavigationMenuItem>
+                  <NavigationMenuLink
+                    href="/"
+                    className={navigationMenuTriggerStyle()}
+                  >
+                    Alle nyheder
+                  </NavigationMenuLink>
+                </NavigationMenuItem>
+
+                {/* Kategorier Dropdown */}
+                <NavigationMenuItem>
+                  <NavigationMenuTrigger>Kategorier</NavigationMenuTrigger>
+                  <NavigationMenuContent>
+                    <div className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px]">
+                      {categories.map((category) => (
+                        <Link
+                          key={category.id}
+                          href={`/${category.slug}`}
+                          className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+                        >
+                          <div className="text-sm font-medium leading-none">
+                            {category.name}
+                          </div>
+                          <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+                            {category.description}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {category.articleCount}{" "}
+                            {category.articleCount === 1 ? "artikel" : "artikler"}
+                          </p>
+                        </Link>
+                      ))}
+                    </div>
+                  </NavigationMenuContent>
+                </NavigationMenuItem>
               </NavigationMenuList>
             </NavigationMenu>
           </div>
@@ -156,21 +218,47 @@ export function Navigation() {
                   </Button>
                 </DrawerClose>
               </DrawerHeader>
-              <div className="flex flex-col gap-2 p-4 h-full">
-                {/* Navigation Links */}
-                {menuItems.map((item) => (
+              <div className="flex flex-col gap-2 p-4 h-full overflow-y-auto">
+                {/* Alle nyheder Link */}
+                <Link
+                  href="/"
+                  onClick={() => setDrawerOpen(false)}
+                  className={cn(
+                    "rounded-md px-4 py-3 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground",
+                    pathname === "/"
+                      ? "bg-accent text-accent-foreground"
+                      : "text-foreground"
+                  )}
+                >
+                  Alle nyheder
+                </Link>
+
+                <Separator className="my-2" />
+
+                {/* Categories Section */}
+                <div className="px-4 py-2">
+                  <p className="text-xs font-semibold uppercase text-muted-foreground mb-2">
+                    Kategorier
+                  </p>
+                </div>
+                {categories.map((category) => (
                   <Link
-                    key={item.href}
-                    href={item.href}
+                    key={category.id}
+                    href={`/${category.slug}`}
                     onClick={() => setDrawerOpen(false)}
                     className={cn(
                       "rounded-md px-4 py-3 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground",
-                      pathname === item.href
+                      pathname === `/${category.slug}`
                         ? "bg-accent text-accent-foreground"
                         : "text-foreground"
                     )}
                   >
-                    {item.label}
+                    <div className="flex justify-between items-center">
+                      <span>{category.name}</span>
+                      <span className="text-xs text-muted-foreground">
+                        {category.articleCount}
+                      </span>
+                    </div>
                   </Link>
                 ))}
 

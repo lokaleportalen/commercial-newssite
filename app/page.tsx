@@ -1,10 +1,12 @@
 import { db } from "@/database/db";
-import { article } from "@/database/schema";
-import { eq, desc, sql } from "drizzle-orm";
+import { article, category, articleCategory } from "@/database/schema";
+import { eq, desc, sql, and, inArray } from "drizzle-orm";
 import { HeroBanner } from "@/components/article/hero-banner";
 import { HeroSection } from "@/components/article/hero-section";
 import { ArticleCard } from "@/components/article/article-card";
 import { Pagination } from "@/components/article/pagination";
+import { CategoryGrid } from "@/components/layout/category-grid";
+import { CategoryFilterWrapper } from "@/components/article/category-filter-wrapper";
 import { getArticleCategoriesBulk } from "@/lib/category-helpers";
 
 const HERO_ARTICLES_COUNT = 4;
@@ -12,13 +14,42 @@ const HERO_ARTICLES_COUNT = 4;
 const ARTICLES_PER_PAGE = 15;
 
 interface HomeProps {
-  searchParams: Promise<{ page?: string }>;
+  searchParams: Promise<{ page?: string; category?: string }>;
 }
 
 export default async function Home({ searchParams }: HomeProps) {
   const params = await searchParams;
   const currentPage = Number(params.page) || 1;
+  const selectedCategory = params.category || "all";
   const isFirstPage = currentPage === 1;
+
+  // Get category ID for filtering if category is selected
+  let categoryId: string | null = null;
+  let categoryName: string | null = null;
+  if (selectedCategory !== "all") {
+    const [categoryData] = await db
+      .select()
+      .from(category)
+      .where(eq(category.slug, selectedCategory))
+      .limit(1);
+    if (categoryData) {
+      categoryId = categoryData.id;
+      categoryName = categoryData.name;
+    }
+  }
+
+  // Build WHERE conditions
+  const whereConditions = [eq(article.status, "published")];
+
+  // Add category filter if selected
+  if (categoryId) {
+    const articlesWithCategory = db
+      .select({ articleId: articleCategory.articleId })
+      .from(articleCategory)
+      .where(eq(articleCategory.categoryId, categoryId));
+
+    whereConditions.push(inArray(article.id, articlesWithCategory));
+  }
 
   const gridOffset = isFirstPage
     ? HERO_ARTICLES_COUNT
@@ -29,21 +60,21 @@ export default async function Home({ searchParams }: HomeProps) {
       ? db
           .select()
           .from(article)
-          .where(eq(article.status, "published"))
+          .where(and(...whereConditions))
           .orderBy(desc(article.publishedDate))
           .limit(HERO_ARTICLES_COUNT)
       : Promise.resolve([]),
     db
       .select()
       .from(article)
-      .where(eq(article.status, "published"))
+      .where(and(...whereConditions))
       .orderBy(desc(article.publishedDate))
       .limit(ARTICLES_PER_PAGE)
       .offset(gridOffset),
     db
       .select({ count: sql<number>`count(*)` })
       .from(article)
-      .where(eq(article.status, "published")),
+      .where(and(...whereConditions)),
   ]);
 
   const totalCount = Number(totalCountResult[0]?.count || 0);
@@ -76,6 +107,12 @@ export default async function Home({ searchParams }: HomeProps) {
         <HeroSection articles={heroArticlesWithCategories} />
       )}
 
+      {/* Category Grid - Only on first page */}
+      {isFirstPage && <CategoryGrid />}
+
+      {/* Category Filter Tabs */}
+      <CategoryFilterWrapper selectedCategory={selectedCategory} />
+
       <main className="container mx-auto px-4 py-12 max-w-6xl">
         {!hasContent ? (
           <section className="text-center py-12">
@@ -85,7 +122,9 @@ export default async function Home({ searchParams }: HomeProps) {
           </section>
         ) : (
           <>
-            <h2 className="text-3xl font-bold mb-8">Seneste Nyt</h2>
+            <h2 className="text-3xl font-bold mb-8">
+              {selectedCategory !== "all" ? `Seneste fra ${categoryName}` : "Seneste Nyt"}
+            </h2>
 
             {gridArticlesWithCategories.length > 0 && (
               <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

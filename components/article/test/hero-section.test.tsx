@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { HeroSection } from '../hero-section'
+import type { Category } from '@/lib/category-helpers'
 
 // Mock Next.js Image component
 vi.mock('next/image', () => ({
@@ -10,6 +11,11 @@ vi.mock('next/image', () => ({
 }))
 
 describe('HeroSection', () => {
+  const mockCategories: Category[] = [
+    { id: '1', name: 'Investering', slug: 'investering', description: null },
+    { id: '2', name: 'Byggeri', slug: 'byggeri', description: null },
+  ]
+
   const mockArticles = [
     {
       id: '1',
@@ -18,7 +24,7 @@ describe('HeroSection', () => {
       summary: 'This is the featured article summary',
       image: '/featured.jpg',
       publishedDate: new Date('2025-01-15'),
-      categories: 'Investering, Byggeri',
+      categories: [mockCategories[0], mockCategories[1]],
     },
     {
       id: '2',
@@ -27,7 +33,7 @@ describe('HeroSection', () => {
       summary: 'First side article',
       image: '/side1.jpg',
       publishedDate: new Date('2025-01-14'),
-      categories: 'Byggeri',
+      categories: [mockCategories[1]],
     },
     {
       id: '3',
@@ -36,7 +42,7 @@ describe('HeroSection', () => {
       summary: 'Second side article',
       image: '/side2.jpg',
       publishedDate: new Date('2025-01-13'),
-      categories: 'Investering',
+      categories: [mockCategories[0]],
     },
     {
       id: '4',
@@ -45,7 +51,7 @@ describe('HeroSection', () => {
       summary: 'Third side article',
       image: '/side3.jpg',
       publishedDate: new Date('2025-01-12'),
-      categories: 'Byggeri',
+      categories: [mockCategories[1]],
     },
   ]
 
