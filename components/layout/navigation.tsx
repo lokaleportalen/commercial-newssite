@@ -88,6 +88,7 @@ export function Navigation() {
 
   return (
     <nav
+      suppressHydrationWarning
       className={cn(
         "sticky top-0 z-50 border-b bg-background transition-shadow",
         isScrolled && "shadow-md"

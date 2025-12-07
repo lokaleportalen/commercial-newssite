@@ -14,7 +14,11 @@ import {
 } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 
-export function PreferencesForm() {
+interface PreferencesFormProps {
+  onClose?: () => void;
+}
+
+export function PreferencesForm({ onClose }: PreferencesFormProps = {}) {
   const router = useRouter();
   const { data: session } = authClient.useSession();
   const [newsCategory, setNewsCategory] = useState("all");
@@ -68,6 +72,12 @@ export function PreferencesForm() {
       }
 
       setSuccess("Dine præferencer er blevet gemt");
+      // If onClose is provided (dialog mode), close after a short delay
+      if (onClose) {
+        setTimeout(() => {
+          onClose();
+        }, 1500);
+      }
     } catch (err) {
       setError("Der opstod en fejl. Prøv venligst igen.");
     } finally {
@@ -92,7 +102,14 @@ export function PreferencesForm() {
       }
 
       setSuccess("Du er nu afmeldt alle nyhedsmails");
-      router.push("/profile");
+      // If onClose is provided (dialog mode), close after a short delay
+      if (onClose) {
+        setTimeout(() => {
+          onClose();
+        }, 1500);
+      } else {
+        router.push("/profile");
+      }
     } catch (err) {
       setError("Der opstod en fejl. Prøv venligst igen.");
     } finally {
@@ -127,163 +144,140 @@ export function PreferencesForm() {
 
   return (
     <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Definér hvilke nyheder du vil have</CardTitle>
-          <CardDescription>
-            Vælg typer af nyheder og hvor ofte du vil have dem sendt på mail.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit}>
-            <div className="space-y-6">
-              {error && (
-                <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
-                  {error}
-                </div>
-              )}
-              {success && (
-                <div className="rounded-md bg-green-50 p-3 text-sm text-green-700">
-                  {success}
-                </div>
-              )}
-
-              {/* News Categories */}
-              <div className="space-y-3">
-                <Label className="text-sm font-medium">
-                  Nyhedskategorier
-                  <span className="ml-1 text-xs font-normal text-muted-foreground">
-                    Jeg ønsker:
-                  </span>
-                </Label>
-                <div className="space-y-2">
-                  <label className="flex cursor-pointer items-center space-x-3 rounded-lg border p-3 hover:bg-accent/50">
-                    <input
-                      type="radio"
-                      name="newsCategory"
-                      value="all"
-                      checked={newsCategory === "all"}
-                      onChange={(e) => setNewsCategory(e.target.value)}
-                      className="h-4 w-4 border-gray-300 text-primary focus:ring-2 focus:ring-primary"
-                    />
-                    <span className="text-sm">Alle nyheder</span>
-                  </label>
-
-                  <label className="flex cursor-pointer items-center space-x-3 rounded-lg border p-3 hover:bg-accent/50">
-                    <input
-                      type="radio"
-                      name="newsCategory"
-                      value="investment"
-                      checked={newsCategory === "investment"}
-                      onChange={(e) => setNewsCategory(e.target.value)}
-                      className="h-4 w-4 border-gray-300 text-primary focus:ring-2 focus:ring-primary"
-                    />
-                    <span className="text-sm">Investeringsnyheder</span>
-                  </label>
-
-                  <label className="flex cursor-pointer items-center space-x-3 rounded-lg border p-3 hover:bg-accent/50">
-                    <input
-                      type="radio"
-                      name="newsCategory"
-                      value="construction"
-                      checked={newsCategory === "construction"}
-                      onChange={(e) => setNewsCategory(e.target.value)}
-                      className="h-4 w-4 border-gray-300 text-primary focus:ring-2 focus:ring-primary"
-                    />
-                    <span className="text-sm">Bygudvikling</span>
-                  </label>
-
-                  <label className="flex cursor-pointer items-center space-x-3 rounded-lg border p-3 hover:bg-accent/50">
-                    <input
-                      type="radio"
-                      name="newsCategory"
-                      value="new"
-                      checked={newsCategory === "new"}
-                      onChange={(e) => setNewsCategory(e.target.value)}
-                      className="h-4 w-4 border-gray-300 text-primary focus:ring-2 focus:ring-primary"
-                    />
-                    <span className="text-sm">D nyt</span>
-                  </label>
-
-                  <label className="flex cursor-pointer items-center space-x-3 rounded-lg border p-3 hover:bg-accent/50">
-                    <input
-                      type="radio"
-                      name="newsCategory"
-                      value="old"
-                      checked={newsCategory === "old"}
-                      onChange={(e) => setNewsCategory(e.target.value)}
-                      className="h-4 w-4 border-gray-300 text-primary focus:ring-2 focus:ring-primary"
-                    />
-                    <span className="text-sm">E nyt</span>
-                  </label>
-                </div>
-              </div>
-
-              {/* Email Frequency */}
-              <div className="space-y-3">
-                <Label className="text-sm font-medium">
-                  Hyppighed for nyheder
-                </Label>
-                <div className="space-y-2">
-                  <label className="flex cursor-pointer items-center space-x-3 rounded-lg border p-3 hover:bg-accent/50">
-                    <input
-                      type="radio"
-                      name="emailFrequency"
-                      value="immediate"
-                      checked={emailFrequency === "immediate"}
-                      onChange={(e) => setEmailFrequency(e.target.value)}
-                      className="h-4 w-4 border-gray-300 text-primary focus:ring-2 focus:ring-primary"
-                    />
-                    <span className="text-sm">
-                      Send mig en mail hver gang der er en relevant nyhed
-                    </span>
-                  </label>
-
-                  <label className="flex cursor-pointer items-center space-x-3 rounded-lg border p-3 hover:bg-accent/50">
-                    <input
-                      type="radio"
-                      name="emailFrequency"
-                      value="daily"
-                      checked={emailFrequency === "daily"}
-                      onChange={(e) => setEmailFrequency(e.target.value)}
-                      className="h-4 w-4 border-gray-300 text-primary focus:ring-2 focus:ring-primary"
-                    />
-                    <span className="text-sm">
-                      Send mig relevante nyheder 1 gang om dagen
-                    </span>
-                  </label>
-                </div>
-              </div>
-
-              {/* Submit Button */}
-              <Button
-                type="submit"
-                disabled={isSaving}
-                className="w-full"
-              >
-                {isSaving ? "Gemmer..." : "Bekræft"}
-              </Button>
-
-              {/* Unsubscribe link */}
-              <button
-                type="button"
-                onClick={handleUnsubscribe}
-                disabled={isSaving}
-                className="w-full text-center text-sm text-muted-foreground hover:underline"
-              >
-                Afmeld alle mails
-              </button>
+      <form onSubmit={handleSubmit}>
+        <div className="space-y-6">
+          {error && (
+            <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
+              {error}
             </div>
-          </form>
-        </CardContent>
-      </Card>
+          )}
+          {success && (
+            <div className="rounded-md bg-green-50 p-3 text-sm text-green-700">
+              {success}
+            </div>
+          )}
 
-      {/* Back to Profile */}
-      <div className="text-center">
-        <Button asChild variant="outline">
-          <Link href="/profile">Tilbage til profil</Link>
-        </Button>
-      </div>
+          {/* News Categories */}
+          <div className="space-y-3">
+            <Label className="text-sm font-medium flex flex-col items-start">
+              Nyhedskategorier
+              <span className="text-xs font-normal text-muted-foreground">
+                Jeg ønsker:
+              </span>
+            </Label>
+            <div className="space-y-2">
+              <label className="flex cursor-pointer items-center space-x-3 rounded-lg border p-3 hover:bg-accent/50">
+                <input
+                  type="radio"
+                  name="newsCategory"
+                  value="all"
+                  checked={newsCategory === "all"}
+                  onChange={(e) => setNewsCategory(e.target.value)}
+                  className="h-4 w-4 border-gray-300 text-primary focus:ring-2 focus:ring-primary"
+                />
+                <span className="text-sm">Alle nyheder</span>
+              </label>
+
+              <label className="flex cursor-pointer items-center space-x-3 rounded-lg border p-3 hover:bg-accent/50">
+                <input
+                  type="radio"
+                  name="newsCategory"
+                  value="investment"
+                  checked={newsCategory === "investment"}
+                  onChange={(e) => setNewsCategory(e.target.value)}
+                  className="h-4 w-4 border-gray-300 text-primary focus:ring-2 focus:ring-primary"
+                />
+                <span className="text-sm">Investeringsnyheder</span>
+              </label>
+
+              <label className="flex cursor-pointer items-center space-x-3 rounded-lg border p-3 hover:bg-accent/50">
+                <input
+                  type="radio"
+                  name="newsCategory"
+                  value="construction"
+                  checked={newsCategory === "construction"}
+                  onChange={(e) => setNewsCategory(e.target.value)}
+                  className="h-4 w-4 border-gray-300 text-primary focus:ring-2 focus:ring-primary"
+                />
+                <span className="text-sm">Bygudvikling</span>
+              </label>
+
+              <label className="flex cursor-pointer items-center space-x-3 rounded-lg border p-3 hover:bg-accent/50">
+                <input
+                  type="radio"
+                  name="newsCategory"
+                  value="new"
+                  checked={newsCategory === "new"}
+                  onChange={(e) => setNewsCategory(e.target.value)}
+                  className="h-4 w-4 border-gray-300 text-primary focus:ring-2 focus:ring-primary"
+                />
+                <span className="text-sm">D nyt</span>
+              </label>
+
+              <label className="flex cursor-pointer items-center space-x-3 rounded-lg border p-3 hover:bg-accent/50">
+                <input
+                  type="radio"
+                  name="newsCategory"
+                  value="old"
+                  checked={newsCategory === "old"}
+                  onChange={(e) => setNewsCategory(e.target.value)}
+                  className="h-4 w-4 border-gray-300 text-primary focus:ring-2 focus:ring-primary"
+                />
+                <span className="text-sm">E nyt</span>
+              </label>
+            </div>
+          </div>
+
+          {/* Email Frequency */}
+          <div className="space-y-3">
+            <Label className="text-sm font-medium">Hyppighed for nyheder</Label>
+            <div className="space-y-2">
+              <label className="flex cursor-pointer items-center space-x-3 rounded-lg border p-3 hover:bg-accent/50">
+                <input
+                  type="radio"
+                  name="emailFrequency"
+                  value="immediate"
+                  checked={emailFrequency === "immediate"}
+                  onChange={(e) => setEmailFrequency(e.target.value)}
+                  className="h-4 w-4 border-gray-300 text-primary focus:ring-2 focus:ring-primary"
+                />
+                <span className="text-sm">
+                  Send mig en mail hver gang der er en relevant nyhed
+                </span>
+              </label>
+
+              <label className="flex cursor-pointer items-center space-x-3 rounded-lg border p-3 hover:bg-accent/50">
+                <input
+                  type="radio"
+                  name="emailFrequency"
+                  value="daily"
+                  checked={emailFrequency === "daily"}
+                  onChange={(e) => setEmailFrequency(e.target.value)}
+                  className="h-4 w-4 border-gray-300 text-primary focus:ring-2 focus:ring-primary"
+                />
+                <span className="text-sm">
+                  Send mig relevante nyheder 1 gang om dagen
+                </span>
+              </label>
+            </div>
+          </div>
+
+          {/* Submit Button */}
+          <Button type="submit" disabled={isSaving} className="w-full">
+            {isSaving ? "Gemmer..." : "Bekræft"}
+          </Button>
+
+          {/* Unsubscribe link */}
+          <button
+            type="button"
+            onClick={handleUnsubscribe}
+            disabled={isSaving}
+            className="w-full text-center text-sm text-muted-foreground hover:underline"
+          >
+            Afmeld alle mails
+          </button>
+        </div>
+      </form>
     </div>
   );
 }
