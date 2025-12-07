@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, boolean } from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, boolean, index } from "drizzle-orm/pg-core";
 
 export const user = pgTable("user", {
   id: text("id").primaryKey(),
@@ -12,7 +12,9 @@ export const user = pgTable("user", {
     .defaultNow()
     .$onUpdate(() => /* @__PURE__ */ new Date())
     .notNull(),
-});
+}, (table) => ({
+  emailIdx: index("idx_user_email").on(table.email),
+}));
 
 export const session = pgTable("session", {
   id: text("id").primaryKey(),
@@ -20,6 +22,7 @@ export const session = pgTable("session", {
   token: text("token").notNull().unique(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at")
+    .defaultNow() // FIX: Added missing defaultNow()
     .$onUpdate(() => /* @__PURE__ */ new Date())
     .notNull(),
   ipAddress: text("ip_address"),
@@ -27,7 +30,10 @@ export const session = pgTable("session", {
   userId: text("user_id")
     .notNull()
     .references(() => user.id, { onDelete: "cascade" }),
-});
+}, (table) => ({
+  userIdIdx: index("idx_session_user_id").on(table.userId),
+  tokenIdx: index("idx_session_token").on(table.token),
+}));
 
 export const account = pgTable("account", {
   id: text("id").primaryKey(),

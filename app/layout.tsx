@@ -11,7 +11,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Nyheder",
+  title: "Estate News",
   description: "En del af Lokaleportalen.dk",
 };
 

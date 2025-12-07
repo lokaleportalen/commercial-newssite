@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { ArticleCard } from "@/components/article/article-card";
 import { Skeleton } from "@/components/ui/skeleton";
+import type { Category } from "@/lib/category-helpers";
 
 interface Article {
   id: string;
@@ -11,7 +12,7 @@ interface Article {
   summary: string | null;
   image: string | null;
   publishedDate: Date;
-  categories: string | null;
+  categories: Category[];
 }
 
 interface RelatedArticlesProps {

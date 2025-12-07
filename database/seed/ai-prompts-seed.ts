@@ -22,14 +22,14 @@ Returner resultaterne i denne EKSAKTE JSON struktur:
     {
       "title": "Nyhedstitel",
       "summary": "2-3 sætninger som opsummerer historien",
-      "sourceUrl": "Den fulde URL til den originale nyhedsartikel (f.eks. https://estatemedia.dk/article/...)",
+      "sources": ["URL1", "URL2", "URL3"],
       "date": "Dato eller tidsramme"
     }
   ]
 }
 
 VIGTIGT:
-- "sourceUrl" skal være den faktiske URL hvor du fandt nyheden, IKKE bare navnet på kilden. Inkluder altid den fulde URL.
+- "sources" skal være et array af faktiske URLs hvor du fandt information om nyheden (f.eks. ["https://estatemedia.dk/article/...", "https://edc.dk/artikel/..."]). Inkluder ALLE relevante kilder du brugte.
 - Sørg for at returnere præcis 10 nyhedshistorier.
 - Dit HELE svar skal være valid JSON - start med { og slut med }
 - Inkludér INGEN tekst før eller efter JSON'en
@@ -46,7 +46,8 @@ VIGTIGT:
 
 Titel: {{title}}
 Resumé: {{summary}}
-{{#if sourceUrl}}Kilde URL: {{sourceUrl}}{{/if}}
+{{#if sources}}Kilder:
+{{sources}}{{/if}}
 {{#if date}}Dato: {{date}}{{/if}}
 
 Søg på nettet efter yderligere detaljer, kontekst og relateret information om denne nyhedshistorie. Levér:
@@ -55,6 +56,8 @@ Søg på nettet efter yderligere detaljer, kontekst og relateret information om 
 3. Citater fra relevante kilder (hvis tilgængelige)
 4. Indvirkning på det danske erhvervsejendomsmarked
 5. Relaterede udviklinger eller tendenser
+
+KRITISK: Under din research, hold styr på ALLE de URLs du bruger som kilder. Returner dem i dit research svar under en "Kilder brugt:" sektion.
 
 Formatér dine research-resultater tydeligt med overskrifter og punkter.`,
     },

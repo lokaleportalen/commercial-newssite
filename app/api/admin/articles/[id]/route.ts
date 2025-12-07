@@ -3,6 +3,11 @@ import { requireAdmin } from "@/lib/auth-helpers";
 import { db } from "@/database/db";
 import { article } from "@/database/schema";
 import { eq } from "drizzle-orm";
+import {
+  resolveCategoryIds,
+  updateArticleCategories,
+  getArticleCategories,
+} from "@/lib/category-helpers";
 
 type RouteContext = {
   params: Promise<{ id: string }>;
@@ -35,7 +40,18 @@ export async function GET(
       );
     }
 
-    return NextResponse.json({ article: articles[0] }, { status: 200 });
+    // Fetch categories from junction table
+    const categories = await getArticleCategories(id);
+
+    return NextResponse.json(
+      {
+        article: {
+          ...articles[0],
+          categories,
+        },
+      },
+      { status: 200 }
+    );
   } catch (error) {
     console.error("Error fetching article:", error);
 
@@ -77,7 +93,7 @@ export async function PUT(
       summary,
       metaDescription,
       image,
-      sourceUrl,
+      sources,
       categories,
       status,
     } = body;
@@ -90,7 +106,19 @@ export async function PUT(
       );
     }
 
-    // Update the article
+    // Process sources - ensure it's an array
+    let sourcesArray: string[] | undefined = undefined;
+    if (sources !== undefined) {
+      if (Array.isArray(sources)) {
+        sourcesArray = sources.filter(s => typeof s === 'string' && s.trim().length > 0);
+      } else if (typeof sources === 'string') {
+        sourcesArray = sources.split('\n').map(s => s.trim()).filter(s => s.length > 0);
+      } else {
+        sourcesArray = [];
+      }
+    }
+
+    // Update article fields (excluding categories which are handled separately)
     const updatedArticles = await db
       .update(article)
       .set({
@@ -100,8 +128,7 @@ export async function PUT(
         summary,
         metaDescription,
         image,
-        sourceUrl,
-        categories,
+        ...(sourcesArray !== undefined && { sources: sourcesArray }),
         status,
         updatedAt: new Date(),
       })
@@ -115,8 +142,43 @@ export async function PUT(
       );
     }
 
+    // Update categories in junction table if provided
+    if (categories !== undefined) {
+      if (Array.isArray(categories)) {
+        const { ids: categoryIds, unknown } =
+          await resolveCategoryIds(categories);
+
+        if (unknown.length > 0) {
+          return NextResponse.json(
+            {
+              error: "Invalid categories",
+              unknown,
+              message: `Unknown categories: ${unknown.join(", ")}`,
+            },
+            { status: 400 }
+          );
+        }
+
+        await updateArticleCategories(id, categoryIds);
+      } else {
+        return NextResponse.json(
+          { error: "Categories must be an array" },
+          { status: 400 }
+        );
+      }
+    }
+
+    // Fetch updated categories
+    const updatedCategories = await getArticleCategories(id);
+
     return NextResponse.json(
-      { article: updatedArticles[0], message: "Article updated successfully" },
+      {
+        article: {
+          ...updatedArticles[0],
+          categories: updatedCategories,
+        },
+        message: "Article updated successfully",
+      },
       { status: 200 }
     );
   } catch (error) {

@@ -1,12 +1,13 @@
 import { db } from "@/database/db";
-import { article, category } from "@/database/schema";
-import { eq, desc, sql, and, ilike } from "drizzle-orm";
+import { article, category, articleCategory } from "@/database/schema";
+import { eq, desc, sql, and, inArray } from "drizzle-orm";
 import { HeroBanner } from "@/components/article/hero-banner";
 import { HeroSection } from "@/components/article/hero-section";
 import { ArticleCard } from "@/components/article/article-card";
 import { Pagination } from "@/components/article/pagination";
 import { CategoryGrid } from "@/components/layout/category-grid";
 import { CategoryFilterWrapper } from "@/components/article/category-filter-wrapper";
+import { getArticleCategoriesBulk } from "@/lib/category-helpers";
 
 const HERO_ARTICLES_COUNT = 4;
 
@@ -22,7 +23,8 @@ export default async function Home({ searchParams }: HomeProps) {
   const selectedCategory = params.category || "all";
   const isFirstPage = currentPage === 1;
 
-  // Get category name for filtering
+  // Get category ID for filtering if category is selected
+  let categoryId: string | null = null;
   let categoryName: string | null = null;
   if (selectedCategory !== "all") {
     const [categoryData] = await db
@@ -30,13 +32,23 @@ export default async function Home({ searchParams }: HomeProps) {
       .from(category)
       .where(eq(category.slug, selectedCategory))
       .limit(1);
-    categoryName = categoryData?.name || null;
+    if (categoryData) {
+      categoryId = categoryData.id;
+      categoryName = categoryData.name;
+    }
   }
 
   // Build WHERE conditions
   const whereConditions = [eq(article.status, "published")];
-  if (categoryName) {
-    whereConditions.push(ilike(article.categories, `%${categoryName}%`));
+
+  // Add category filter if selected
+  if (categoryId) {
+    const articlesWithCategory = db
+      .select({ articleId: articleCategory.articleId })
+      .from(articleCategory)
+      .where(eq(articleCategory.categoryId, categoryId));
+
+    whereConditions.push(inArray(article.id, articlesWithCategory));
   }
 
   const gridOffset = isFirstPage
@@ -69,14 +81,30 @@ export default async function Home({ searchParams }: HomeProps) {
   const gridArticlesCount = Math.max(0, totalCount - HERO_ARTICLES_COUNT);
   const totalPages = Math.ceil(gridArticlesCount / ARTICLES_PER_PAGE);
 
+  // Fetch categories for all articles in bulk
+  const allArticles = [...heroArticles, ...gridArticles];
+  const articleIds = allArticles.map((a) => a.id);
+  const categoriesMap = await getArticleCategoriesBulk(articleIds);
+
+  // Merge categories into articles
+  const heroArticlesWithCategories = heroArticles.map((art) => ({
+    ...art,
+    categories: categoriesMap.get(art.id) || [],
+  }));
+
+  const gridArticlesWithCategories = gridArticles.map((art) => ({
+    ...art,
+    categories: categoriesMap.get(art.id) || [],
+  }));
+
   const hasContent = heroArticles.length > 0 || gridArticles.length > 0;
 
   return (
     <div className="flex-1">
       <HeroBanner />
 
-      {isFirstPage && heroArticles.length > 0 && (
-        <HeroSection articles={heroArticles} />
+      {isFirstPage && heroArticlesWithCategories.length > 0 && (
+        <HeroSection articles={heroArticlesWithCategories} />
       )}
 
       {/* Category Grid - Only on first page */}
@@ -98,9 +126,9 @@ export default async function Home({ searchParams }: HomeProps) {
               {selectedCategory !== "all" ? `Seneste fra ${categoryName}` : "Seneste Nyt"}
             </h2>
 
-            {gridArticles.length > 0 && (
+            {gridArticlesWithCategories.length > 0 && (
               <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {gridArticles.map((articleItem) => (
+                {gridArticlesWithCategories.map((articleItem) => (
                   <ArticleCard
                     key={articleItem.id}
                     title={articleItem.title}

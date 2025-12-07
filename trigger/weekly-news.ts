@@ -22,14 +22,14 @@ Returner resultaterne i denne EKSAKTE JSON struktur:
     {
       "title": "Nyhedstitel",
       "summary": "2-3 sætninger som opsummerer historien",
-      "sourceUrl": "Den fulde URL til den originale nyhedsartikel (f.eks. https://estatemedia.dk/article/...)",
+      "sources": ["URL1", "URL2", "URL3"],
       "date": "Dato eller tidsramme"
     }
   ]
 }
 
 VIGTIGT:
-- "sourceUrl" skal være den faktiske URL hvor du fandt nyheden, IKKE bare navnet på kilden. Inkluder altid den fulde URL.
+- "sources" skal være et array af faktiske URLs hvor du fandt information om nyheden (f.eks. ["https://estatemedia.dk/article/...", "https://edc.dk/artikel/..."]). Inkluder ALLE relevante kilder du brugte.
 - Sørg for at returnere præcis 10 nyhedshistorier.
 - Dit HELE svar skal være valid JSON - start med { og slut med }
 - Inkludér INGEN tekst før eller efter JSON'en
@@ -38,7 +38,7 @@ VIGTIGT:
 interface NewsItem {
   title: string;
   summary: string;
-  sourceUrl?: string;
+  sources?: string[];
   date?: string;
 }
 

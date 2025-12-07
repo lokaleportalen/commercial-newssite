@@ -27,6 +27,7 @@ import {
   DrawerTrigger,
 } from "@/components/ui/drawer";
 import { cn } from "@/lib/utils";
+import Image from "next/image";
 
 interface Category {
   id: string;
@@ -92,8 +93,18 @@ export function Navigation() {
       <div className="mx-auto max-w-6xl px-4">
         <div className="flex h-16 items-center justify-between">
           <div className="flex items-center gap-8">
-            <Link href="/" className="text-xl font-bold text-foreground">
-              Nyheder
+            <Link
+              href="/"
+              className="text-xl font-bold text-foreground flex items-center gap-2 text-primary"
+            >
+              <Image
+                alt="logo"
+                src="/estatenews-logo.svg"
+                height={24}
+                width={24}
+                className="p-0.25"
+              />
+              Estate News
             </Link>
 
             {/* Desktop Navigation */}

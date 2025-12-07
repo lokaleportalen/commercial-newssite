@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, boolean } from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, boolean, index } from "drizzle-orm/pg-core";
 import { user } from "./auth-schema";
 
 export const userPreferences = pgTable("user_preferences", {
@@ -20,4 +20,6 @@ export const userPreferences = pgTable("user_preferences", {
     .defaultNow()
     .$onUpdate(() => new Date())
     .notNull(),
-});
+}, (table) => ({
+  userIdIdx: index("idx_user_preferences_user_id").on(table.userId),
+}));

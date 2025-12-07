@@ -1,7 +1,8 @@
 import { db } from "@/database/db";
-import { article } from "@/database/schema";
-import { eq, ne, desc, sql } from "drizzle-orm";
+import { article, articleCategory } from "@/database/schema";
+import { eq, ne, desc, inArray, and } from "drizzle-orm";
 import { NextResponse } from "next/server";
+import { getArticleCategories, getArticleCategoriesBulk } from "@/lib/category-helpers";
 
 interface RouteContext {
   params: Promise<{ id: string }>;
@@ -11,49 +12,47 @@ export async function GET(request: Request, context: RouteContext) {
   try {
     const { id } = await context.params;
 
-    // Fetch the current article
-    const [currentArticle] = await db
-      .select()
-      .from(article)
-      .where(eq(article.id, id))
-      .limit(1);
+    // Fetch the current article's categories from junction table
+    const currentCategories = await getArticleCategories(id);
 
-    if (!currentArticle || !currentArticle.categories) {
+    if (currentCategories.length === 0) {
       return NextResponse.json({ articles: [] });
     }
 
-    // Parse categories from the current article
-    const currentCategories = currentArticle.categories
-      .split(",")
-      .map((cat) => cat.trim());
+    // Get category IDs
+    const categoryIds = currentCategories.map((cat) => cat.id);
 
-    // Fetch related articles based on shared categories
-    // We'll use LIKE queries to match categories
+    // Find articles that share categories with this article
+    const articlesWithSharedCategories = db
+      .select({ articleId: articleCategory.articleId })
+      .from(articleCategory)
+      .where(inArray(articleCategory.categoryId, categoryIds));
+
+    // Fetch related articles (published, not current article, shared categories)
     const relatedArticles = await db
-      .select({
-        id: article.id,
-        title: article.title,
-        slug: article.slug,
-        summary: article.summary,
-        image: article.image,
-        publishedDate: article.publishedDate,
-        categories: article.categories,
-      })
+      .select()
       .from(article)
       .where(
-        sql`${article.status} = 'published'
-        AND ${article.id} != ${id}
-        AND (${sql.join(
-          currentCategories.map(
-            (cat) => sql`${article.categories} LIKE ${`%${cat}%`}`
-          ),
-          sql` OR `
-        )})`
+        and(
+          inArray(article.id, articlesWithSharedCategories),
+          eq(article.status, "published"),
+          ne(article.id, id)
+        )
       )
       .orderBy(desc(article.publishedDate))
       .limit(4);
 
-    return NextResponse.json({ articles: relatedArticles });
+    // Fetch categories for all related articles
+    const articleIds = relatedArticles.map((a) => a.id);
+    const categoriesMap = await getArticleCategoriesBulk(articleIds);
+
+    // Merge categories into articles
+    const articlesWithCategories = relatedArticles.map((art) => ({
+      ...art,
+      categories: categoriesMap.get(art.id) || [],
+    }));
+
+    return NextResponse.json({ articles: articlesWithCategories });
   } catch (error) {
     console.error("Error fetching related articles:", error);
     return NextResponse.json(

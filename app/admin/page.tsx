@@ -1,14 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
-import { ArticleList } from "@/components/admin/article-list";
+import { ArticleList, type ArticleListRef } from "@/components/admin/article-list";
 import { ArticleEditor } from "@/components/admin/article-editor";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { Newspaper, Sparkles } from "lucide-react";
+import { Newspaper, Sparkles, Plus } from "lucide-react";
 import Link from "next/link";
 
 export default function AdminDashboard() {
@@ -19,6 +19,7 @@ export default function AdminDashboard() {
     null
   );
   const [isTriggeringCron, setIsTriggeringCron] = useState(false);
+  const articleListRef = useRef<ArticleListRef>(null);
 
   // Check if user is admin
   useEffect(() => {
@@ -51,31 +52,47 @@ export default function AdminDashboard() {
     setIsTriggeringCron(true);
 
     try {
-      // Fire the request without waiting for completion
-      fetch("/api/admin/trigger-cron", {
+      const response = await fetch("/api/admin/trigger-cron", {
         method: "POST",
-      }).catch((error) => {
-        // Ignore timeout errors - the job is still running
-        console.log("Cron job triggered (connection may timeout, but job continues):", error.message);
       });
 
-      // Show immediate success feedback
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.details || error.error || "Failed to trigger task");
+      }
+
+      const data = await response.json();
+
       toast.success("News fetch started!", {
-        description: "The job is running in the background. New articles will appear in 10-15 minutes.",
+        description: "The job is running on Trigger.dev. New articles will appear when processing completes.",
         duration: 5000,
       });
+
+      console.log("Trigger.dev task started:", data.taskId);
+      console.log("Monitor at:", data.monitorUrl);
 
       // Keep button disabled for 5 minutes to prevent duplicate triggers
       setTimeout(() => {
         setIsTriggeringCron(false);
       }, 300000); // 5 minutes
     } catch (error) {
-      console.error("Error triggering cron:", error);
+      console.error("Error triggering weekly news task:", error);
       toast.error("Failed to start news fetch", {
         description: error instanceof Error ? error.message : "Unknown error",
       });
       setIsTriggeringCron(false);
     }
+  };
+
+  const handleCreateArticle = () => {
+    // Open editor with special "new" ID - article will be created when user saves
+    setSelectedArticleId("new");
+  };
+
+  const handleArticleCreated = (newArticleId: string) => {
+    // Switch to the newly created article and refresh the list
+    setSelectedArticleId(newArticleId);
+    articleListRef.current?.refresh();
   };
 
   if (isPending || isAdmin === null) {
@@ -104,6 +121,14 @@ export default function AdminDashboard() {
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <Button
+            onClick={handleCreateArticle}
+            size="sm"
+            variant="default"
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            Tilføj artikel
+          </Button>
           <Link href="/admin/ai-prompts">
             <Button size="sm" variant="outline">
               <Sparkles className="mr-2 h-4 w-4" />
@@ -127,6 +152,7 @@ export default function AdminDashboard() {
         {/* Sidebar - Article List */}
         <div className="w-80 border-r bg-muted/30">
           <ArticleList
+            ref={articleListRef}
             selectedArticleId={selectedArticleId}
             onSelectArticle={setSelectedArticleId}
           />
@@ -138,6 +164,7 @@ export default function AdminDashboard() {
             <ArticleEditor
               articleId={selectedArticleId}
               onClose={() => setSelectedArticleId(null)}
+              onArticleCreated={handleArticleCreated}
             />
           ) : (
             <div className="flex h-full items-center justify-center text-muted-foreground">

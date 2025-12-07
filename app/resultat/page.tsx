@@ -6,7 +6,7 @@ import { Search, Loader2, SlidersHorizontal } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { ArticleCard } from "@/components/article/article-card";
-import { cn } from "@/lib/utils";
+import type { Category } from "@/lib/category-helpers";
 
 interface Article {
   id: string;
@@ -15,14 +15,10 @@ interface Article {
   summary: string | null;
   image: string | null;
   publishedDate: Date;
-  categories: string | null;
+  categories: Category[];
 }
 
-interface Category {
-  id: string;
-  name: string;
-  slug: string;
-  description: string | null;
+interface CategoryWithCount extends Category {
   articleCount: number;
 }
 
@@ -37,7 +33,7 @@ function SearchResultsContent() {
   const [selectedCategory, setSelectedCategory] = useState(categoryParam);
   const [selectedSort, setSelectedSort] = useState(sortParam);
   const [results, setResults] = useState<Article[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
+  const [categories, setCategories] = useState<CategoryWithCount[]>([]);
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
 

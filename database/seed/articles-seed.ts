@@ -1,8 +1,13 @@
 import { db } from "../db";
-import { article } from "../schema";
+import { article, articleCategory, category } from "../schema";
+import { eq } from "drizzle-orm";
 
 export async function seedArticles() {
   console.log("Seeding articles...");
+
+  // Fetch all categories first to get their IDs
+  const categories = await db.select().from(category);
+  const categoryMap = new Map(categories.map((c) => [c.name, c.id]));
 
   const articles = [
     {
@@ -12,7 +17,7 @@ export async function seedArticles() {
         "Den tidligere saudiske ambassade på Lille Strandvej i Hellerup er solgt for 153,2 mio. kr., og handlen er registreret via nystiftede LSV 27 ApS. Ejendommen på knap 3.000 m² står i dårlig stand, men rummer potentiale til renovering eller nedrivning og udstykning.",
       metaDescription:
         "Tidligere saudisk ambassade i Hellerup solgt for 153,2 mio. kr. i én af årets største ejendomshandler. Potentiale til renovering eller udstykning.",
-      categories: "Investering, Bolig",
+      categoryNames: ["Investering", "Bolig"],
       status: "published" as const,
       publishedDate: new Date("2025-11-17"),
       content: `# Hellerup-ambassade solgt for 153,2 mio. kr. i én af årets største ejendomshandler
@@ -62,7 +67,7 @@ Gentofte Kommune har bekræftet, at man vil være i dialog med den nye ejer om f
         "Prologis indvier et nyt logistikcenter på 45.000 m² ved Københavns lufthavn. Faciliteten er fuldt udlejet til en førende e-handelsaktør og markerer den største nybyggede logistikejendom i hovedstadsområdet i 2025.",
       metaDescription:
         "Prologis indvier 45.000 m² logistikcenter ved Københavns lufthavn, fuldt udlejet til e-handelsaktør. Største nybyggeri i hovedstadsområdet 2025.",
-      categories: "Logistik, Byggeri",
+      categoryNames: ["Logistik", "Byggeri"],
       status: "published" as const,
       publishedDate: new Date("2025-11-16"),
       content: `# Ny logistics hub åbner ved Øresund – 45.000 m² til e-handel
@@ -118,7 +123,7 @@ Andre udviklere følger også udviklingen med stor interesse. Det forventes, at 
         "Ledighedsprocenten for kontorejendomme i København er faldet til 7,8% i 3. kvartal 2025 – det laveste niveau siden pandemiens start. Især områder som Nordhavn og Sydhavn oplever stigende efterspørgsel.",
       metaDescription:
         "Københavns kontormarked viser fremgang med ledighed faldet til 7,8%. Nordhavn og Sydhavn oplever stigende efterspørgsel efter kontorarealer.",
-      categories: "Kontor, Investering",
+      categoryNames: ["Kontor", "Investering"],
       status: "published" as const,
       publishedDate: new Date("2025-11-15"),
       content: `# Kontormarkedet i København viser første tegn på genopretning
@@ -178,7 +183,7 @@ Det største ukendte er udviklingen i arbejdsmodellerne. Hvis flere virksomheder
         "Coop har indgået lejeaftaler for 12 nye butikslokaler fordelt over hele Danmark. Ekspansionen fokuserer på byer mellem 15.000 og 50.000 indbyggere og forventes at skabe over 300 nye arbejdspladser.",
       metaDescription:
         "Coop ekspanderer med 12 nye butikker i 2026 i danske provinsbyer. Over 300 nye arbejdspladser skabes i byer med 15.000-50.000 indbyggere.",
-      categories: "Detailhandel, Investering",
+      categoryNames: ["Detailhandel", "Investering"],
       status: "published" as const,
       publishedDate: new Date("2025-11-14"),
       content: `# Supermarkedskæde ekspanderer – 12 nye butikker i 2026
@@ -238,7 +243,7 @@ Hvis de 12 nye butikker lever op til forventningerne, har Coop signaleret, at de
         "Aarhus oplever en markant stigning i hotelbyggeriet med tre nye projekter på i alt 520 værelser. Projekterne, der alle forventes indviet inden udgangen af 2026, investeres der samlet over 800 mio. kr. i.",
       metaDescription:
         "Tre nye hoteller med 520 værelser på vej til Aarhus. Over 800 mio. kr. investeres i hotelbyggeri, med indvielse inden udgangen af 2026.",
-      categories: "Hotel, Byggeri, Investering",
+      categoryNames: ["Hotel", "Byggeri", "Investering"],
       status: "published" as const,
       publishedDate: new Date("2025-11-13"),
       content: `# Hotel-boom i Aarhus: Tre nye hoteller på vej
@@ -302,7 +307,7 @@ Der er dog også bekymringer for, at markedet kan blive overmættet, især hvis 
         "Danske industrivirksomheder investerer massivt i energirenovering af produktionsfaciliteter. I 2025 forventes investeringer på over 2,5 mia. kr. i forbedringer, der kan reducere energiforbruget med op til 40%.",
       metaDescription:
         "Danske industrivirksomheder investerer 2,5 mia. kr. i energirenovering af produktionsfaciliteter for at reducere energiforbrug med op til 40% i 2025.",
-      categories: "Industri, Bæredygtighed",
+      categoryNames: ["Industri", "Bæredygtighed"],
       status: "published" as const,
       publishedDate: new Date("2025-11-12"),
       content: `# Bæredygtighed driver renoveringsbølge i industribygninger
@@ -372,7 +377,7 @@ Samtidig indføres der krav om CO2-rapportering for flere typer virksomheder, hv
         "PFA Ejendomme har erhvervet en portefølje af fem danske storcentre for 4,2 mia. kr. Handlen er en af de største på det danske detailmarked i årevis og omfatter centre i både København, Aarhus og Odense.",
       metaDescription:
         "PFA Ejendomme køber fem danske storcentre for 4,2 mia. kr. i en af de største detailhandler. Porteføljen omfatter centre i København, Aarhus og Odense.",
-      categories: "Detailhandel, Investering",
+      categoryNames: ["Detailhandel", "Investering"],
       status: "published" as const,
       publishedDate: new Date("2025-11-11"),
       content: `# Pensionsselskab køber storcentre i 4,2 mia. kr. handel
@@ -442,7 +447,7 @@ Sælger i transaktionen var en international ejendomsfond, der har valgt at real
         "En international tech-gigant planlægger Danmarks største datacenter ved Esbjerg. Projektet på 150.000 m² og med en investering på 6 mia. kr. skaber debat om infrastruktur og grøn energi.",
       metaDescription:
         "Danmarks største datacenter planlægges ved Esbjerg med 150.000 m² og 6 mia. kr. investering. Projektet skaber debat om strømforbrug og grøn energi.",
-      categories: "Industri, Bæredygtighed, Investering",
+      categoryNames: ["Industri", "Bæredygtighed", "Investering"],
       status: "published" as const,
       publishedDate: new Date("2025-11-10"),
       content: `# Data center-investering skaber debat om strømforbrug
@@ -522,7 +527,7 @@ Hvis projektet får succes, forventes det at tiltrække yderligere tech-invester
         "Markedet for temperaturkontrollerede lagerfaciliteter vokser med 15% årligt. Fødevareproducenter og distributører efterspørger moderne køle- og fryselagre med avanceret teknologi til kvalitetsstyring.",
       metaDescription:
         "Temperaturkontrollerede lagerfaciliteter oplever 15% årlig vækst. Fødevarebranchen efterspørger moderne køle- og fryselagre med avanceret teknologi.",
-      categories: "Logistik, Lager",
+      categoryNames: ["Logistik", "Lager"],
       status: "published" as const,
       publishedDate: new Date("2025-11-09"),
       content: `# Kølelagre oplever rekordefterspørgsel fra fødevarebranchen
@@ -603,12 +608,39 @@ Bæredygtighed vil fortsætte med at være et centralt tema. Flere virksomheder 
     },
   ];
 
-  // Insert articles in batches
+  // Insert articles and their categories
   console.log(`Inserting ${articles.length} articles...`);
 
   for (const articleData of articles) {
-    await db.insert(article).values(articleData);
+    const { categoryNames, ...articleFields } = articleData;
+
+    // Insert the article
+    const [insertedArticle] = await db
+      .insert(article)
+      .values(articleFields)
+      .returning({ id: article.id });
+
+    // Insert article-category relationships
+    if (categoryNames && categoryNames.length > 0) {
+      const categoryRelations = categoryNames
+        .map((name) => {
+          const categoryId = categoryMap.get(name);
+          if (!categoryId) {
+            console.warn(`Category "${name}" not found for article "${articleData.title}"`);
+            return null;
+          }
+          return {
+            articleId: insertedArticle.id,
+            categoryId: categoryId,
+          };
+        })
+        .filter((relation): relation is { articleId: string; categoryId: string } => relation !== null);
+
+      if (categoryRelations.length > 0) {
+        await db.insert(articleCategory).values(categoryRelations);
+      }
+    }
   }
 
-  console.log(`✓ Successfully seeded ${articles.length} articles`);
+  console.log(`✓ Successfully seeded ${articles.length} articles with their categories`);
 }

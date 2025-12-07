@@ -1,10 +1,11 @@
 import { db } from "@/database/db";
-import { article, category } from "@/database/schema";
-import { eq, desc, sql, like } from "drizzle-orm";
+import { article, category, articleCategory } from "@/database/schema";
+import { eq, desc, and, inArray, sql } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import { ArticleCard } from "@/components/article/article-card";
 import { Pagination } from "@/components/article/pagination";
 import { Breadcrumbs } from "@/components/layout/breadcrumbs";
+import { getArticleCategoriesBulk } from "@/lib/category-helpers";
 import type { Metadata } from "next";
 
 const ARTICLES_PER_PAGE = 15;
@@ -61,16 +62,23 @@ export default async function CategoryPage({
     notFound();
   }
 
-  // Fetch articles that contain this category
-  // Since categories are stored as comma-separated strings, we use LIKE
-  const categoryPattern = `%${categoryData.name}%`;
+  // Fetch articles that contain this category using junction table
+  // Subquery to find article IDs for this category
+  const categoryArticleIds = db
+    .select({ articleId: articleCategory.articleId })
+    .from(articleCategory)
+    .innerJoin(category, eq(articleCategory.categoryId, category.id))
+    .where(eq(category.slug, slug));
 
   const [articles, totalCountResult] = await Promise.all([
     db
       .select()
       .from(article)
       .where(
-        sql`${article.status} = 'published' AND ${article.categories} LIKE ${categoryPattern}`
+        and(
+          eq(article.status, "published"),
+          inArray(article.id, categoryArticleIds)
+        )
       )
       .orderBy(desc(article.publishedDate))
       .limit(ARTICLES_PER_PAGE)
@@ -79,9 +87,16 @@ export default async function CategoryPage({
       .select({ count: sql<number>`count(*)` })
       .from(article)
       .where(
-        sql`${article.status} = 'published' AND ${article.categories} LIKE ${categoryPattern}`
+        and(
+          eq(article.status, "published"),
+          inArray(article.id, categoryArticleIds)
+        )
       ),
   ]);
+
+  // Fetch categories for all articles in bulk (avoid N+1 queries)
+  const articleIds = articles.map((a) => a.id);
+  const categoriesMap = await getArticleCategoriesBulk(articleIds);
 
   const totalCount = Number(totalCountResult[0]?.count || 0);
   const totalPages = Math.ceil(totalCount / ARTICLES_PER_PAGE);
@@ -133,7 +148,7 @@ export default async function CategoryPage({
                   summary={articleItem.summary}
                   image={articleItem.image}
                   publishedDate={articleItem.publishedDate}
-                  categories={articleItem.categories}
+                  categories={categoriesMap.get(articleItem.id) || []}
                 />
               ))}
             </section>

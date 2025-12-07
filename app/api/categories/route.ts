@@ -1,6 +1,6 @@
 import { db } from "@/database/db";
-import { category, article } from "@/database/schema";
-import { sql, eq } from "drizzle-orm";
+import { category, article, articleCategory } from "@/database/schema";
+import { sql, eq, and } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
 export async function GET() {
@@ -16,16 +16,18 @@ export async function GET() {
       .from(category)
       .orderBy(category.name);
 
-    // Get article count for each category
-    // Since categories are stored as comma-separated strings in articles
+    // Get article count for each category using junction table
     const categoriesWithCounts = await Promise.all(
       categories.map(async (cat) => {
-        const categoryPattern = `%${cat.name}%`;
         const countResult = await db
-          .select({ count: sql<number>`count(*)` })
+          .select({ count: sql<number>`count(DISTINCT ${article.id})` })
           .from(article)
+          .innerJoin(articleCategory, eq(article.id, articleCategory.articleId))
           .where(
-            sql`${article.status} = 'published' AND ${article.categories} LIKE ${categoryPattern}`
+            and(
+              eq(article.status, "published"),
+              eq(articleCategory.categoryId, cat.id)
+            )
           );
 
         return {

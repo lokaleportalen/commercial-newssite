@@ -1,4 +1,5 @@
-import { pgTable, text, uuid, timestamp, primaryKey } from "drizzle-orm/pg-core";
+import { pgTable, text, uuid, timestamp, primaryKey, index } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 import { article } from "./articles-schema";
 
 // Categories table with fixed Danish categories
@@ -12,7 +13,12 @@ export const category = pgTable("category", {
     .defaultNow()
     .$onUpdate(() => new Date())
     .notNull(),
-});
+  // Full-text search vector for category names
+  searchVector: text("search_vector").$type<string>(),
+}, (table) => ({
+  // GIN index for full-text search on category names
+  searchVectorIdx: index("idx_category_search_vector").using("gin", sql`to_tsvector('danish', COALESCE(name, '') || ' ' || COALESCE(description, ''))`),
+}));
 
 // Junction table for many-to-many relationship between articles and categories
 export const articleCategory = pgTable(
@@ -29,6 +35,8 @@ export const articleCategory = pgTable(
   (table) => {
     return {
       pk: primaryKey({ columns: [table.articleId, table.categoryId] }),
+      categoryIdIdx: index("idx_article_category_category_id").on(table.categoryId),
+      articleIdIdx: index("idx_article_category_article_id").on(table.articleId),
     };
   }
 );

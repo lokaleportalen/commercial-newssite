@@ -28,7 +28,7 @@ const getGeminiClient = () => {
 interface NewsItem {
   title: string;
   summary: string;
-  sourceUrl?: string;
+  sources?: string[];
   date?: string;
 }
 
@@ -54,44 +54,36 @@ export async function processArticle(
 
     logger.info(`Processing news item: ${newsItem.title}`);
 
-    // Check for duplicate articles before processing
-    const duplicateConditions = [];
+    // Check for duplicate articles before processing (by similar title)
+    const existingArticles = await db
+      .select()
+      .from(article)
+      .where(ilike(article.title, newsItem.title))
+      .limit(1);
 
-    // Check by sourceUrl if provided
-    if (newsItem.sourceUrl) {
-      duplicateConditions.push(eq(article.sourceUrl, newsItem.sourceUrl));
-    }
-
-    // Check by similar title (case-insensitive)
-    duplicateConditions.push(ilike(article.title, newsItem.title));
-
-    if (duplicateConditions.length > 0) {
-      const existingArticles = await db
-        .select()
-        .from(article)
-        .where(or(...duplicateConditions))
-        .limit(1);
-
-      if (existingArticles.length > 0) {
-        logger.warn(
-          `Duplicate article found: ${existingArticles[0].title} (ID: ${existingArticles[0].id})`
-        );
-        return {
-          success: false,
-          duplicate: true,
-          error: "Duplicate article - already exists",
-        };
-      }
+    if (existingArticles.length > 0) {
+      logger.warn(
+        `Duplicate article found: ${existingArticles[0].title} (ID: ${existingArticles[0].id})`
+      );
+      return {
+        success: false,
+        duplicate: true,
+        error: "Duplicate article - already exists",
+      };
     }
 
     // Step 1: Research the news story using OpenAI with web search
     logger.info("Researching news story with OpenAI...");
 
     // Get research prompt from database
+    const sourcesText = newsItem.sources && newsItem.sources.length > 0
+      ? newsItem.sources.map((url, idx) => `${idx + 1}. ${url}`).join('\n')
+      : "";
+
     const researchPrompt = await getAiPromptWithVars("article_research", {
       title: newsItem.title,
       summary: newsItem.summary,
-      sourceUrl: newsItem.sourceUrl || "",
+      sources: sourcesText,
       date: newsItem.date || "",
     });
 
@@ -102,7 +94,7 @@ export async function processArticle(
 
 Titel: ${newsItem.title}
 Resumé: ${newsItem.summary}
-${newsItem.sourceUrl ? `Kilde URL: ${newsItem.sourceUrl}` : ""}
+${sourcesText ? `Kilder:\n${sourcesText}` : ""}
 ${newsItem.date ? `Dato: ${newsItem.date}` : ""}
 
 Søg på nettet efter yderligere detaljer, kontekst og relateret information om denne nyhedshistorie. Levér:
@@ -111,6 +103,8 @@ Søg på nettet efter yderligere detaljer, kontekst og relateret information om 
 3. Citater fra relevante kilder (hvis tilgængelige)
 4. Indvirkning på det danske erhvervsejendomsmarked
 5. Relaterede udviklinger eller tendenser
+
+KRITISK: Under din research, hold styr på ALLE de URLs du bruger som kilder. Returner dem i dit research svar under en "Kilder brugt:" sektion.
 
 Formatér dine research-resultater tydeligt med overskrifter og punkter.`;
 
@@ -267,7 +261,34 @@ Svar KUN med valid JSON i denne præcise struktur:
       };
     }
 
-    logger.info("Metadata generated, saving to database...");
+    logger.info("Metadata generated, extracting sources from research...");
+
+    // Extract sources from research findings
+    const sourcesFromResearch: string[] = [];
+
+    // Try to extract URLs from "Kilder brugt:" section
+    const sourcesMatch = researchFindings.match(/Kilder brugt:([^]*?)(?:\n\n|$)/i);
+    if (sourcesMatch) {
+      const sourcesSection = sourcesMatch[1];
+      const urlRegex = /https?:\/\/[^\s)]+/g;
+      const extractedUrls = sourcesSection.match(urlRegex) || [];
+      sourcesFromResearch.push(...extractedUrls);
+    }
+
+    // Combine with original sources from newsItem
+    const allSources = [
+      ...(newsItem.sources || []),
+      ...sourcesFromResearch
+    ];
+
+    // Remove duplicates and clean URLs
+    const uniqueSources = Array.from(new Set(
+      allSources
+        .map(url => url.trim())
+        .filter(url => url.startsWith('http'))
+    ));
+
+    logger.info(`Saving article with ${uniqueSources.length} sources to database...`);
 
     // Step 4: Save the article to the database
     const [insertedArticle] = await db
@@ -278,8 +299,7 @@ Svar KUN med valid JSON i denne præcise struktur:
         content: articleContent,
         summary: metadata.summary,
         metaDescription: metadata.metaDescription,
-        sourceUrl: newsItem.sourceUrl || null,
-        categories: metadata.categories,
+        sources: uniqueSources,
         status: "published",
         publishedDate: new Date(),
         promptId: articlePromptObj?.id || null,

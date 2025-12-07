@@ -4,6 +4,7 @@ import { useEffect, useState, useMemo } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 
 type AiPrompt = {
@@ -22,6 +23,9 @@ type AiPromptListProps = {
   selectedPromptId: string | null;
   onSelectPrompt: (id: string) => void;
 };
+
+// Define the order of sections
+const SECTION_ORDER = ["Weekly News", "Article Generation", "Image Generation"];
 
 export function AiPromptList({
   selectedPromptId,
@@ -50,7 +54,7 @@ export function AiPromptList({
     fetchPrompts();
   }, []);
 
-  // Group prompts by section
+  // Group prompts by section and sort by defined order
   const groupedPrompts = useMemo(() => {
     const groups: Record<string, AiPrompt[]> = {};
 
@@ -61,14 +65,23 @@ export function AiPromptList({
       groups[prompt.section].push(prompt);
     });
 
-    return groups;
-  }, [prompts]);
+    // Convert to array and sort by section order
+    const sortedEntries = Object.entries(groups).sort(
+      ([sectionA], [sectionB]) => {
+        const indexA = SECTION_ORDER.indexOf(sectionA);
+        const indexB = SECTION_ORDER.indexOf(sectionB);
 
-  const getModelBadgeColor = (model: string) => {
-    if (model.includes("gpt")) return "default";
-    if (model.includes("gemini")) return "secondary";
-    return "outline";
-  };
+        // If section not in order list, put it at the end
+        if (indexA === -1 && indexB === -1) return 0;
+        if (indexA === -1) return 1;
+        if (indexB === -1) return -1;
+
+        return indexA - indexB;
+      }
+    );
+
+    return sortedEntries;
+  }, [prompts]);
 
   return (
     <div className="flex h-full flex-col">
@@ -97,43 +110,39 @@ export function AiPromptList({
               No AI prompts configured yet
             </div>
           ) : (
-            Object.entries(groupedPrompts).map(([section, sectionPrompts]) => (
+            groupedPrompts.map(([section, sectionPrompts], sectionIndex) => (
               <div key={section} className="mb-4">
                 <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide px-3 mb-2">
-                  {section}
+                  {sectionIndex + 1}. {section}
                 </h3>
-                {sectionPrompts.map((prompt) => (
-                  <button
-                    key={prompt.id}
-                    onClick={() => onSelectPrompt(prompt.id)}
-                    className={cn(
-                      "w-full text-left p-3 rounded-lg mb-2 transition-colors",
-                      "hover:bg-accent",
-                      selectedPromptId === prompt.id
-                        ? "bg-accent border-2 border-primary"
-                        : "border border-transparent"
-                    )}
-                  >
-                    <div className="flex items-start justify-between gap-2 mb-1">
-                      <h4 className="font-semibold text-sm line-clamp-1">
-                        {prompt.name}
-                      </h4>
-                      <Badge
-                        variant={getModelBadgeColor(prompt.model)}
-                        className="shrink-0 text-xs"
-                      >
-                        {prompt.model}
-                      </Badge>
-                    </div>
-                    {prompt.description && (
-                      <p className="text-xs text-muted-foreground line-clamp-2 mb-2">
-                        {prompt.description}
-                      </p>
-                    )}
-                    <p className="text-xs text-muted-foreground">
-                      Key: {prompt.key}
-                    </p>
-                  </button>
+                {sectionPrompts.map((prompt, index) => (
+                  <div key={prompt.id}>
+                    <button
+                      onClick={() => onSelectPrompt(prompt.id)}
+                      className={cn(
+                        "w-full text-left p-3 rounded-lg transition-colors",
+                        "hover:bg-accent",
+                        selectedPromptId === prompt.id
+                          ? "bg-accent border-2 border-primary"
+                          : "border border-transparent"
+                      )}
+                    >
+                      <div className="flex items-start justify-between gap-2 mb-1">
+                        <h4 className="font-semibold text-sm line-clamp-1">
+                          {prompt.name}
+                        </h4>
+                      </div>
+                      {prompt.description && (
+                        <p className="text-xs text-muted-foreground line-clamp-2 mb-2">
+                          {prompt.description}
+                        </p>
+                      )}
+                    </button>
+                    {sectionPrompts.length > 1 &&
+                      index < sectionPrompts.length - 1 && (
+                        <Separator className="my-2" />
+                      )}
+                  </div>
                 ))}
               </div>
             ))
