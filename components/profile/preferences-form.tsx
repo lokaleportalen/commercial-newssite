@@ -2,16 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { authClient } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 
 interface PreferencesFormProps {
@@ -117,28 +109,12 @@ export function PreferencesForm({ onClose }: PreferencesFormProps = {}) {
     }
   };
 
-  if (!session) {
-    return (
-      <Card>
-        <CardContent className="py-8 text-center">
-          <p className="text-muted-foreground">
-            Du skal være logget ind for at ændre dine præferencer.
-          </p>
-          <Button asChild className="mt-4">
-            <Link href="/login">Log ind</Link>
-          </Button>
-        </CardContent>
-      </Card>
-    );
-  }
-
+  // Show loading state while preferences are loading
   if (isLoading) {
     return (
-      <Card>
-        <CardContent className="py-8 text-center">
-          <p className="text-muted-foreground">Indlæser...</p>
-        </CardContent>
-      </Card>
+      <div className="py-8 text-center">
+        <p className="text-muted-foreground">Indlæser...</p>
+      </div>
     );
   }
 
@@ -272,7 +248,7 @@ export function PreferencesForm({ onClose }: PreferencesFormProps = {}) {
             type="button"
             onClick={handleUnsubscribe}
             disabled={isSaving}
-            className="w-full text-center text-sm text-muted-foreground hover:underline"
+            className="w-full text-center text-sm text-muted-foreground flex justify-self-center max-w-fit cursor-pointer hover:underline"
           >
             Afmeld alle mails
           </button>

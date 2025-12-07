@@ -1,52 +1,20 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
-import { useRouter } from "next/navigation";
-import { authClient } from "@/lib/auth-client";
+import { useState, useRef } from "react";
 import { ArticleList, type ArticleListRef } from "@/components/admin/article-list";
 import { ArticleEditor } from "@/components/admin/article-editor";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
+import { AdminRoute } from "@/components/auth/admin-route";
 import { toast } from "sonner";
 import { Newspaper, Sparkles, Plus } from "lucide-react";
 import Link from "next/link";
 
 export default function AdminDashboard() {
-  const router = useRouter();
-  const { data: session, isPending } = authClient.useSession();
-  const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [selectedArticleId, setSelectedArticleId] = useState<string | null>(
     null
   );
   const [isTriggeringCron, setIsTriggeringCron] = useState(false);
   const articleListRef = useRef<ArticleListRef>(null);
-
-  // Check if user is admin
-  useEffect(() => {
-    async function checkAdminStatus() {
-      if (!session?.user) {
-        router.push("/login");
-        return;
-      }
-
-      try {
-        // Check admin status by making a test request to admin API
-        const response = await fetch("/api/admin/articles");
-        if (response.status === 403 || response.status === 401) {
-          router.push("/");
-          return;
-        }
-        setIsAdmin(true);
-      } catch (error) {
-        console.error("Error checking admin status:", error);
-        router.push("/");
-      }
-    }
-
-    if (!isPending) {
-      checkAdminStatus();
-    }
-  }, [session, isPending, router]);
 
   const handleTriggerCron = async () => {
     setIsTriggeringCron(true);
@@ -95,23 +63,9 @@ export default function AdminDashboard() {
     articleListRef.current?.refresh();
   };
 
-  if (isPending || isAdmin === null) {
-    return (
-      <div className="flex h-screen items-center justify-center">
-        <div className="space-y-4">
-          <Skeleton className="h-12 w-64" />
-          <Skeleton className="h-4 w-48" />
-        </div>
-      </div>
-    );
-  }
-
-  if (!isAdmin) {
-    return null;
-  }
-
   return (
-    <div className="flex h-screen flex-col overflow-hidden">
+    <AdminRoute>
+      <div className="flex h-screen flex-col overflow-hidden">
       {/* Header with manual cron trigger */}
       <div className="border-b bg-background px-6 py-3 flex items-center justify-between">
         <div>
@@ -178,6 +132,7 @@ export default function AdminDashboard() {
           )}
         </div>
       </div>
-    </div>
+      </div>
+    </AdminRoute>
   );
 }

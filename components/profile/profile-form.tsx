@@ -22,8 +22,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { PreferencesForm } from "./preferences-form";
-import Link from "next/link";
-import { Loader2 } from "lucide-react";
 
 export function ProfileForm() {
   const router = useRouter();
@@ -96,10 +94,6 @@ export function ProfileForm() {
       setDeleteDialogOpen(false);
     }
   };
-
-  if (!session) {
-    return <Loader2 className="animate-spin" />;
-  }
 
   return (
     <div className="space-y-6">
@@ -223,7 +217,7 @@ export function ProfileForm() {
         open={preferencesDialogOpen}
         onOpenChange={setPreferencesDialogOpen}
       >
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Definér hvilke nyheder du vil have</DialogTitle>
           </DialogHeader>
