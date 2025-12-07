@@ -347,12 +347,12 @@ export function ArticleEditor({
             {formData.slug && (
               <div className="text-sm text-muted-foreground">
                 <a
-                  href={`/${formData.slug}`}
+                  href={`/nyheder/${formData.slug}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="hover:underline hover:text-foreground transition-colors"
                 >
-                  {typeof window !== "undefined" ? window.location.origin : ""}/
+                  {typeof window !== "undefined" ? window.location.origin : ""}/nyheder/
                   <span className="font-medium">{formData.slug}</span>
                 </a>
               </div>

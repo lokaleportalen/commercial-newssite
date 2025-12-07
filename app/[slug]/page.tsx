@@ -1,19 +1,20 @@
 import { db } from "@/database/db";
 import { article, category, articleCategory } from "@/database/schema";
-import { eq, desc, and, inArray, sql } from "drizzle-orm";
+import { eq, desc, asc, and, inArray, sql } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import { ArticleCard } from "@/components/article/article-card";
 import { Pagination } from "@/components/article/pagination";
 import { Breadcrumbs } from "@/components/layout/breadcrumbs";
 import { CategoryHero } from "@/components/article/category-hero";
-import { getArticleCategoriesBulk } from "@/lib/category-helpers";
+import { ArticleSort, type SortOption } from "@/components/article/article-sort";
+import { getArticleCategoriesBulk, getCategoryHeroImage } from "@/lib/category-helpers";
 import type { Metadata } from "next";
 
 const ARTICLES_PER_PAGE = 15;
 
 interface CategoryPageProps {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ page?: string }>;
+  searchParams: Promise<{ page?: string; sort?: string }>;
 }
 
 // Generate metadata for SEO
@@ -47,14 +48,13 @@ export default async function CategoryPage({
   searchParams,
 }: CategoryPageProps) {
   const { slug } = await params;
-  const { page } = await searchParams;
+  const { page, sort } = await searchParams;
   const currentPage = Number(page) || 1;
   const isFirstPage = currentPage === 1;
+  const sortOption = (sort as SortOption) || "newest";
 
-  // For first page, we show featured article in hero, so offset grid articles
-  const offset = isFirstPage
-    ? 0
-    : (currentPage - 1) * ARTICLES_PER_PAGE - 1; // -1 because first page shows featured article
+  // Calculate offset for pagination
+  const offset = (currentPage - 1) * ARTICLES_PER_PAGE;
 
   // Fetch category by slug
   const [categoryData] = await db
@@ -67,6 +67,21 @@ export default async function CategoryPage({
   if (!categoryData) {
     notFound();
   }
+
+  // Determine sort order based on sortOption
+  const getSortOrder = () => {
+    switch (sortOption) {
+      case "oldest":
+        return asc(article.publishedDate);
+      case "title-asc":
+        return asc(article.title);
+      case "title-desc":
+        return desc(article.title);
+      case "newest":
+      default:
+        return desc(article.publishedDate);
+    }
+  };
 
   // Fetch articles that contain this category using junction table
   // Subquery to find article IDs for this category
@@ -86,8 +101,8 @@ export default async function CategoryPage({
           inArray(article.id, categoryArticleIds)
         )
       )
-      .orderBy(desc(article.publishedDate))
-      .limit(isFirstPage ? ARTICLES_PER_PAGE + 1 : ARTICLES_PER_PAGE) // +1 for featured article on first page
+      .orderBy(getSortOrder())
+      .limit(ARTICLES_PER_PAGE)
       .offset(offset),
     db
       .select({ count: sql<number>`count(*)` })
@@ -110,16 +125,11 @@ export default async function CategoryPage({
     categories: categoriesMap.get(art.id) || [],
   }));
 
-  // Split featured article and grid articles for first page
-  const featuredArticle = isFirstPage && articlesWithCategories.length > 0
-    ? articlesWithCategories[0]
-    : null;
-  const gridArticles = isFirstPage && articlesWithCategories.length > 0
-    ? articlesWithCategories.slice(1)
-    : articlesWithCategories;
-
   const totalCount = Number(totalCountResult[0]?.count || 0);
   const totalPages = Math.ceil(totalCount / ARTICLES_PER_PAGE);
+
+  // Get hero image (from DB or convention-based path)
+  const heroImageUrl = getCategoryHeroImage(categoryData.slug, categoryData.heroImage);
 
   return (
     <div className="flex-1">
@@ -136,7 +146,7 @@ export default async function CategoryPage({
         <CategoryHero
           categoryName={categoryData.name}
           categoryDescription={categoryData.description}
-          featuredArticle={featuredArticle}
+          heroImage={heroImageUrl}
           totalArticles={totalCount}
         />
       )}
@@ -159,7 +169,7 @@ export default async function CategoryPage({
 
       {/* Articles Section */}
       <main className="container mx-auto px-4 py-12 max-w-6xl">
-        {gridArticles.length === 0 ? (
+        {articlesWithCategories.length === 0 ? (
           <section className="text-center py-12">
             <p className="text-muted-foreground text-lg">
               Ingen artikler fundet i denne kategori
@@ -167,14 +177,17 @@ export default async function CategoryPage({
           </section>
         ) : (
           <>
-            {/* Section Headline */}
-            <h2 className="text-3xl font-bold mb-8">
-              {isFirstPage ? `Mere fra ${categoryData.name}` : `Seneste fra ${categoryData.name}`}
-            </h2>
+            {/* Section Headline and Sort */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+              <h2 className="text-3xl font-bold">
+                Seneste fra {categoryData.name}
+              </h2>
+              <ArticleSort currentSort={sortOption} />
+            </div>
 
             {/* Articles Grid */}
             <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {gridArticles.map((articleItem) => (
+              {articlesWithCategories.map((articleItem) => (
                 <ArticleCard
                   key={articleItem.id}
                   title={articleItem.title}

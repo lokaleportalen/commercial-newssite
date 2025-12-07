@@ -101,13 +101,6 @@ export function Navigation() {
               href="/"
               className="text-xl font-bold flex items-center gap-2 text-primary"
             >
-              <Image
-                alt="logo"
-                src="/estatenews-logo.svg"
-                height={24}
-                width={24}
-                className="p-0.25"
-              />
               Estate News
             </Link>
 

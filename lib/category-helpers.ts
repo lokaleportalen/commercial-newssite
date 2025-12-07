@@ -8,6 +8,7 @@ export interface Category {
   name: string;
   slug: string;
   description: string | null;
+  heroImage?: string | null;
 }
 
 export interface ArticleWithCategories {
@@ -167,4 +168,29 @@ export async function getArticleCategoriesBulk(
   }
 
   return categoryMap;
+}
+
+/**
+ * Get category hero image URL
+ * Tries heroImage field from DB first, falls back to default path based on slug
+ * @param slug Category slug
+ * @param heroImage Hero image URL from database
+ * @returns Image URL or null if no image available
+ */
+export function getCategoryHeroImage(
+  slug: string,
+  heroImage?: string | null
+): string | null {
+  // If heroImage is set in DB, use that
+  if (heroImage) {
+    return heroImage;
+  }
+
+  // Otherwise, use convention-based path
+  // Images are named: {slug}-category.png in public/categories/hero/
+  // Special case for 'baeredygtighed' which is spelled 'baedygtighed' in filename
+  const filenameSlug = slug === 'baeredygtighed' ? 'baedygtighed' : slug;
+  const defaultPath = `/categories/hero/${filenameSlug}-category.png`;
+
+  return defaultPath;
 }

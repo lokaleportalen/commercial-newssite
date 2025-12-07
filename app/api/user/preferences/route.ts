@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/database/db";
-import { userPreferences } from "@/database/schema";
+import { userPreferences, userPreferenceCategory } from "@/database/schema";
 import { eq } from "drizzle-orm";
 import { headers } from "next/headers";
 
@@ -27,13 +27,25 @@ export async function GET(request: NextRequest) {
 
     if (preferences.length === 0) {
       return NextResponse.json({
-        newsCategory: "all",
-        emailFrequency: "daily",
+        allCategories: true,
+        selectedCategories: [],
+        emailFrequency: "weekly",
       });
     }
 
+    // Get selected categories if not "all"
+    let selectedCategories: string[] = [];
+    if (!preferences[0].allCategories) {
+      const categories = await db
+        .select({ categoryId: userPreferenceCategory.categoryId })
+        .from(userPreferenceCategory)
+        .where(eq(userPreferenceCategory.userPreferencesId, preferences[0].id));
+      selectedCategories = categories.map(c => c.categoryId);
+    }
+
     return NextResponse.json({
-      newsCategory: preferences[0].newsCategory,
+      allCategories: preferences[0].allCategories,
+      selectedCategories,
       emailFrequency: preferences[0].emailFrequency,
     });
   } catch (error) {
@@ -59,11 +71,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { newsCategory, emailFrequency } = await request.json();
+    const { allCategories, selectedCategories, emailFrequency } = await request.json();
 
-    if (!newsCategory || !emailFrequency) {
+    if (allCategories === undefined || !emailFrequency) {
       return NextResponse.json(
-        { error: "News category and email frequency are required" },
+        { error: "All categories flag and email frequency are required" },
+        { status: 400 }
+      );
+    }
+
+    if (!allCategories && (!selectedCategories || selectedCategories.length === 0)) {
+      return NextResponse.json(
+        { error: "At least one category must be selected when not selecting all categories" },
         { status: 400 }
       );
     }
@@ -75,24 +94,43 @@ export async function POST(request: NextRequest) {
       .where(eq(userPreferences.userId, session.user.id))
       .limit(1);
 
+    let preferencesId: string;
+
     if (existing.length > 0) {
+      preferencesId = existing[0].id;
       // Update existing preferences
       await db
         .update(userPreferences)
         .set({
-          newsCategory,
+          allCategories,
           emailFrequency,
           updatedAt: new Date(),
         })
         .where(eq(userPreferences.userId, session.user.id));
+
+      // Delete existing category selections
+      await db
+        .delete(userPreferenceCategory)
+        .where(eq(userPreferenceCategory.userPreferencesId, preferencesId));
     } else {
       // Create new preferences
+      preferencesId = crypto.randomUUID();
       await db.insert(userPreferences).values({
-        id: crypto.randomUUID(),
+        id: preferencesId,
         userId: session.user.id,
-        newsCategory,
+        allCategories,
         emailFrequency,
       });
+    }
+
+    // Insert selected categories if not "all"
+    if (!allCategories && selectedCategories && selectedCategories.length > 0) {
+      await db.insert(userPreferenceCategory).values(
+        selectedCategories.map((categoryId: string) => ({
+          userPreferencesId: preferencesId,
+          categoryId,
+        }))
+      );
     }
 
     return NextResponse.json({ success: true });

@@ -5,6 +5,14 @@ import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
+
+interface Category {
+  id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+}
 
 interface PreferencesFormProps {
   onClose?: () => void;
@@ -13,33 +21,52 @@ interface PreferencesFormProps {
 export function PreferencesForm({ onClose }: PreferencesFormProps = {}) {
   const router = useRouter();
   const { data: session } = authClient.useSession();
-  const [newsCategory, setNewsCategory] = useState("all");
-  const [emailFrequency, setEmailFrequency] = useState("daily");
+  const [allCategories, setAllCategories] = useState(true);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [emailFrequency, setEmailFrequency] = useState("weekly");
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
   useEffect(() => {
-    const loadPreferences = async () => {
+    const loadData = async () => {
       if (!session?.user) return;
 
       try {
-        const response = await fetch("/api/user/preferences");
-        if (response.ok) {
-          const data = await response.json();
-          if (data.newsCategory) setNewsCategory(data.newsCategory);
-          if (data.emailFrequency) setEmailFrequency(data.emailFrequency);
+        // Load categories
+        const categoriesResponse = await fetch("/api/categories");
+        if (categoriesResponse.ok) {
+          const categoriesData = await categoriesResponse.json();
+          setCategories(categoriesData.categories || []);
+        }
+
+        // Load preferences
+        const preferencesResponse = await fetch("/api/user/preferences");
+        if (preferencesResponse.ok) {
+          const data = await preferencesResponse.json();
+          setAllCategories(data.allCategories ?? true);
+          setSelectedCategories(data.selectedCategories || []);
+          setEmailFrequency(data.emailFrequency || "weekly");
         }
       } catch (err) {
-        console.error("Failed to load preferences:", err);
+        console.error("Failed to load data:", err);
       } finally {
         setIsLoading(false);
       }
     };
 
-    loadPreferences();
+    loadData();
   }, [session]);
+
+  const handleCategoryToggle = (categoryId: string) => {
+    setSelectedCategories((prev) =>
+      prev.includes(categoryId)
+        ? prev.filter((id) => id !== categoryId)
+        : [...prev, categoryId]
+    );
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -54,13 +81,15 @@ export function PreferencesForm({ onClose }: PreferencesFormProps = {}) {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          newsCategory,
+          allCategories,
+          selectedCategories: allCategories ? [] : selectedCategories,
           emailFrequency,
         }),
       });
 
       if (!response.ok) {
-        throw new Error("Failed to save preferences");
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to save preferences");
       }
 
       setSuccess("Dine præferencer er blevet gemt");
@@ -71,7 +100,11 @@ export function PreferencesForm({ onClose }: PreferencesFormProps = {}) {
         }, 1500);
       }
     } catch (err) {
-      setError("Der opstod en fejl. Prøv venligst igen.");
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Der opstod en fejl. Prøv venligst igen."
+      );
     } finally {
       setIsSaving(false);
     }
@@ -141,66 +174,55 @@ export function PreferencesForm({ onClose }: PreferencesFormProps = {}) {
                 Jeg ønsker:
               </span>
             </Label>
-            <div className="space-y-2">
+            <div className="space-y-4">
+              {/* All Categories Option */}
               <label className="flex cursor-pointer items-center space-x-3 rounded-lg border p-3 hover:bg-accent/50">
                 <input
                   type="radio"
-                  name="newsCategory"
-                  value="all"
-                  checked={newsCategory === "all"}
-                  onChange={(e) => setNewsCategory(e.target.value)}
+                  name="categorySelection"
+                  checked={allCategories}
+                  onChange={() => setAllCategories(true)}
                   className="h-4 w-4 border-gray-300 text-primary focus:ring-2 focus:ring-primary"
                 />
-                <span className="text-sm">Alle nyheder</span>
+                <span className="text-sm font-medium">Alle Nyheder</span>
               </label>
 
-              <label className="flex cursor-pointer items-center space-x-3 rounded-lg border p-3 hover:bg-accent/50">
-                <input
-                  type="radio"
-                  name="newsCategory"
-                  value="investment"
-                  checked={newsCategory === "investment"}
-                  onChange={(e) => setNewsCategory(e.target.value)}
-                  className="h-4 w-4 border-gray-300 text-primary focus:ring-2 focus:ring-primary"
-                />
-                <span className="text-sm">Investeringsnyheder</span>
-              </label>
+              {/* Specific Categories Option */}
+              <div className="space-y-3">
+                <label className="flex cursor-pointer items-center space-x-3 rounded-lg border p-3 hover:bg-accent/50">
+                  <input
+                    type="radio"
+                    name="categorySelection"
+                    checked={!allCategories}
+                    onChange={() => setAllCategories(false)}
+                    className="h-4 w-4 border-gray-300 text-primary focus:ring-2 focus:ring-primary"
+                  />
+                  <span className="text-sm font-medium">
+                    Vælg specifikke kategorier
+                  </span>
+                </label>
 
-              <label className="flex cursor-pointer items-center space-x-3 rounded-lg border p-3 hover:bg-accent/50">
-                <input
-                  type="radio"
-                  name="newsCategory"
-                  value="construction"
-                  checked={newsCategory === "construction"}
-                  onChange={(e) => setNewsCategory(e.target.value)}
-                  className="h-4 w-4 border-gray-300 text-primary focus:ring-2 focus:ring-primary"
-                />
-                <span className="text-sm">Bygudvikling</span>
-              </label>
-
-              <label className="flex cursor-pointer items-center space-x-3 rounded-lg border p-3 hover:bg-accent/50">
-                <input
-                  type="radio"
-                  name="newsCategory"
-                  value="new"
-                  checked={newsCategory === "new"}
-                  onChange={(e) => setNewsCategory(e.target.value)}
-                  className="h-4 w-4 border-gray-300 text-primary focus:ring-2 focus:ring-primary"
-                />
-                <span className="text-sm">D nyt</span>
-              </label>
-
-              <label className="flex cursor-pointer items-center space-x-3 rounded-lg border p-3 hover:bg-accent/50">
-                <input
-                  type="radio"
-                  name="newsCategory"
-                  value="old"
-                  checked={newsCategory === "old"}
-                  onChange={(e) => setNewsCategory(e.target.value)}
-                  className="h-4 w-4 border-gray-300 text-primary focus:ring-2 focus:ring-primary"
-                />
-                <span className="text-sm">E nyt</span>
-              </label>
+                {/* Category Checkboxes Grid */}
+                {!allCategories && (
+                  <div className="ml-7 grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+                    {categories.map((category) => (
+                      <label
+                        key={category.id}
+                        className="flex items-center space-x-2 cursor-pointer rounded-md border p-3 hover:bg-accent/50"
+                      >
+                        <Checkbox
+                          id={category.id}
+                          checked={selectedCategories.includes(category.id)}
+                          onCheckedChange={() =>
+                            handleCategoryToggle(category.id)
+                          }
+                        />
+                        <span className="text-sm">{category.name}</span>
+                      </label>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
@@ -226,13 +248,13 @@ export function PreferencesForm({ onClose }: PreferencesFormProps = {}) {
                 <input
                   type="radio"
                   name="emailFrequency"
-                  value="daily"
-                  checked={emailFrequency === "daily"}
+                  value="weekly"
+                  checked={emailFrequency === "weekly"}
                   onChange={(e) => setEmailFrequency(e.target.value)}
                   className="h-4 w-4 border-gray-300 text-primary focus:ring-2 focus:ring-primary"
                 />
                 <span className="text-sm">
-                  Send mig relevante nyheder 1 gang om dagen
+                  Send mig relevante nyheder 1 gang om ugen
                 </span>
               </label>
             </div>

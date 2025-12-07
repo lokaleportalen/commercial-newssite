@@ -8,6 +8,7 @@ export const category = pgTable("category", {
   name: text("name").notNull().unique(), // Danish category name
   slug: text("slug").notNull().unique(), // URL-friendly slug
   description: text("description"), // Optional description
+  heroImage: text("hero_image"), // Static hero image for category page
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at")
     .defaultNow()
