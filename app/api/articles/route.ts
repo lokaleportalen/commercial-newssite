@@ -6,11 +6,14 @@ import { getArticleCategoriesBulk } from "@/lib/category-helpers";
 
 /**
  * GET /api/articles
- * List published articles with optional search, category filter, and sort
+ * List published articles with optional search, category filter, sort, and pagination
  * Query params:
  *   - search: Search term for title, summary, content, or categories
- *   - category: Filter by category name
+ *   - category: Filter by category slug or name
  *   - sort: Sort order ('date-desc' | 'date-asc' | 'title-asc' | 'title-desc')
+ *   - page: Page number (default: 1)
+ *   - limit: Items per page (default: 15)
+ *   - includeHero: Include hero articles count in pagination (default: false)
  * Public endpoint - no authentication required
  */
 export async function GET(request: NextRequest) {
@@ -19,20 +22,23 @@ export async function GET(request: NextRequest) {
     const search = searchParams.get("search");
     const categoryFilter = searchParams.get("category");
     const sort = searchParams.get("sort") || "date-desc";
+    const page = parseInt(searchParams.get("page") || "1", 10);
+    const limit = parseInt(searchParams.get("limit") || "15", 10);
+    const includeHero = searchParams.get("includeHero") === "true";
 
     let articles;
 
     // Build base query conditions
     const conditions = [eq(article.status, "published")];
 
-    // Add category filter if provided
+    // Add category filter if provided (supports both slug and name)
     if (categoryFilter && categoryFilter !== "all") {
-      // Find articles that have this category
+      // Find articles that have this category (by slug or name)
       const articlesWithCategory = db
         .select({ articleId: articleCategory.articleId })
         .from(articleCategory)
         .innerJoin(category, eq(articleCategory.categoryId, category.id))
-        .where(eq(category.name, categoryFilter));
+        .where(or(eq(category.slug, categoryFilter), eq(category.name, categoryFilter)));
 
       conditions.push(inArray(article.id, articlesWithCategory));
     }

@@ -8,12 +8,11 @@ import {
   Briefcase,
   Store,
   Warehouse,
-  ShoppingBag,
   Truck,
   Hotel as HotelIcon,
   Factory,
   Home,
-  Leaf
+  Leaf,
 } from "lucide-react";
 
 interface Category {
@@ -65,10 +64,7 @@ export function CategoryGrid() {
         <h2 className="text-2xl font-bold mb-6">Gennemse kategorier</h2>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
           {[...Array(10)].map((_, i) => (
-            <div
-              key={i}
-              className="h-32 animate-pulse rounded-lg bg-muted"
-            />
+            <div key={i} className="h-32 animate-pulse rounded-lg bg-muted" />
           ))}
         </div>
       </section>
@@ -84,14 +80,17 @@ export function CategoryGrid() {
             <Card className="h-full p-6 hover:shadow-lg transition-shadow cursor-pointer group">
               <div className="flex flex-col items-center text-center gap-3">
                 <div className="text-primary group-hover:scale-110 transition-transform">
-                  {categoryIcons[category.slug] || <Building2 className="h-6 w-6" />}
+                  {categoryIcons[category.slug] || (
+                    <Building2 className="h-6 w-6" />
+                  )}
                 </div>
                 <div>
                   <h3 className="font-semibold text-sm mb-1 group-hover:text-primary transition-colors">
                     {category.name}
                   </h3>
                   <p className="text-xs text-muted-foreground">
-                    {category.articleCount} {category.articleCount === 1 ? "artikel" : "artikler"}
+                    {category.articleCount}{" "}
+                    {category.articleCount === 1 ? "artikel" : "artikler"}
                   </p>
                 </div>
               </div>

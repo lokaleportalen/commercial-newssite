@@ -14,10 +14,14 @@ import {
   NavigationMenuItem,
   NavigationMenuLink,
   NavigationMenuList,
-  NavigationMenuTrigger,
-  NavigationMenuContent,
   navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   Drawer,
   DrawerClose,
@@ -41,7 +45,6 @@ export function Navigation() {
   const router = useRouter();
   const pathname = usePathname();
   const { data: session, isPending } = authClient.useSession();
-  const { isAdmin } = useUserRole();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -95,7 +98,7 @@ export function Navigation() {
           <div className="flex items-center gap-8">
             <Link
               href="/"
-              className="text-xl font-bold text-foreground flex items-center gap-2 text-primary"
+              className="text-xl font-bold flex items-center gap-2 text-primary"
             >
               <Image
                 alt="logo"
@@ -108,46 +111,44 @@ export function Navigation() {
             </Link>
 
             {/* Desktop Navigation */}
-            <NavigationMenu className="hidden md:flex">
-              <NavigationMenuList>
-                {/* Alle nyheder */}
-                <NavigationMenuItem>
-                  <NavigationMenuLink
-                    href="/"
-                    className={navigationMenuTriggerStyle()}
-                  >
-                    Alle nyheder
-                  </NavigationMenuLink>
-                </NavigationMenuItem>
+            <div className="hidden md:flex items-center gap-1">
+              <Link
+                href="/"
+                className={cn(
+                  navigationMenuTriggerStyle(),
+                  "hover:bg-transparent"
+                )}
+              >
+                Alle nyheder
+              </Link>
 
-                {/* Kategorier Dropdown */}
-                <NavigationMenuItem>
-                  <NavigationMenuTrigger>Kategorier</NavigationMenuTrigger>
-                  <NavigationMenuContent>
-                    <div className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px]">
-                      {categories.map((category) => (
+              {/* Kategorier Dropdown */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    className="hover:bg-transparent h-9 px-4 py-2 text-sm font-medium"
+                  >
+                    Kategorier
+                    <ChevronDown className="ml-1 h-3 w-3" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-[300px]">
+                  <div className="grid grid-cols-2 gap-1 p-2">
+                    {categories.map((category) => (
+                      <DropdownMenuItem key={category.id} asChild>
                         <Link
-                          key={category.id}
                           href={`/${category.slug}`}
-                          className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+                          className="cursor-pointer"
                         >
-                          <div className="text-sm font-medium leading-none">
-                            {category.name}
-                          </div>
-                          <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
-                            {category.description}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            {category.articleCount}{" "}
-                            {category.articleCount === 1 ? "artikel" : "artikler"}
-                          </p>
+                          {category.name}
                         </Link>
-                      ))}
-                    </div>
-                  </NavigationMenuContent>
-                </NavigationMenuItem>
-              </NavigationMenuList>
-            </NavigationMenu>
+                      </DropdownMenuItem>
+                    ))}
+                  </div>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           </div>
 
           {/* Desktop Search and Auth Buttons */}

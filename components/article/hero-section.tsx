@@ -26,9 +26,10 @@ export function HeroSection({ articles }: HeroSectionProps) {
   const featuredArticle = articles[0];
   const sideArticles = articles.slice(1, 4);
 
-  const featuredCategory = featuredArticle.categories.length > 0
-    ? featuredArticle.categories[0].name
-    : null;
+  const featuredCategory =
+    featuredArticle.categories.length > 0
+      ? featuredArticle.categories[0].name
+      : null;
 
   return (
     <section className="container mx-auto px-4 py-8 max-w-6xl">
@@ -87,7 +88,7 @@ export function HeroSection({ articles }: HeroSectionProps) {
           </Card>
         </div>
 
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-4 items-start">
           {sideArticles.map((article) => (
             <ArticleCard
               key={article.id}
@@ -98,6 +99,7 @@ export function HeroSection({ articles }: HeroSectionProps) {
               publishedDate={article.publishedDate}
               categories={article.categories}
               variant="small"
+              className="h-auto"
             />
           ))}
         </div>
