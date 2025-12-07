@@ -8,7 +8,7 @@ import { ArticleEditor } from "@/components/admin/article-editor";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { Newspaper, Sparkles, Plus } from "lucide-react";
+import { Newspaper, Sparkles, FolderTree, Plus } from "lucide-react";
 import Link from "next/link";
 
 export default function AdminDashboard() {
@@ -129,6 +129,12 @@ export default function AdminDashboard() {
             <Plus className="mr-2 h-4 w-4" />
             Tilføj artikel
           </Button>
+          <Link href="/admin/categories">
+            <Button size="sm" variant="outline">
+              <FolderTree className="mr-2 h-4 w-4" />
+              Categories
+            </Button>
+          </Link>
           <Link href="/admin/ai-prompts">
             <Button size="sm" variant="outline">
               <Sparkles className="mr-2 h-4 w-4" />

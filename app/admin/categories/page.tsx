@@ -1,0 +1,112 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { authClient } from "@/lib/auth-client";
+import { Skeleton } from "@/components/ui/skeleton";
+import { CategoryList } from "@/components/admin/category-list";
+import { CategoryEditor } from "@/components/admin/category-editor";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft } from "lucide-react";
+
+export default function CategoriesAdminPage() {
+  const router = useRouter();
+  const { data: session, isPending } = authClient.useSession();
+  const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(
+    null
+  );
+
+  // Check if user is admin
+  useEffect(() => {
+    async function checkAdminStatus() {
+      if (!session?.user) {
+        router.push("/login");
+        return;
+      }
+
+      try {
+        // Check admin status by making a test request to admin API
+        const response = await fetch("/api/admin/categories");
+        if (response.status === 403 || response.status === 401) {
+          router.push("/");
+          return;
+        }
+        setIsAdmin(true);
+      } catch (error) {
+        console.error("Error checking admin status:", error);
+        router.push("/");
+      }
+    }
+
+    if (!isPending) {
+      checkAdminStatus();
+    }
+  }, [session, isPending, router]);
+
+  if (isPending || isAdmin === null) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <div className="space-y-4">
+          <Skeleton className="h-12 w-64" />
+          <Skeleton className="h-4 w-48" />
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAdmin) {
+    return null;
+  }
+
+  return (
+    <div className="flex h-screen flex-col overflow-hidden">
+      {/* Header */}
+      <div className="border-b bg-background px-6 py-3 flex justify-between items-center">
+        <div>
+          <h1 className="text-lg font-semibold">Category Management</h1>
+          <p className="text-sm text-muted-foreground">
+            Create and manage article categories
+          </p>
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => router.push("/admin")}
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Back to Dashboard
+        </Button>
+      </div>
+      {/* Main content */}
+      <div className="flex flex-1 overflow-hidden">
+        {/* Sidebar - Category List */}
+        <div className="w-80 border-r bg-muted/30">
+          <CategoryList
+            selectedCategoryId={selectedCategoryId}
+            onSelectCategory={setSelectedCategoryId}
+          />
+        </div>
+
+        {/* Main Content - Category Editor */}
+        <div className="flex-1 overflow-auto">
+          {selectedCategoryId ? (
+            <CategoryEditor
+              categoryId={selectedCategoryId}
+              onClose={() => setSelectedCategoryId(null)}
+            />
+          ) : (
+            <div className="flex h-full items-center justify-center text-muted-foreground">
+              <div className="text-center">
+                <h2 className="text-2xl font-semibold mb-2">
+                  Select a category to edit
+                </h2>
+                <p>Choose a category from the list or create a new one</p>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
