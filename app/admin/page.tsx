@@ -126,6 +126,15 @@ export default function AdminDashboard() {
                 </DropdownMenuItem>
 
                 <DropdownMenuSeparator />
+
+                <DropdownMenuItem asChild>
+                  <Link href="/admin/settings" className="cursor-pointer">
+                    <Settings className="mr-2 h-4 w-4" />
+                    <span>System Indstillinger</span>
+                  </Link>
+                </DropdownMenuItem>
+
+                <DropdownMenuSeparator />
                 <DropdownMenuLabel>Handlinger</DropdownMenuLabel>
                 <DropdownMenuSeparator />
 

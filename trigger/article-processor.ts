@@ -1,4 +1,3 @@
-import OpenAI from "openai";
 import { GoogleGenAI } from "@google/genai";
 import { put } from "@vercel/blob";
 import { db } from "@/database/db";
@@ -10,15 +9,9 @@ import {
   getAiPromptWithVars,
   getAiPromptObject,
 } from "@/lib/ai-prompts";
+import { generateText, generateJSON, getAIProvider } from "@/lib/ai-client";
 
-// Initialize OpenAI client lazily (fallback for build phase)
-const getOpenAIClient = () => {
-  return new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY || "",
-  });
-};
-
-// Initialize Gemini client lazily (fallback for build phase)
+// Initialize Gemini client lazily (fallback for build phase - still used for image generation)
 const getGeminiClient = () => {
   return new GoogleGenAI({
     apiKey: process.env.GEMINI_API_KEY || "",
@@ -73,7 +66,8 @@ export async function processArticle(
     }
 
     // Step 1: Research the news story using OpenAI with web search
-    logger.info("Researching news story with OpenAI...");
+    // Note: Research always uses OpenAI because it has built-in web search
+    logger.info("Researching news story with OpenAI (web search enabled)...");
 
     // Get research prompt from database
     const sourcesText = newsItem.sources && newsItem.sources.length > 0
@@ -112,20 +106,24 @@ Formatér dine research-resultater tydeligt med overskrifter og punkter.`;
       logger.warn("Using fallback research prompt - database prompt not found");
     }
 
-    const openai = getOpenAIClient();
-    const researchResponse = await openai.responses.create({
-      model: "gpt-5-mini",
-      tools: [{ type: "web_search" }],
-      input: finalResearchPrompt,
+    // Always use OpenAI with web search for research (critical for finding sources)
+    const researchResponse = await generateText({
+      prompt: finalResearchPrompt,
+      useWebSearch: true, // OpenAI with web search
+      maxTokens: 4096,
     });
 
-    const researchFindings = researchResponse.output_text;
+    const researchFindings = researchResponse.text;
 
     if (!researchFindings) {
       throw new Error("Failed to research news story");
     }
 
-    logger.info("Research completed, writing article...");
+    logger.info("Research completed with OpenAI, writing article...");
+
+    // Get the configured AI provider for article writing
+    const aiProvider = await getAIProvider();
+    logger.info(`Using ${aiProvider} for article writing...`);
 
     // Step 2: Write a structured article based on the research
     // Get article writing prompt from database
@@ -173,18 +171,19 @@ Formatér artiklen i markdown med korrekte overskrifter (#, ##, ###).`;
       );
     }
 
-    const articleResponse = await openai.responses.create({
-      model: "gpt-5-mini",
-      input: finalArticlePrompt,
+    const articleResponse = await generateText({
+      prompt: finalArticlePrompt,
+      useWebSearch: false,
+      maxTokens: 8192, // Longer for article content
     });
 
-    const articleContent = articleResponse.output_text;
+    const articleContent = articleResponse.text;
 
     if (!articleContent) {
       throw new Error("Failed to write article");
     }
 
-    logger.info("Article written, generating metadata...");
+    logger.info(`Article written using ${articleResponse.provider}, generating metadata...`);
 
     // Step 3: Generate metadata (slug, meta description, summary)
     // Get metadata prompt from database
@@ -228,12 +227,6 @@ Svar KUN med valid JSON i denne præcise struktur:
       logger.warn("Using fallback metadata prompt - database prompt not found");
     }
 
-    const metadataResponse = await openai.responses.create({
-      model: "gpt-5-mini",
-      input: finalMetadataPrompt,
-    });
-
-    const metadataText = metadataResponse.output_text;
     let metadata: {
       slug: string;
       metaDescription: string;
@@ -242,7 +235,14 @@ Svar KUN med valid JSON i denne præcise struktur:
     };
 
     try {
-      metadata = JSON.parse(metadataText || "{}");
+      const metadataResponse = await generateJSON<typeof metadata>({
+        prompt: finalMetadataPrompt,
+        useWebSearch: false,
+        maxTokens: 1024,
+      });
+
+      metadata = metadataResponse.data;
+      logger.info(`Metadata generated using ${metadataResponse.provider}`);
     } catch (error) {
       logger.warn("Failed to parse metadata JSON, using fallback", { error });
       // Fallback metadata
