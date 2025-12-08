@@ -120,7 +120,7 @@ export async function sendWelcomeEmail({
 }: SendWelcomeEmailParams) {
   const urls = generateEmailUrls(userId);
 
-  const html = renderEmail(
+  const html = await renderEmail(
     WelcomeEmail({
       userName,
       preferencesUrl: urls.preferencesUrl,
@@ -159,7 +159,7 @@ export async function sendArticleNotification({
   const urls = generateEmailUrls(userId);
   const articleUrl = `${urls.baseUrl}/artikler/${articleSlug}`;
 
-  const html = renderEmail(
+  const html = await renderEmail(
     ArticleNotification({
       articleTitle,
       articleSummary,
@@ -207,7 +207,7 @@ export async function sendWeeklyDigest({
 }: SendWeeklyDigestParams) {
   const urls = generateEmailUrls(userId);
 
-  const html = renderEmail(
+  const html = await renderEmail(
     WeeklyDigest({
       userName,
       articles,
@@ -246,7 +246,7 @@ export async function sendPasswordReset({
   resetUrl,
   expirationMinutes = 60,
 }: SendPasswordResetParams) {
-  const html = renderEmail(
+  const html = await renderEmail(
     PasswordReset({
       userName,
       resetUrl,
