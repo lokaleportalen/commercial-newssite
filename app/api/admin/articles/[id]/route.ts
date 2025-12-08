@@ -10,6 +10,7 @@ import {
 } from "@/lib/category-helpers";
 import { tasks } from "@trigger.dev/sdk";
 import { sendArticleNotificationsTask } from "@/trigger/send-article-notifications";
+import { del } from "@vercel/blob";
 
 type RouteContext = {
   params: Promise<{ id: string }>;
@@ -238,7 +239,7 @@ export async function PUT(
 
 /**
  * DELETE /api/admin/articles/[id]
- * Delete an article
+ * Delete an article and its associated image from Vercel Blob
  */
 export async function DELETE(
   request: NextRequest,
@@ -250,6 +251,23 @@ export async function DELETE(
 
     const { id } = await context.params;
 
+    // First, fetch the article to get the image URL
+    const existingArticles = await db
+      .select()
+      .from(article)
+      .where(eq(article.id, id))
+      .limit(1);
+
+    if (!existingArticles || existingArticles.length === 0) {
+      return NextResponse.json(
+        { error: "Article not found" },
+        { status: 404 }
+      );
+    }
+
+    const imageUrl = existingArticles[0].image;
+
+    // Delete the article from database
     const deletedArticles = await db
       .delete(article)
       .where(eq(article.id, id))
@@ -260,6 +278,17 @@ export async function DELETE(
         { error: "Article not found" },
         { status: 404 }
       );
+    }
+
+    // Delete the image from Vercel Blob if it exists and is a blob URL
+    if (imageUrl && imageUrl.includes("vercel-storage.com")) {
+      try {
+        await del(imageUrl);
+        console.log(`✓ Deleted blob image: ${imageUrl}`);
+      } catch (blobError) {
+        // Don't fail the deletion if blob cleanup fails
+        console.error("Failed to delete blob image:", blobError);
+      }
     }
 
     return NextResponse.json(

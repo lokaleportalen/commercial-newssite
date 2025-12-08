@@ -183,6 +183,8 @@ npx trigger.dev@latest deploy  # Deploy to Trigger.dev
 ## Recent Changes
 
 **2025-12-08:**
+- **Automatic blob cleanup on deletion** - Articles and categories now automatically delete their associated images from Vercel Blob when deleted to prevent orphaned files and reduce storage costs
+- **Category hero image improvements** - Fixed to use category ID instead of filename for Vercel Blob storage, ensuring unique filenames and proper production image loading
 - **Removed onboarding flow** - New users are now redirected directly to `/profile/preferences` after signup instead of `/onboarding` for immediate email preference setup
 - **Email system implementation** - React Email templates (welcome, article notification, weekly digest, password reset) with Tailwind CSS and orange theme
 - **Mailgun integration** - Email sending functions in `lib/email.ts` with template rendering

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { put } from "@vercel/blob";
 import { requireAdmin } from "@/lib/auth-helpers";
+import { randomUUID } from "crypto";
 
 export async function POST(request: NextRequest) {
   try {
@@ -9,6 +10,7 @@ export async function POST(request: NextRequest) {
 
     const formData = await request.formData();
     const file = formData.get("file") as File;
+    const categoryId = formData.get("categoryId") as string | null;
 
     if (!file) {
       return NextResponse.json(
@@ -33,8 +35,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Get file extension
+    const fileExtension = file.name.split(".").pop() || "jpg";
+
+    // Generate unique filename using category ID if available, otherwise use UUID
+    const uniqueId = categoryId || randomUUID();
+    const filename = `category-hero/${uniqueId}.${fileExtension}`;
+
     // Upload to Vercel Blob
-    const blob = await put(file.name, file, {
+    const blob = await put(filename, file, {
       access: "public",
     });
 

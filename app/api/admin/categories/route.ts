@@ -4,6 +4,7 @@ import { category, articleCategory } from "@/database/schema/categories-schema";
 import { article } from "@/database/schema/articles-schema";
 import { asc, eq } from "drizzle-orm";
 import { requireAdmin } from "@/lib/auth-helpers";
+import { del } from "@vercel/blob";
 
 /**
  * GET /api/admin/categories
@@ -153,7 +154,7 @@ export async function PATCH(request: NextRequest) {
 
 /**
  * DELETE /api/admin/categories
- * Delete a category
+ * Delete a category and its associated hero image from Vercel Blob
  */
 export async function DELETE(request: NextRequest) {
   try {
@@ -186,7 +187,35 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
+    // Fetch the category to get the hero image URL
+    const existingCategories = await db
+      .select()
+      .from(category)
+      .where(eq(category.id, id))
+      .limit(1);
+
+    if (existingCategories.length === 0) {
+      return NextResponse.json(
+        { error: "Category not found" },
+        { status: 404 }
+      );
+    }
+
+    const heroImage = existingCategories[0].heroImage;
+
+    // Delete the category from database
     await db.delete(category).where(eq(category.id, id));
+
+    // Delete the hero image from Vercel Blob if it exists and is a blob URL
+    if (heroImage && heroImage.includes("vercel-storage.com")) {
+      try {
+        await del(heroImage);
+        console.log(`✓ Deleted blob hero image: ${heroImage}`);
+      } catch (blobError) {
+        // Don't fail the deletion if blob cleanup fails
+        console.error("Failed to delete blob hero image:", blobError);
+      }
+    }
 
     return NextResponse.json({ success: true });
   } catch (error) {

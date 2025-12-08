@@ -184,6 +184,11 @@ export default function CategoryManagement() {
       const formData = new FormData();
       formData.append("file", file);
 
+      // Pass category ID if editing existing category (for organized blob storage)
+      if (selectedCategory?.id) {
+        formData.append("categoryId", selectedCategory.id);
+      }
+
       const response = await fetch("/api/admin/upload-category-image", {
         method: "POST",
         body: formData,

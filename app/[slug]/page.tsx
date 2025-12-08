@@ -134,13 +134,11 @@ export default async function CategoryPage({
   const totalCount = Number(totalCountResult[0]?.count || 0);
   const totalPages = Math.ceil(totalCount / ARTICLES_PER_PAGE);
 
-  // Get hero image (from DB or convention-based path)
+  // Get hero image (from DB only)
   const heroImageUrl = getCategoryHeroImage(
     categoryData.slug,
     categoryData.heroImage
   );
-
-  console.log("billede", categoryData.heroImage);
 
   return (
     <div className="flex-1">

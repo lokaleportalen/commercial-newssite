@@ -172,8 +172,8 @@ export async function getArticleCategoriesBulk(
 
 /**
  * Get category hero image URL
- * Tries heroImage field from DB first, falls back to default path based on slug
- * @param slug Category slug
+ * Returns the hero image URL from database or null if not set
+ * @param slug Category slug (kept for backwards compatibility but not used)
  * @param heroImage Hero image URL from database
  * @returns Image URL or null if no image available
  */
@@ -181,16 +181,7 @@ export function getCategoryHeroImage(
   slug: string,
   heroImage?: string | null
 ): string | null {
-  // If heroImage is set in DB, use that
-  if (heroImage) {
-    return heroImage;
-  }
-
-  // Otherwise, use convention-based path
-  // Images are named: {slug}-category.png in public/categories/hero/
-  // Special case for 'baeredygtighed' which is spelled 'baedygtighed' in filename
-  const filenameSlug = slug === 'baeredygtighed' ? 'baedygtighed' : slug;
-  const defaultPath = `/categories/hero/${filenameSlug}-category.png`;
-
-  return defaultPath;
+  // Return the hero image URL from database if set
+  // No fallback to public folder - images must be uploaded to Vercel Blob
+  return heroImage || null;
 }
