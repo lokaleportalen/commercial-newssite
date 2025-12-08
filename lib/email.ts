@@ -57,8 +57,10 @@ export async function sendEmail(options: SendEmailOptions) {
 /**
  * Render a React Email component to HTML string
  */
-export function renderEmail(component: React.ReactElement): string {
-  return render(component);
+export async function renderEmail(
+  component: React.ReactElement
+): Promise<string> {
+  return await render(component);
 }
 
 /**
