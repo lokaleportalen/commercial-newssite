@@ -1,5 +1,5 @@
 {
-  "id": "68e3bf41-8f20-4d24-9721-d4ceefd0227f",
+  "id": "47e53223-f70e-490f-9d8b-65fefab9c211",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -412,11 +412,12 @@
           "primaryKey": false,
           "notNull": false
         },
-        "source_url": {
-          "name": "source_url",
-          "type": "text",
+        "sources": {
+          "name": "sources",
+          "type": "jsonb",
           "primaryKey": false,
-          "notNull": false
+          "notNull": false,
+          "default": "'[]'::jsonb"
         },
         "status": {
           "name": "status",
@@ -698,6 +699,12 @@
           "primaryKey": false,
           "notNull": false
         },
+        "hero_image": {
+          "name": "hero_image",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
         "created_at": {
           "name": "created_at",
           "type": "timestamp",
@@ -758,6 +765,104 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
+    "public.user_preference_category": {
+      "name": "user_preference_category",
+      "schema": "",
+      "columns": {
+        "user_preferences_id": {
+          "name": "user_preferences_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "category_id": {
+          "name": "category_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "idx_user_preference_category_category_id": {
+          "name": "idx_user_preference_category_category_id",
+          "columns": [
+            {
+              "expression": "category_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "idx_user_preference_category_user_preferences_id": {
+          "name": "idx_user_preference_category_user_preferences_id",
+          "columns": [
+            {
+              "expression": "user_preferences_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "user_preference_category_user_preferences_id_user_preferences_id_fk": {
+          "name": "user_preference_category_user_preferences_id_user_preferences_id_fk",
+          "tableFrom": "user_preference_category",
+          "tableTo": "user_preferences",
+          "columnsFrom": [
+            "user_preferences_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "user_preference_category_category_id_category_id_fk": {
+          "name": "user_preference_category_category_id_category_id_fk",
+          "tableFrom": "user_preference_category",
+          "tableTo": "category",
+          "columnsFrom": [
+            "category_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "user_preference_category_user_preferences_id_category_id_pk": {
+          "name": "user_preference_category_user_preferences_id_category_id_pk",
+          "columns": [
+            "user_preferences_id",
+            "category_id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
     "public.user_preferences": {
       "name": "user_preferences",
       "schema": "",
@@ -774,19 +879,19 @@
           "primaryKey": false,
           "notNull": true
         },
-        "news_category": {
-          "name": "news_category",
-          "type": "text",
+        "all_categories": {
+          "name": "all_categories",
+          "type": "boolean",
           "primaryKey": false,
           "notNull": true,
-          "default": "'all'"
+          "default": true
         },
         "email_frequency": {
           "name": "email_frequency",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
-          "default": "'daily'"
+          "default": "'weekly'"
         },
         "created_at": {
           "name": "created_at",

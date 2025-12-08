@@ -101,3 +101,107 @@ export async function GET(request: NextRequest) {
     );
   }
 }
+
+/**
+ * POST /api/admin/articles
+ * Create a new article
+ */
+export async function POST(request: NextRequest) {
+  try {
+    // Check if user is admin
+    await requireAdmin();
+
+    const body = await request.json();
+    const { title, slug, content, summary, metaDescription, image, sources, categories, status } = body;
+
+    // Validate required fields (allow empty for draft creation)
+    if (title === undefined || slug === undefined || content === undefined) {
+      return NextResponse.json(
+        { error: "Title, slug, and content fields are required" },
+        { status: 400 }
+      );
+    }
+
+    // Process sources - ensure it's an array
+    let sourcesArray: string[] = [];
+    if (sources) {
+      if (Array.isArray(sources)) {
+        sourcesArray = sources.filter(s => typeof s === 'string' && s.trim().length > 0);
+      } else if (typeof sources === 'string') {
+        sourcesArray = sources.split('\n').map(s => s.trim()).filter(s => s.length > 0);
+      }
+    }
+
+    // Create the article
+    const [newArticle] = await db
+      .insert(article)
+      .values({
+        title,
+        slug,
+        content,
+        summary: summary || null,
+        metaDescription: metaDescription || null,
+        image: image || null,
+        sources: sourcesArray,
+        status: status || "draft",
+        publishedDate: new Date(),
+      })
+      .returning();
+
+    // Handle categories if provided (expecting array of category IDs)
+    if (categories && Array.isArray(categories) && categories.length > 0) {
+      // Link article to categories
+      for (const categoryId of categories) {
+        await db.insert(articleCategory).values({
+          articleId: newArticle.id,
+          categoryId,
+        });
+      }
+    }
+
+    // Fetch the created article with categories
+    const [articleData] = await db
+      .select({
+        article: article,
+        prompt: aiPrompt,
+      })
+      .from(article)
+      .leftJoin(aiPrompt, eq(article.promptId, aiPrompt.id))
+      .where(eq(article.id, newArticle.id));
+
+    const categoriesMap = await getArticleCategoriesBulk([newArticle.id]);
+    const articleWithCategories = {
+      ...articleData.article,
+      prompt: articleData.prompt,
+      categories: categoriesMap.get(newArticle.id) || [],
+    };
+
+    return NextResponse.json(
+      { article: articleWithCategories },
+      { status: 201 }
+    );
+  } catch (error) {
+    console.error("Error creating article:", error);
+
+    if (error instanceof Error) {
+      if (error.message === "Unauthorized") {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      }
+      if (error.message.includes("Forbidden")) {
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      }
+      // Check for unique constraint violation (duplicate slug)
+      if (error.message.includes("unique") || error.message.includes("duplicate")) {
+        return NextResponse.json(
+          { error: "An article with this slug already exists" },
+          { status: 409 }
+        );
+      }
+    }
+
+    return NextResponse.json(
+      { error: "Failed to create article" },
+      { status: 500 }
+    );
+  }
+}

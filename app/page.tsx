@@ -1,10 +1,11 @@
 import { db } from "@/database/db";
 import { article } from "@/database/schema";
-import { eq, desc, sql } from "drizzle-orm";
+import { eq, desc, sql, and } from "drizzle-orm";
 import { HeroBanner } from "@/components/article/hero-banner";
 import { HeroSection } from "@/components/article/hero-section";
 import { ArticleCard } from "@/components/article/article-card";
 import { Pagination } from "@/components/article/pagination";
+import { CategoryGrid } from "@/components/layout/category-grid";
 import { getArticleCategoriesBulk } from "@/lib/category-helpers";
 
 const HERO_ARTICLES_COUNT = 4;
@@ -20,6 +21,9 @@ export default async function Home({ searchParams }: HomeProps) {
   const currentPage = Number(params.page) || 1;
   const isFirstPage = currentPage === 1;
 
+  // Build WHERE conditions
+  const whereConditions = [eq(article.status, "published")];
+
   const gridOffset = isFirstPage
     ? HERO_ARTICLES_COUNT
     : HERO_ARTICLES_COUNT + (currentPage - 1) * ARTICLES_PER_PAGE;
@@ -29,21 +33,21 @@ export default async function Home({ searchParams }: HomeProps) {
       ? db
           .select()
           .from(article)
-          .where(eq(article.status, "published"))
+          .where(and(...whereConditions))
           .orderBy(desc(article.publishedDate))
           .limit(HERO_ARTICLES_COUNT)
       : Promise.resolve([]),
     db
       .select()
       .from(article)
-      .where(eq(article.status, "published"))
+      .where(and(...whereConditions))
       .orderBy(desc(article.publishedDate))
       .limit(ARTICLES_PER_PAGE)
       .offset(gridOffset),
     db
       .select({ count: sql<number>`count(*)` })
       .from(article)
-      .where(eq(article.status, "published")),
+      .where(and(...whereConditions)),
   ]);
 
   const totalCount = Number(totalCountResult[0]?.count || 0);
@@ -76,6 +80,9 @@ export default async function Home({ searchParams }: HomeProps) {
         <HeroSection articles={heroArticlesWithCategories} />
       )}
 
+      {/* Category Grid - Only on first page */}
+      {isFirstPage && <CategoryGrid />}
+
       <main className="container mx-auto px-4 py-12 max-w-6xl">
         {!hasContent ? (
           <section className="text-center py-12">
@@ -85,7 +92,9 @@ export default async function Home({ searchParams }: HomeProps) {
           </section>
         ) : (
           <>
-            <h2 className="text-3xl font-bold mb-8">Seneste Nyt</h2>
+            <h2 className="text-3xl font-bold mb-8">
+              Seneste Nyt
+            </h2>
 
             {gridArticlesWithCategories.length > 0 && (
               <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

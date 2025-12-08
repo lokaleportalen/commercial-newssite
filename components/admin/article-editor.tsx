@@ -10,13 +10,6 @@ import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Label } from "@/components/ui/label";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-  DropdownMenuSeparator,
-} from "@/components/ui/dropdown-menu";
-import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -26,7 +19,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { MoreVertical, Upload, X, Archive, Trash2 } from "lucide-react";
+import { CategorySelect } from "@/components/admin/category-select";
+import { Upload, X, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 type Category = {
@@ -43,8 +37,8 @@ type Article = {
   summary: string | null;
   metaDescription: string | null;
   image: string | null;
-  sourceUrl: string | null;
-  categories: Category[] | string | null;
+  sources: string[] | null;
+  categories: Category[];
   status: string;
   publishedDate: Date;
   createdAt: Date;
@@ -54,9 +48,14 @@ type Article = {
 type ArticleEditorProps = {
   articleId: string;
   onClose: () => void;
+  onArticleCreated?: (articleId: string) => void;
 };
 
-export function ArticleEditor({ articleId, onClose }: ArticleEditorProps) {
+export function ArticleEditor({
+  articleId,
+  onClose,
+  onArticleCreated,
+}: ArticleEditorProps) {
   const router = useRouter();
   const [article, setArticle] = useState<Article | null>(null);
   const [formData, setFormData] = useState<Partial<Article>>({});
@@ -64,26 +63,58 @@ export function ArticleEditor({ articleId, onClose }: ArticleEditorProps) {
   const [isSaving, setIsSaving] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [showArchiveDialog, setShowArchiveDialog] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
-  const [categoriesDisplay, setCategoriesDisplay] = useState("");
+  const [sourcesDisplay, setSourcesDisplay] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Helper function to convert categories to display string
-  const categoriesToString = (
-    categories: Category[] | string | null
-  ): string => {
-    if (!categories) return "";
-    if (typeof categories === "string") return categories;
-    if (Array.isArray(categories)) {
-      return categories.map((cat) => cat.name).join(", ");
-    }
-    return "";
+  // Helper function to generate URL-friendly slug from title
+  const generateSlug = (title: string): string => {
+    return (
+      title
+        .toLowerCase()
+        .trim()
+        // Replace Danish characters
+        .replace(/æ/g, "ae")
+        .replace(/ø/g, "oe")
+        .replace(/å/g, "aa")
+        // Replace spaces and special chars with hyphens
+        .replace(/[^\w\s-]/g, "")
+        .replace(/\s+/g, "-")
+        // Remove multiple consecutive hyphens
+        .replace(/-+/g, "-")
+        // Remove leading/trailing hyphens
+        .replace(/^-+|-+$/g, "")
+    );
   };
 
   // Fetch article data
   useEffect(() => {
     async function fetchArticle() {
+      // Handle new article creation (not saved to DB yet)
+      if (articleId === "new") {
+        const newArticle: Article = {
+          id: "new",
+          title: "",
+          slug: "",
+          content: "",
+          summary: null,
+          metaDescription: null,
+          image: null,
+          sources: null,
+          categories: [],
+          status: "draft",
+          publishedDate: new Date(),
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        };
+        setArticle(newArticle);
+        setFormData(newArticle);
+        setSourcesDisplay("");
+        setHasChanges(false);
+        setIsLoading(false);
+        return;
+      }
+
       try {
         setIsLoading(true);
         const response = await fetch(`/api/admin/articles/${articleId}`);
@@ -91,14 +122,18 @@ export function ArticleEditor({ articleId, onClose }: ArticleEditorProps) {
           const data = await response.json();
           setArticle(data.article);
           setFormData(data.article);
-          setCategoriesDisplay(categoriesToString(data.article.categories));
+          setSourcesDisplay(
+            Array.isArray(data.article.sources)
+              ? data.article.sources.join("\n")
+              : ""
+          );
           setHasChanges(false);
         } else {
-          toast.error("Failed to load article");
+          toast.error("Kunne ikke indlæse artikel");
         }
       } catch (error) {
         console.error("Error fetching article:", error);
-        toast.error("Error loading article");
+        toast.error("Fejl ved indlæsning af artikel");
       } finally {
         setIsLoading(false);
       }
@@ -121,14 +156,31 @@ export function ArticleEditor({ articleId, onClose }: ArticleEditorProps) {
   }, [hasChanges]);
 
   const handleFieldChange = (field: keyof Article, value: any) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
+    setFormData((prev) => {
+      const newData = { ...prev, [field]: value };
+
+      // Auto-generate slug from title
+      if (field === "title") {
+        newData.slug = generateSlug(value);
+      }
+
+      return newData;
+    });
     setHasChanges(true);
   };
 
-  const handleCategoriesChange = (value: string) => {
-    setCategoriesDisplay(value);
-    // Store as string in formData - the API will handle the conversion
-    handleFieldChange("categories", value);
+  const handleCategoriesChange = (categories: Category[]) => {
+    handleFieldChange("categories", categories);
+  };
+
+  const handleSourcesChange = (value: string) => {
+    setSourcesDisplay(value);
+    // Convert newline-separated string to array
+    const sourcesArray = value
+      .split("\n")
+      .map((s) => s.trim())
+      .filter((s) => s.length > 0);
+    handleFieldChange("sources", sourcesArray);
   };
 
   const handleImageUpload = async (file: File) => {
@@ -145,13 +197,13 @@ export function ArticleEditor({ articleId, onClose }: ArticleEditorProps) {
       if (response.ok) {
         const data = await response.json();
         handleFieldChange("image", data.url);
-        toast.success("Image uploaded successfully");
+        toast.success("Billede uploadet");
       } else {
-        toast.error("Failed to upload image");
+        toast.error("Kunne ikke uploade billede");
       }
     } catch (error) {
       console.error("Error uploading image:", error);
-      toast.error("Error uploading image");
+      toast.error("Fejl ved upload af billede");
     } finally {
       setIsUploading(false);
     }
@@ -160,59 +212,74 @@ export function ArticleEditor({ articleId, onClose }: ArticleEditorProps) {
   const handleSave = async () => {
     try {
       setIsSaving(true);
-      const response = await fetch(`/api/admin/articles/${articleId}`, {
-        method: "PUT",
+
+      // Validate required fields
+      if (!formData.title || !formData.content) {
+        toast.error("Titel og indhold er påkrævet");
+        setIsSaving(false);
+        return;
+      }
+
+      const isNewArticle = articleId === "new";
+      const url = isNewArticle
+        ? "/api/admin/articles"
+        : `/api/admin/articles/${articleId}`;
+      const method = isNewArticle ? "POST" : "PUT";
+
+      const response = await fetch(url, {
+        method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          ...formData,
+          categories: formData.categories?.map((c) => c.id) || [],
+        }),
       });
 
       if (response.ok) {
         const data = await response.json();
         setArticle(data.article);
         setFormData(data.article);
-        setCategoriesDisplay(categoriesToString(data.article.categories));
+        setSourcesDisplay(
+          Array.isArray(data.article.sources)
+            ? data.article.sources.join("\n")
+            : ""
+        );
         setHasChanges(false);
-        toast.success("Article saved successfully");
+        toast.success(
+          isNewArticle
+            ? "Artikel oprettet"
+            : "Artikel gemt"
+        );
+
+        // If this was a new article, notify parent component
+        if (isNewArticle && data.article.id) {
+          onArticleCreated?.(data.article.id);
+        }
       } else {
-        toast.error("Failed to save article");
+        const error = await response.json();
+        toast.error(error.error || "Kunne ikke gemme artikel");
       }
     } catch (error) {
       console.error("Error saving article:", error);
-      toast.error("Error saving article");
+      toast.error("Fejl ved gemning af artikel");
     } finally {
       setIsSaving(false);
     }
   };
 
   const handleCancel = () => {
-    if (article) {
+    if (articleId === "new") {
+      // Close the editor for new unsaved articles
+      onClose();
+      toast.info("Artikeloprettelse annulleret");
+    } else if (article) {
       setFormData(article);
-      setCategoriesDisplay(categoriesToString(article.categories));
+      setSourcesDisplay(
+        Array.isArray(article.sources) ? article.sources.join("\n") : ""
+      );
       setHasChanges(false);
-      toast.info("Changes cancelled");
+      toast.info("Ændringer annulleret");
     }
-  };
-
-  const handleArchive = async () => {
-    try {
-      const response = await fetch(`/api/admin/articles/${articleId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...formData, status: "archived" }),
-      });
-
-      if (response.ok) {
-        toast.success("Article archived successfully");
-        onClose();
-        router.refresh();
-      } else {
-        toast.error("Failed to archive article");
-      }
-    } catch (error) {
-      console.error("Error archiving article:", error);
-      toast.error("Error archiving article");
-    }
-    setShowArchiveDialog(false);
   };
 
   const handleDelete = async () => {
@@ -222,15 +289,15 @@ export function ArticleEditor({ articleId, onClose }: ArticleEditorProps) {
       });
 
       if (response.ok) {
-        toast.success("Article deleted successfully");
+        toast.success("Artikel slettet");
         onClose();
         router.refresh();
       } else {
-        toast.error("Failed to delete article");
+        toast.error("Kunne ikke slette artikel");
       }
     } catch (error) {
       console.error("Error deleting article:", error);
-      toast.error("Error deleting article");
+      toast.error("Fejl ved sletning af artikel");
     }
     setShowDeleteDialog(false);
   };
@@ -239,8 +306,6 @@ export function ArticleEditor({ articleId, onClose }: ArticleEditorProps) {
     switch (status) {
       case "published":
         return "success";
-      case "archived":
-        return "secondary";
       default:
         return "warning";
     }
@@ -260,7 +325,7 @@ export function ArticleEditor({ articleId, onClose }: ArticleEditorProps) {
   if (!article) {
     return (
       <div className="flex h-full items-center justify-center text-muted-foreground">
-        Article not found
+        Artikel ikke fundet
       </div>
     );
   }
@@ -273,23 +338,32 @@ export function ArticleEditor({ articleId, onClose }: ArticleEditorProps) {
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-2">
               <Badge variant={getStatusVariant(formData.status!)}>
-                {formData.status === "published"
-                  ? "Published"
-                  : formData.status === "archived"
-                  ? "Archived"
-                  : "Draft"}
+                {formData.status === "published" ? "Publiceret" : "Kladde"}
               </Badge>
               <span className="text-sm text-muted-foreground">
-                Updated {new Date(article.updatedAt).toLocaleDateString()}
+                Opdateret {new Date(article.updatedAt).toLocaleDateString()}
               </span>
             </div>
+            {formData.slug && (
+              <div className="text-sm text-muted-foreground">
+                <a
+                  href={`/nyheder/${formData.slug}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:underline hover:text-foreground transition-colors"
+                >
+                  {typeof window !== "undefined" ? window.location.origin : ""}/nyheder/
+                  <span className="font-medium">{formData.slug}</span>
+                </a>
+              </div>
+            )}
           </div>
 
           <div className="flex items-center gap-2">
             {/* Publish/Unpublish Toggle */}
             <div className="flex items-center gap-2 mr-4">
               <Label htmlFor="publish-toggle" className="text-sm">
-                {formData.status === "published" ? "Published" : "Publish"}
+                {formData.status === "published" ? "Publiceret" : "Publicer"}
               </Label>
               <Switch
                 id="publish-toggle"
@@ -297,32 +371,20 @@ export function ArticleEditor({ articleId, onClose }: ArticleEditorProps) {
                 onCheckedChange={(checked) =>
                   handleFieldChange("status", checked ? "published" : "draft")
                 }
-                disabled={formData.status === "archived"}
               />
             </div>
 
-            {/* Actions Menu */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="icon">
-                  <MoreVertical className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => setShowArchiveDialog(true)}>
-                  <Archive className="mr-2 h-4 w-4" />
-                  Archive
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  onClick={() => setShowDeleteDialog(true)}
-                  className="text-destructive"
-                >
-                  <Trash2 className="mr-2 h-4 w-4" />
-                  Delete
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            {/* Delete button - Only show for existing articles */}
+            {articleId !== "new" && (
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => setShowDeleteDialog(true)}
+                className="text-destructive hover:text-destructive hover:bg-destructive/10"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            )}
 
             <Button variant="outline" size="icon" onClick={onClose}>
               <X className="h-4 w-4" />
@@ -352,46 +414,35 @@ export function ArticleEditor({ articleId, onClose }: ArticleEditorProps) {
         <div className="max-w-4xl mx-auto space-y-6">
           {/* Title */}
           <div className="space-y-2">
-            <Label htmlFor="title">Title *</Label>
+            <Label htmlFor="title">Titel *</Label>
             <Input
               id="title"
               value={formData.title || ""}
               onChange={(e) => handleFieldChange("title", e.target.value)}
-              placeholder="Article title"
-            />
-          </div>
-
-          {/* Slug */}
-          <div className="space-y-2">
-            <Label htmlFor="slug">URL Slug *</Label>
-            <Input
-              id="slug"
-              value={formData.slug || ""}
-              onChange={(e) => handleFieldChange("slug", e.target.value)}
-              placeholder="article-url-slug"
+              placeholder="Artikeltitel"
             />
           </div>
 
           {/* Summary */}
           <div className="space-y-2">
-            <Label htmlFor="summary">Summary</Label>
+            <Label htmlFor="summary">Resumé</Label>
             <Textarea
               id="summary"
               value={formData.summary || ""}
               onChange={(e) => handleFieldChange("summary", e.target.value)}
-              placeholder="Brief article summary (2-3 sentences)"
+              placeholder="Kort artikel resumé (2-3 sætninger)"
               rows={3}
             />
           </div>
 
           {/* Content */}
           <div className="space-y-2">
-            <Label htmlFor="content">Content *</Label>
+            <Label htmlFor="content">Indhold *</Label>
             <Textarea
               id="content"
               value={formData.content || ""}
               onChange={(e) => handleFieldChange("content", e.target.value)}
-              placeholder="Article content in markdown"
+              placeholder="Artikelindhold i markdown"
               rows={20}
               className="font-mono text-sm"
             />
@@ -399,31 +450,31 @@ export function ArticleEditor({ articleId, onClose }: ArticleEditorProps) {
 
           {/* Meta Description */}
           <div className="space-y-2">
-            <Label htmlFor="metaDescription">Meta Description</Label>
+            <Label htmlFor="metaDescription">Meta Beskrivelse</Label>
             <Textarea
               id="metaDescription"
               value={formData.metaDescription || ""}
               onChange={(e) =>
                 handleFieldChange("metaDescription", e.target.value)
               }
-              placeholder="SEO meta description (150-160 characters)"
+              placeholder="SEO meta beskrivelse (150-160 tegn)"
               rows={2}
               maxLength={160}
             />
             <p className="text-xs text-muted-foreground">
-              {formData.metaDescription?.length || 0}/160 characters
+              {formData.metaDescription?.length || 0}/160 tegn
             </p>
           </div>
 
           {/* Image */}
           <div className="space-y-2">
-            <Label htmlFor="image">Featured Image</Label>
+            <Label htmlFor="image">Fremhævet Billede</Label>
             <div className="space-y-2">
               <Input
                 id="image"
                 value={formData.image || ""}
                 onChange={(e) => handleFieldChange("image", e.target.value)}
-                placeholder="Image URL or upload below"
+                placeholder="Billede URL eller upload nedenfor"
               />
               <div className="flex gap-2">
                 <Button
@@ -433,7 +484,7 @@ export function ArticleEditor({ articleId, onClose }: ArticleEditorProps) {
                   disabled={isUploading}
                 >
                   <Upload className="mr-2 h-4 w-4" />
-                  {isUploading ? "Uploading..." : "Upload Image"}
+                  {isUploading ? "Uploader..." : "Upload Billede"}
                 </Button>
                 <input
                   ref={fileInputRef}
@@ -449,7 +500,7 @@ export function ArticleEditor({ articleId, onClose }: ArticleEditorProps) {
               {formData.image && (
                 <img
                   src={formData.image}
-                  alt="Preview"
+                  alt="Forhåndsvisning"
                   className="w-full max-w-md rounded-lg border"
                 />
               )}
@@ -458,28 +509,30 @@ export function ArticleEditor({ articleId, onClose }: ArticleEditorProps) {
 
           {/* Categories */}
           <div className="space-y-2">
-            <Label htmlFor="categories">Categories</Label>
-            <Input
-              id="categories"
-              value={categoriesDisplay}
-              onChange={(e) => handleCategoriesChange(e.target.value)}
-              placeholder="Comma-separated categories"
+            <Label htmlFor="categories">Kategorier (maks 3)</Label>
+            <CategorySelect
+              selectedCategories={formData.categories || []}
+              onCategoriesChange={handleCategoriesChange}
+              maxCategories={3}
             />
             <p className="text-xs text-muted-foreground">
-              Enter category names separated by commas (e.g., Tech, News,
-              Sports)
+              Søg og vælg op til 3 kategorier til denne artikel
             </p>
           </div>
 
-          {/* Source URL */}
+          {/* Sources */}
           <div className="space-y-2">
-            <Label htmlFor="sourceUrl">Source URL</Label>
-            <Input
-              id="sourceUrl"
-              value={formData.sourceUrl || ""}
-              onChange={(e) => handleFieldChange("sourceUrl", e.target.value)}
-              placeholder="Original news source URL"
+            <Label htmlFor="sources">Kilder</Label>
+            <Textarea
+              id="sources"
+              value={sourcesDisplay}
+              onChange={(e) => handleSourcesChange(e.target.value)}
+              placeholder="Indtast kilde-URL'er, én pr. linje"
+              rows={5}
             />
+            <p className="text-xs text-muted-foreground">
+              Indtast hver kilde-URL på en ny linje
+            </p>
           </div>
         </div>
       </div>
@@ -488,38 +541,19 @@ export function ArticleEditor({ articleId, onClose }: ArticleEditorProps) {
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogTitle>Slet Artikel?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently delete the article. This action cannot be
-              undone.
+              Dette vil permanent slette artiklen. Denne handling kan ikke
+              fortrydes.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>Annuller</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      {/* Archive Dialog */}
-      <AlertDialog open={showArchiveDialog} onOpenChange={setShowArchiveDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Archive Article?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will archive the article and hide it from public view. You
-              can restore it later if needed.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleArchive}>
-              Archive
+              Slet
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

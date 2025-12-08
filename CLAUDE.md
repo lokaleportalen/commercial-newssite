@@ -41,8 +41,15 @@ lib/                          # Auth config, auth helpers, utilities
 
 ## Database
 
-**Schema:** user, session, account, verification, role, article (PostgreSQL via Drizzle)
+**Schema:** user, session, account, verification, role, article, category (PostgreSQL via Drizzle)
 **Seed Users:** admin@example.com / admin123, test@example.com / password123
+
+**IMPORTANT - Database Migrations:**
+- NEVER create manual migration files (`.sql` files in `database/migrations/`)
+- Schema changes are applied using `cd database && npm run push` (drizzle-kit push)
+- For production data reset: `cd database && npm run reset` (runs seed/reset.ts)
+- Drizzle handles schema diffing automatically via push command
+- Migration files are not needed in this project workflow
 
 ## Auth & API
 
@@ -55,11 +62,21 @@ lib/                          # Auth config, auth helpers, utilities
 ## Admin CMS
 
 `/admin` - Two-panel layout (list + editor), search, edit all fields, image upload, publish/archive/delete, toast notifications
+`/admin/categories` - Category management with hero image upload (Vercel Blob), edit name/slug/description
+`/admin/ai-prompts` - AI prompt version management
 
 ## Configuration
 
-**Required Env Vars:** `DATABASE_URL`, `OPENAI_API_KEY`, `GEMINI_API_KEY`, `TRIGGER_SECRET_KEY`, `NEXT_PUBLIC_BASE_URL`
+**Required Env Vars:**
+- `DATABASE_URL` - PostgreSQL connection string
+- `OPENAI_API_KEY` - GPT-4o for article generation
+- `GEMINI_API_KEY` - Gemini 3 Pro for image generation
+- `TRIGGER_SECRET_KEY` - Trigger.dev authentication
+- `NEXT_PUBLIC_BASE_URL` - Base URL for the application
+- `BLOB_READ_WRITE_TOKEN` - Vercel Blob for image uploads (article images, category hero images)
+
 **Optional:** `CRON_SECRET` (deprecated - only needed if using old HTTP cron endpoint)
+
 **Config:** TypeScript strict, Tailwind v4 (orange OKLCh theme), ShadCN (new-york style), Drizzle PostgreSQL
 
 ## Commands
@@ -121,6 +138,12 @@ npx trigger.dev@latest deploy  # Deploy to Trigger.dev
 
 
 ## Recent Changes
+
+**2025-12-07:**
+- Category hero images - Static hero images for category pages (stored in DB or `public/categories/hero/`)
+- User preferences overhaul - Multiple category selection via checkboxes, grid layout, database-driven categories, email frequency changed to weekly
+- Admin category management - Upload/manage hero images via `/admin/categories` (Vercel Blob)
+- CategoryHero component redesign - Removed featured article logic, simplified to static branding
 
 **2025-12-01:** Article paywall implementation - unauthenticated users see preview (first 400 chars) with blurred content and sign-up CTA, authenticated users see full articles
 **2025-11-28:** Trigger.dev v4 integration for weekly news - scheduled tasks (Wednesdays 6 AM CET), Europe/Copenhagen timezone, no timeouts, automatic retries, manual trigger endpoint

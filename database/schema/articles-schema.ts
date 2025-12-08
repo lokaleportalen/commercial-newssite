@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, uuid, index } from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, uuid, index, jsonb } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import { aiPrompt } from "./ai-prompts-schema";
 
@@ -10,9 +10,9 @@ export const article = pgTable("article", {
   summary: text("summary"),
   metaDescription: text("meta_description"),
   image: text("image"),
-  sourceUrl: text("source_url"),
+  sources: jsonb("sources").$type<string[]>().default([]), // Array of source URLs
   // Categories now handled via article_category junction table
-  status: text("status").notNull().default("draft"), // draft, published, archived
+  status: text("status").notNull().default("draft"), // draft, published
   publishedDate: timestamp("published_date").defaultNow().notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at")

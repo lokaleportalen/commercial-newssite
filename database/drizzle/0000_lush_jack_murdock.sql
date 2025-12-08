@@ -55,7 +55,7 @@ CREATE TABLE "article" (
 	"summary" text,
 	"meta_description" text,
 	"image" text,
-	"source_url" text,
+	"sources" jsonb DEFAULT '[]'::jsonb,
 	"status" text DEFAULT 'draft' NOT NULL,
 	"published_date" timestamp DEFAULT now() NOT NULL,
 	"created_at" timestamp DEFAULT now() NOT NULL,
@@ -77,6 +77,7 @@ CREATE TABLE "category" (
 	"name" text NOT NULL,
 	"slug" text NOT NULL,
 	"description" text,
+	"hero_image" text,
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"updated_at" timestamp DEFAULT now() NOT NULL,
 	"search_vector" text,
@@ -84,11 +85,18 @@ CREATE TABLE "category" (
 	CONSTRAINT "category_slug_unique" UNIQUE("slug")
 );
 --> statement-breakpoint
+CREATE TABLE "user_preference_category" (
+	"user_preferences_id" text NOT NULL,
+	"category_id" uuid NOT NULL,
+	"created_at" timestamp DEFAULT now() NOT NULL,
+	CONSTRAINT "user_preference_category_user_preferences_id_category_id_pk" PRIMARY KEY("user_preferences_id","category_id")
+);
+--> statement-breakpoint
 CREATE TABLE "user_preferences" (
 	"id" text PRIMARY KEY NOT NULL,
 	"user_id" text NOT NULL,
-	"news_category" text DEFAULT 'all' NOT NULL,
-	"email_frequency" text DEFAULT 'daily' NOT NULL,
+	"all_categories" boolean DEFAULT true NOT NULL,
+	"email_frequency" text DEFAULT 'weekly' NOT NULL,
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"updated_at" timestamp DEFAULT now() NOT NULL,
 	CONSTRAINT "user_preferences_user_id_unique" UNIQUE("user_id")
@@ -137,6 +145,8 @@ ALTER TABLE "session" ADD CONSTRAINT "session_user_id_user_id_fk" FOREIGN KEY ("
 ALTER TABLE "article" ADD CONSTRAINT "article_prompt_id_ai_prompt_id_fk" FOREIGN KEY ("prompt_id") REFERENCES "public"."ai_prompt"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "article_category" ADD CONSTRAINT "article_category_article_id_article_id_fk" FOREIGN KEY ("article_id") REFERENCES "public"."article"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "article_category" ADD CONSTRAINT "article_category_category_id_category_id_fk" FOREIGN KEY ("category_id") REFERENCES "public"."category"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "user_preference_category" ADD CONSTRAINT "user_preference_category_user_preferences_id_user_preferences_id_fk" FOREIGN KEY ("user_preferences_id") REFERENCES "public"."user_preferences"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "user_preference_category" ADD CONSTRAINT "user_preference_category_category_id_category_id_fk" FOREIGN KEY ("category_id") REFERENCES "public"."category"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "user_preferences" ADD CONSTRAINT "user_preferences_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "role" ADD CONSTRAINT "role_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "ai_prompt_version" ADD CONSTRAINT "ai_prompt_version_prompt_id_ai_prompt_id_fk" FOREIGN KEY ("prompt_id") REFERENCES "public"."ai_prompt"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
@@ -152,6 +162,8 @@ CREATE INDEX "idx_article_search_vector" ON "article" USING gin (to_tsvector('da
 CREATE INDEX "idx_article_category_category_id" ON "article_category" USING btree ("category_id");--> statement-breakpoint
 CREATE INDEX "idx_article_category_article_id" ON "article_category" USING btree ("article_id");--> statement-breakpoint
 CREATE INDEX "idx_category_search_vector" ON "category" USING gin (to_tsvector('danish', COALESCE(name, '') || ' ' || COALESCE(description, '')));--> statement-breakpoint
+CREATE INDEX "idx_user_preference_category_category_id" ON "user_preference_category" USING btree ("category_id");--> statement-breakpoint
+CREATE INDEX "idx_user_preference_category_user_preferences_id" ON "user_preference_category" USING btree ("user_preferences_id");--> statement-breakpoint
 CREATE INDEX "idx_user_preferences_user_id" ON "user_preferences" USING btree ("user_id");--> statement-breakpoint
 CREATE INDEX "idx_role_user_id" ON "role" USING btree ("user_id");--> statement-breakpoint
 CREATE INDEX "idx_ai_prompt_version_prompt_id" ON "ai_prompt_version" USING btree ("prompt_id");
