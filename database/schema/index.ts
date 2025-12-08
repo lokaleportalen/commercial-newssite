@@ -5,3 +5,4 @@ export * from "./user-preferences-schema";
 export * from "./roles-schema";
 export * from "./ai-prompts-schema";
 export * from "./ai-prompt-versions-schema";
+export * from "./email-templates-schema";

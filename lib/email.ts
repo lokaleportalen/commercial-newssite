@@ -5,6 +5,15 @@ import { WelcomeEmail } from "@/emails/welcome-email";
 import { ArticleNotification } from "@/emails/article-notification";
 import { WeeklyDigest } from "@/emails/weekly-digest";
 import { PasswordReset } from "@/emails/password-reset";
+import { db } from "@/database/db";
+import { emailTemplate } from "@/database/schema";
+import { eq } from "drizzle-orm";
+import type {
+  WelcomeEmailContent,
+  ArticleNotificationContent,
+  WeeklyDigestContent,
+  PasswordResetContent,
+} from "@/database/schema";
 
 const mailgun = new Mailgun(formData);
 
@@ -103,6 +112,29 @@ export function generateEmailUrls(userId: string) {
   };
 }
 
+/**
+ * Fetch an email template from the database by key
+ */
+async function getEmailTemplate(key: string) {
+  const templates = await db
+    .select()
+    .from(emailTemplate)
+    .where(eq(emailTemplate.key, key))
+    .limit(1);
+
+  if (!templates || templates.length === 0 || !templates[0].isActive) {
+    throw new Error(`Email template "${key}" not found or inactive`);
+  }
+
+  const template = templates[0];
+  const content = JSON.parse(template.content);
+
+  return {
+    template,
+    content,
+  };
+}
+
 // ============================================================================
 // Email Sender Functions
 // ============================================================================
@@ -120,18 +152,27 @@ export async function sendWelcomeEmail({
 }: SendWelcomeEmailParams) {
   const urls = generateEmailUrls(userId);
 
+  // Fetch template content from database
+  const { template, content } = await getEmailTemplate("welcome");
+  const welcomeContent = content as WelcomeEmailContent;
+
   const html = await renderEmail(
     WelcomeEmail({
       userName,
       preferencesUrl: urls.preferencesUrl,
       articlesUrl: urls.articlesUrl,
       unsubscribeUrl: urls.unsubscribeUrl,
+      // Spread database content
+      ...welcomeContent,
     })
   );
 
+  // Replace variables in subject
+  const subject = template.subject.replace(/{userName}/g, userName);
+
   return sendEmail({
     to,
-    subject: "Velkommen til Estate News",
+    subject,
     text: `Hej ${userName}, velkommen til Estate News! Besøg ${urls.articlesUrl} for at læse de nyeste artikler.`,
     html,
   });
@@ -159,6 +200,10 @@ export async function sendArticleNotification({
   const urls = generateEmailUrls(userId);
   const articleUrl = `${urls.baseUrl}/artikler/${articleSlug}`;
 
+  // Fetch template content from database
+  const { template, content } = await getEmailTemplate("article_notification");
+  const articleContent = content as ArticleNotificationContent;
+
   const html = await renderEmail(
     ArticleNotification({
       articleTitle,
@@ -168,12 +213,17 @@ export async function sendArticleNotification({
       categoryName,
       preferencesUrl: urls.preferencesUrl,
       unsubscribeUrl: urls.unsubscribeUrl,
+      // Spread database content
+      ...articleContent,
     })
   );
 
+  // Replace variables in subject
+  const subject = template.subject.replace(/{articleTitle}/g, articleTitle);
+
   return sendEmail({
     to,
-    subject: `Ny artikel: ${articleTitle}`,
+    subject,
     text: `${articleTitle}\n\n${articleSummary}\n\nLæs mere: ${articleUrl}`,
     html,
   });
@@ -207,6 +257,10 @@ export async function sendWeeklyDigest({
 }: SendWeeklyDigestParams) {
   const urls = generateEmailUrls(userId);
 
+  // Fetch template content from database
+  const { template, content } = await getEmailTemplate("weekly_digest");
+  const digestContent = content as WeeklyDigestContent;
+
   const html = await renderEmail(
     WeeklyDigest({
       userName,
@@ -216,14 +270,15 @@ export async function sendWeeklyDigest({
       unsubscribeUrl: urls.unsubscribeUrl,
       weekStart,
       weekEnd,
+      // Spread database content
+      ...digestContent,
     })
   );
 
-  const articleCount = articles.length;
-  const subject =
-    articleCount > 0
-      ? `Ugens erhvervsejendomsnyheder (${articleCount} nye artikler)`
-      : "Ugens erhvervsejendomsnyheder";
+  // Replace variables in subject
+  const subject = template.subject
+    .replace(/{weekStart}/g, weekStart)
+    .replace(/{weekEnd}/g, weekEnd);
 
   return sendEmail({
     to,
@@ -246,17 +301,26 @@ export async function sendPasswordReset({
   resetUrl,
   expirationMinutes = 60,
 }: SendPasswordResetParams) {
+  // Fetch template content from database
+  const { template, content } = await getEmailTemplate("password_reset");
+  const resetContent = content as PasswordResetContent;
+
   const html = await renderEmail(
     PasswordReset({
       userName,
       resetUrl,
       expirationMinutes,
+      // Spread database content
+      ...resetContent,
     })
   );
 
+  // Replace variables in subject
+  const subject = template.subject.replace(/{userName}/g, userName);
+
   return sendEmail({
     to,
-    subject: "Nulstil din adgangskode - Estate News",
+    subject,
     text: `Hej ${userName}, klik på dette link for at nulstille din adgangskode: ${resetUrl} (Gyldigt i ${expirationMinutes} minutter)`,
     html,
   });

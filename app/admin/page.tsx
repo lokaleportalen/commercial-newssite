@@ -9,8 +9,16 @@ import { ArticleEditor } from "@/components/admin/article-editor";
 import { Button } from "@/components/ui/button";
 import { AdminRoute } from "@/components/auth/admin-route";
 import { toast } from "sonner";
-import { Newspaper, Sparkles, Plus, FolderOpen } from "lucide-react";
+import { Newspaper, Sparkles, Plus, FolderOpen, Mail, Settings } from "lucide-react";
 import Link from "next/link";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export default function AdminDashboard() {
   const [selectedArticleId, setSelectedArticleId] = useState<string | null>(
@@ -84,27 +92,53 @@ export default function AdminDashboard() {
               <Plus className="mr-2 h-4 w-4" />
               Tilføj artikel
             </Button>
-            <Link href="/admin/categories">
-              <Button size="sm" variant="outline">
-                <FolderOpen className="mr-2 h-4 w-4" />
-                Kategorier
-              </Button>
-            </Link>
-            <Link href="/admin/ai-prompts">
-              <Button size="sm" variant="outline">
-                <Sparkles className="mr-2 h-4 w-4" />
-                AI Prompts
-              </Button>
-            </Link>
-            <Button
-              onClick={handleTriggerCron}
-              disabled={isTriggeringCron}
-              size="sm"
-              variant={isTriggeringCron ? "default" : "outline"}
-            >
-              <Newspaper className="mr-2 h-4 w-4" />
-              {isTriggeringCron ? "Job kører..." : "Hent ugens nyheder"}
-            </Button>
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button size="sm" variant="outline">
+                  <Settings className="mr-2 h-4 w-4" />
+                  Indstillinger
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel>Konfiguration</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+
+                <DropdownMenuItem asChild>
+                  <Link href="/admin/categories" className="cursor-pointer">
+                    <FolderOpen className="mr-2 h-4 w-4" />
+                    <span>Kategorier</span>
+                  </Link>
+                </DropdownMenuItem>
+
+                <DropdownMenuItem asChild>
+                  <Link href="/admin/ai-prompts" className="cursor-pointer">
+                    <Sparkles className="mr-2 h-4 w-4" />
+                    <span>AI Prompts</span>
+                  </Link>
+                </DropdownMenuItem>
+
+                <DropdownMenuItem asChild>
+                  <Link href="/admin/email-templates" className="cursor-pointer">
+                    <Mail className="mr-2 h-4 w-4" />
+                    <span>Email Skabeloner</span>
+                  </Link>
+                </DropdownMenuItem>
+
+                <DropdownMenuSeparator />
+                <DropdownMenuLabel>Handlinger</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+
+                <DropdownMenuItem
+                  onClick={handleTriggerCron}
+                  disabled={isTriggeringCron}
+                  className="cursor-pointer"
+                >
+                  <Newspaper className="mr-2 h-4 w-4" />
+                  <span>{isTriggeringCron ? "Job kører..." : "Hent ugens nyheder"}</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
 

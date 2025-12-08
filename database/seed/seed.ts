@@ -4,6 +4,7 @@ import { seedAuth } from "./auth-seed";
 import { seedCategories } from "./categories-seed";
 import { seedArticles } from "./articles-seed";
 import { seedAiPrompts } from "./ai-prompts-seed";
+import { seedEmailTemplates } from "./email-templates-seed";
 
 config({ path: resolve(__dirname, "../../.env") });
 
@@ -13,6 +14,7 @@ export async function seed() {
   await seedAuth();
   await seedCategories();
   await seedAiPrompts();
+  await seedEmailTemplates();
   await seedArticles();
 
   console.log("\n✓ All seeds completed successfully!");

@@ -8,6 +8,7 @@ import { aiPrompt } from "../schema/ai-prompts-schema";
 import { aiPromptVersion } from "../schema/ai-prompt-versions-schema";
 import { role } from "../schema/roles-schema";
 import { userPreferences } from "../schema/user-preferences-schema";
+import { emailTemplate } from "../schema/email-templates-schema";
 import { seed } from "./seed";
 
 config({ path: resolve(__dirname, "../../.env") });
@@ -43,6 +44,9 @@ async function reset() {
 
     await db.delete(aiPrompt);
     console.log("✓ Cleared AI prompts");
+
+    await db.delete(emailTemplate);
+    console.log("✓ Cleared email templates");
 
     await db.delete(category);
     console.log("✓ Cleared categories");

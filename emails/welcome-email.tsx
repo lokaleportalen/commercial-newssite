@@ -7,6 +7,16 @@ interface WelcomeEmailProps {
   preferencesUrl: string;
   articlesUrl: string;
   unsubscribeUrl: string;
+  // Optional content overrides from database
+  heading?: string;
+  greeting?: string;
+  introParagraph?: string;
+  descriptionParagraph?: string;
+  primaryCtaText?: string;
+  preferencesInfoParagraph?: string;
+  secondaryCtaText?: string;
+  closingText?: string;
+  signatureText?: string;
 }
 
 export const WelcomeEmail = ({
@@ -14,7 +24,21 @@ export const WelcomeEmail = ({
   preferencesUrl,
   articlesUrl,
   unsubscribeUrl,
+  heading = "Velkommen til Estate News!",
+  greeting = "Hej {userName},",
+  introParagraph = "Tak fordi du tilmeldte dig Estate News. Vi er glade for at have dig med i vores fællesskab af erhvervsejendomsinteresserede.",
+  descriptionParagraph = "Du vil modtage ugentlige nyheder om den danske erhvervsejendomsbranche - alt fra nye projekter og transaktioner til markedstendenser og analyser.",
+  primaryCtaText = "Læs de nyeste artikler",
+  preferencesInfoParagraph = "Du kan til enhver tid tilpasse dine præferencer og vælge hvilke kategorier du ønsker at modtage nyheder om.",
+  secondaryCtaText = "Administrer præferencer",
+  closingText = "Vi glæder os til at holde dig opdateret!",
+  signatureText = "Estate News teamet",
 }: WelcomeEmailProps) => {
+  // Replace template variables in text
+  const replaceVariables = (text: string) => {
+    return text.replace(/{userName}/g, userName);
+  };
+
   return (
     <EmailLayout
       preview="Velkommen til Estate News - Din kilde til erhvervsejendomsnyheder"
@@ -22,47 +46,43 @@ export const WelcomeEmail = ({
       unsubscribeUrl={unsubscribeUrl}
     >
       <Heading className="text-3xl font-bold text-gray-900 mt-8 mb-6 leading-tight">
-        Velkommen til Estate News!
+        {heading}
       </Heading>
 
       <Text className="text-base text-gray-700 my-4 leading-relaxed">
-        Hej {userName},
+        {replaceVariables(greeting)}
       </Text>
 
       <Text className="text-base text-gray-700 my-4 leading-relaxed">
-        Tak fordi du tilmeldte dig Estate News. Vi er glade for at have dig med
-        i vores fællesskab af erhvervsejendomsinteresserede.
+        {introParagraph}
       </Text>
 
       <Text className="text-base text-gray-700 my-4 leading-relaxed">
-        Du vil modtage ugentlige nyheder om den danske erhvervsejendomsbranche
-        - alt fra nye projekter og transaktioner til markedstendenser og
-        analyser.
+        {descriptionParagraph}
       </Text>
 
       <Button
         className="py-3.5 px-6 bg-primary rounded-md text-white text-base font-semibold no-underline text-center block my-6"
         href={articlesUrl}
       >
-        Læs de nyeste artikler
+        {primaryCtaText}
       </Button>
 
       <Text className="text-base text-gray-700 my-4 leading-relaxed">
-        Du kan til enhver tid tilpasse dine præferencer og vælge hvilke
-        kategorier du ønsker at modtage nyheder om.
+        {preferencesInfoParagraph}
       </Text>
 
       <Button
         className="py-3.5 px-6 bg-white border-2 border-primary rounded-md text-primary text-base font-semibold no-underline text-center block my-6"
         href={preferencesUrl}
       >
-        Administrer præferencer
+        {secondaryCtaText}
       </Button>
 
       <Text className="text-base text-gray-700 my-8 leading-relaxed">
-        Vi glæder os til at holde dig opdateret!
+        {closingText}
         <br />
-        <span className="font-semibold">Estate News teamet</span>
+        <span className="font-semibold">{signatureText}</span>
       </Text>
     </EmailLayout>
   );

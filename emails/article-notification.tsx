@@ -16,6 +16,9 @@ interface ArticleNotificationProps {
   categoryName: string;
   preferencesUrl: string;
   unsubscribeUrl: string;
+  // Optional content overrides from database
+  primaryCtaText?: string;
+  footerText?: string;
 }
 
 export const ArticleNotification = ({
@@ -26,6 +29,8 @@ export const ArticleNotification = ({
   categoryName = "Erhvervsejendomme",
   preferencesUrl,
   unsubscribeUrl,
+  primaryCtaText = "Læs hele artiklen",
+  footerText = "Du modtager denne email, fordi du har valgt at modtage nye artikler med det samme.",
 }: ArticleNotificationProps) => {
   return (
     <EmailLayout
@@ -59,12 +64,11 @@ export const ArticleNotification = ({
         className="py-3.5 px-6 bg-primary rounded-md text-white text-base font-semibold no-underline text-center block my-6"
         href={articleUrl}
       >
-        Læs hele artiklen
+        {primaryCtaText}
       </Button>
 
       <Text className="text-sm text-gray-500 mt-8 mb-0 leading-relaxed italic">
-        Du modtager denne email, fordi du har valgt at modtage nye artikler med
-        det samme.
+        {footerText}
       </Text>
     </EmailLayout>
   );
