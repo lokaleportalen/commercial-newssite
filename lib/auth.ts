@@ -9,45 +9,30 @@ export const auth = betterAuth({
   }),
   emailAndPassword: {
     enabled: true,
-    // Custom email sender for password reset
     sendResetPassword: async ({ user, url }) => {
-      try {
-        await sendPasswordReset({
-          to: user.email,
-          userName: user.name,
-          resetUrl: url,
-          expirationMinutes: 60,
-        });
-      } catch (error) {
-        console.error("Failed to send password reset email:", error);
-        throw error;
-      }
+      await sendPasswordReset({
+        to: user.email,
+        userName: user.name,
+        resetUrl: url,
+      });
     },
   },
-  // Hooks for user events
-  hooks: {
-    after: [
-      {
-        // Send welcome email after user is created
-        matcher: (context) => context.path === "/sign-up/email",
-        handler: async (context) => {
-          if (context.user && context.returned) {
-            try {
-              await sendWelcomeEmail({
-                to: context.user.email,
-                userName: context.user.name,
-                userId: context.user.id,
-              });
-              console.log(
-                `Welcome email sent to ${context.user.email} (${context.user.id})`
-              );
-            } catch (error) {
-              // Don't fail the signup if email fails
-              console.error("Failed to send welcome email:", error);
-            }
+  databaseHooks: {
+    user: {
+      create: {
+        after: async (user) => {
+          try {
+            await sendWelcomeEmail({
+              to: user.email,
+              userName: user.name,
+              userId: user.id,
+            });
+            console.log(`Welcome email sent to ${user.email}`);
+          } catch (error) {
+            console.error("Failed to send welcome email:", error);
           }
         },
       },
-    ],
+    },
   },
 });

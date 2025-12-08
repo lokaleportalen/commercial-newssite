@@ -84,79 +84,85 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
   const articleUrl = `${baseUrl}/nyheder/${articleData.slug}`;
 
   return (
-    <article className="min-h-screen">
-      <header className="bg-muted/50 border-b">
-        <div className="container mx-auto px-4 py-12 max-w-4xl">
-          {/* Breadcrumbs */}
-          <Breadcrumbs
-            items={
-              primaryCategory
-                ? [
-                    {
-                      label: primaryCategory.name,
-                      href: `/${primaryCategory.slug}`,
-                    },
-                    { label: articleData.title },
-                  ]
-                : [{ label: articleData.title }]
-            }
-            className="mb-6"
-          />
+    <main className="mb-16">
+      <article className="min-h-screen">
+        <header className="bg-muted/50 border-b">
+          <div className="container mx-auto px-4 py-12 max-w-4xl">
+            {/* Breadcrumbs */}
+            <Breadcrumbs
+              items={
+                primaryCategory
+                  ? [
+                      {
+                        label: primaryCategory.name,
+                        href: `/${primaryCategory.slug}`,
+                      },
+                      { label: articleData.title },
+                    ]
+                  : [{ label: articleData.title }]
+              }
+              className="mb-6"
+            />
 
-          {categories.length > 0 && (
-            <div className="flex flex-wrap gap-2 mb-4">
-              {categories.map((category) => (
-                <CategoryLink key={category.id} category={category.name} variant="badge" />
-              ))}
+            {categories.length > 0 && (
+              <div className="flex flex-wrap gap-2 mb-4">
+                {categories.map((category) => (
+                  <CategoryLink
+                    key={category.id}
+                    category={category.name}
+                    variant="badge"
+                  />
+                ))}
+              </div>
+            )}
+
+            <h1 className="text-4xl md:text-5xl font-bold mb-4">
+              {articleData.title}
+            </h1>
+
+            {articleData.summary && (
+              <p className="text-xl text-muted-foreground mb-4">
+                {articleData.summary}
+              </p>
+            )}
+
+            <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
+              <time dateTime={articleData.publishedDate.toISOString()}>
+                {formattedDate}
+              </time>
+            </div>
+          </div>
+        </header>
+
+        <div className="container mx-auto px-4 py-4 max-w-4xl">
+          {articleData.image && (
+            <div className="relative w-full aspect-video max-w-4xl mx-auto mb-8">
+              <Image
+                src={articleData.image}
+                alt={articleData.title}
+                fill
+                className="object-cover rounded-lg"
+                priority
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 1200px"
+              />
             </div>
           )}
+          <ArticleContent
+            content={articleData.content}
+            isAuthenticated={isAuthenticated}
+          />
 
-          <h1 className="text-4xl md:text-5xl font-bold mb-4">
-            {articleData.title}
-          </h1>
-
-          {articleData.summary && (
-            <p className="text-xl text-muted-foreground mb-4">
-              {articleData.summary}
-            </p>
-          )}
-
-          <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
-            <time dateTime={articleData.publishedDate.toISOString()}>
-              {formattedDate}
-            </time>
-          </div>
+          {/* Share Buttons */}
+          <ShareButtons
+            title={articleData.title}
+            url={articleUrl}
+            summary={articleData.summary}
+          />
         </div>
-      </header>
 
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
-        {articleData.image && (
-          <div className="relative w-full aspect-video max-w-4xl mx-auto mb-8">
-            <Image
-              src={articleData.image}
-              alt={articleData.title}
-              fill
-              className="object-cover rounded-lg"
-              priority
-              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 1200px"
-            />
-          </div>
-        )}
-        <ArticleContent
-          content={articleData.content}
-          isAuthenticated={isAuthenticated}
-        />
-
-        {/* Share Buttons */}
-        <ShareButtons
-          title={articleData.title}
-          url={articleUrl}
-          summary={articleData.summary}
-        />
-      </div>
-
-      {/* Related Articles */}
-      <RelatedArticles articleId={articleData.id} />
-    </article>
+        {/* Related Articles */}
+        <RelatedArticles articleId={articleData.id} />
+      </article>
+    </main>
   );
 }

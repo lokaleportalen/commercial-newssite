@@ -52,7 +52,7 @@ export function RelatedArticles({ articleId }: RelatedArticlesProps) {
   }
 
   return (
-    <section className="mt-16 border-t pt-12">
+    <section className="mt-8 border-t pt-12">
       <div className="container mx-auto px-4 max-w-4xl">
         <h2 className="text-2xl font-bold mb-6">Relaterede artikler</h2>
 
