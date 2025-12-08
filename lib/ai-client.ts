@@ -168,7 +168,7 @@ export async function generateText(
  * Generate text with JSON response format
  * Attempts to extract valid JSON from the response
  */
-export async function generateJSON<T = any>(
+export async function generateJSON<T = unknown>(
   options: GenerateTextOptions
 ): Promise<{ data: T; provider: AIProvider }> {
   const response = await generateText(options);

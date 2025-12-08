@@ -111,7 +111,7 @@ export function EmailTemplateEditor({
     }
   };
 
-  const handleFieldChange = (field: keyof EmailTemplate, value: any) => {
+  const handleFieldChange = (field: keyof EmailTemplate, value: string | boolean) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
     setHasChanges(true);
   };

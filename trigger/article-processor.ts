@@ -378,24 +378,27 @@ Svar KUN med valid JSON i denne præcise struktur:
               contents: finalImagePrompt,
             });
             break; // Success, exit retry loop
-          } catch (error: any) {
+          } catch (error: unknown) {
             const isLastRetry = retryCount >= maxRetries - 1;
 
+            // Type guard for error object
+            const err = error as { status?: number; error?: { code?: number; details?: Array<{ "@type"?: string; retryDelay?: string }> }; message?: string; code?: string };
+
             // Check error type
-            const isRateLimit = error?.status === 429;
+            const isRateLimit = err?.status === 429;
             const isServiceUnavailable =
-              error?.status === 503 ||
-              error?.error?.code === 503 ||
-              error?.message?.includes("overloaded");
+              err?.status === 503 ||
+              err?.error?.code === 503 ||
+              err?.message?.includes("overloaded");
             const isTimeout =
-              error?.message?.includes("fetch failed") ||
-              error?.message?.includes("timeout") ||
-              error?.code === "ETIMEDOUT" ||
-              error?.code === "ECONNRESET";
+              err?.message?.includes("fetch failed") ||
+              err?.message?.includes("timeout") ||
+              err?.code === "ETIMEDOUT" ||
+              err?.code === "ECONNRESET";
             const isNetworkError =
-              error?.message?.includes("network") ||
-              error?.code === "ECONNREFUSED" ||
-              error?.code === "ENOTFOUND";
+              err?.message?.includes("network") ||
+              err?.code === "ECONNREFUSED" ||
+              err?.code === "ENOTFOUND";
 
             // Retry on rate limits, service unavailable, timeouts, or network errors
             if (
@@ -410,8 +413,8 @@ Svar KUN med valid JSON i denne præcise struktur:
 
               if (isRateLimit) {
                 // Rate limit - use API's suggested delay or default 60s
-                const retryDelay = error?.error?.details?.find(
-                  (d: any) =>
+                const retryDelay = err?.error?.details?.find(
+                  (d) =>
                     d["@type"] === "type.googleapis.com/google.rpc.RetryInfo"
                 )?.retryDelay;
                 delayMs = retryDelay ? parseInt(retryDelay) * 1000 : 60000;
@@ -435,7 +438,7 @@ Svar KUN med valid JSON i denne præcise struktur:
                   delayMs / 1000
                 }s... (attempt ${retryCount + 1}/${maxRetries})`
               );
-              logger.debug(`Error details: ${error?.message || error}`);
+              logger.debug(`Error details: ${err?.message || String(error)}`);
 
               await new Promise((resolve) => setTimeout(resolve, delayMs));
               retryCount++;

@@ -18,6 +18,16 @@ interface Article {
   categories: Category[];
 }
 
+interface ArticleFromAPI {
+  id: string;
+  title: string;
+  slug: string;
+  summary: string | null;
+  image: string | null;
+  publishedDate: string;
+  categories: Category[];
+}
+
 interface CategoryWithCount extends Category {
   articleCount: number;
 }
@@ -76,7 +86,7 @@ function SearchResultsContent() {
         if (response.ok) {
           const data = await response.json();
           // Convert date strings to Date objects
-          const articlesWithDates = data.articles.map((article: any) => ({
+          const articlesWithDates = data.articles.map((article: ArticleFromAPI): Article => ({
             ...article,
             publishedDate: new Date(article.publishedDate),
           }));

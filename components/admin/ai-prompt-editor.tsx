@@ -112,7 +112,7 @@ export function AiPromptEditor({ promptId, onClose }: AiPromptEditorProps) {
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [hasChanges]);
 
-  const handleFieldChange = (field: keyof AiPrompt, value: any) => {
+  const handleFieldChange = (field: keyof AiPrompt, value: string | Date | null) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
     setHasChanges(true);
   };

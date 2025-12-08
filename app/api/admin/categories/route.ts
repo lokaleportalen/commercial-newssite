@@ -121,7 +121,13 @@ export async function PATCH(request: NextRequest) {
     }
 
     // Build update object with only provided fields
-    const updateData: any = {
+    const updateData: {
+      name?: string;
+      slug?: string;
+      description?: string;
+      heroImage?: string;
+      updatedAt: Date;
+    } = {
       updatedAt: new Date(),
     };
 

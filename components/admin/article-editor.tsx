@@ -155,12 +155,12 @@ export function ArticleEditor({
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [hasChanges]);
 
-  const handleFieldChange = (field: keyof Article, value: any) => {
+  const handleFieldChange = (field: keyof Article, value: string | string[] | Date | Category[] | null) => {
     setFormData((prev) => {
       const newData = { ...prev, [field]: value };
 
       // Auto-generate slug from title
-      if (field === "title") {
+      if (field === "title" && typeof value === "string") {
         newData.slug = generateSlug(value);
       }
 
