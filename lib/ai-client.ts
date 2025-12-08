@@ -138,7 +138,7 @@ export async function generateText(
 
       // Claude doesn't have built-in web search
       const response = await anthropic.messages.create({
-        model: "claude-4-5-haiku-20250514",
+        model: "claude-haiku-4-5",
         max_tokens: maxTokens,
         messages: [
           {
