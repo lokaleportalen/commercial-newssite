@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/database/db";
-import { category } from "@/database/schema/categories-schema";
+import { category, articleCategory } from "@/database/schema/categories-schema";
 import { article } from "@/database/schema/articles-schema";
 import { asc, eq } from "drizzle-orm";
 import { requireAdmin } from "@/lib/auth-helpers";
@@ -169,18 +169,18 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    // Check if category has any articles
+    // Check if category has any articles (through junction table)
     const articlesInCategory = await db
       .select()
-      .from(article)
-      .where(eq(article.categoryId, id))
+      .from(articleCategory)
+      .where(eq(articleCategory.categoryId, id))
       .limit(1);
 
     if (articlesInCategory.length > 0) {
       return NextResponse.json(
         {
           error:
-            "Cannot delete category with articles. Please reassign or delete the articles first.",
+            "Kan ikke slette kategori med artikler. Fjern venligst artikler fra kategorien først.",
         },
         { status: 400 }
       );

@@ -18,9 +18,9 @@ export default function AiPromptsAdminPage() {
       {/* Header */}
       <div className="border-b bg-background px-6 py-3 flex justify-between items-center">
         <div>
-          <h1 className="text-lg font-semibold">AI Prompts Management</h1>
+          <h1 className="text-lg font-semibold">AI Prompt Administration</h1>
           <p className="text-sm text-muted-foreground">
-            Configure AI prompts for article generation and image creation
+            Konfigurer AI prompts til artikel-generering og billede-oprettelse
           </p>
         </div>
         <Button
@@ -29,7 +29,7 @@ export default function AiPromptsAdminPage() {
           onClick={() => router.push("/admin")}
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to Dashboard
+          Tilbage til Dashboard
         </Button>
       </div>
       {/* Main content */}
@@ -53,9 +53,9 @@ export default function AiPromptsAdminPage() {
             <div className="flex h-full items-center justify-center text-muted-foreground">
               <div className="text-center">
                 <h2 className="text-2xl font-semibold mb-2">
-                  Select an AI prompt to edit
+                  Vælg en AI prompt at redigere
                 </h2>
-                <p>Choose a prompt from the list to view and edit it</p>
+                <p>Vælg en prompt fra listen for at se og redigere den</p>
               </div>
             </div>
           )}

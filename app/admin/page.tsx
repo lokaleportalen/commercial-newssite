@@ -36,9 +36,9 @@ export default function AdminDashboard() {
 
       const data = await response.json();
 
-      toast.success("News fetch started!", {
+      toast.success("Nyhedshentning startet!", {
         description:
-          "The job is running on Trigger.dev. New articles will appear when processing completes.",
+          "Jobbet kører på Trigger.dev. Nye artikler vil vises når behandlingen er færdig.",
         duration: 5000,
       });
 
@@ -51,8 +51,8 @@ export default function AdminDashboard() {
       }, 300000); // 5 minutes
     } catch (error) {
       console.error("Error triggering weekly news task:", error);
-      toast.error("Failed to start news fetch", {
-        description: error instanceof Error ? error.message : "Unknown error",
+      toast.error("Kunne ikke starte nyhedshentning", {
+        description: error instanceof Error ? error.message : "Ukendt fejl",
       });
       setIsTriggeringCron(false);
     }
@@ -76,7 +76,7 @@ export default function AdminDashboard() {
           <div>
             <h1 className="text-lg font-semibold">Admin Dashboard</h1>
             <p className="text-sm text-muted-foreground">
-              Manage articles and content
+              Administrer artikler og indhold
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -87,7 +87,7 @@ export default function AdminDashboard() {
             <Link href="/admin/categories">
               <Button size="sm" variant="outline">
                 <FolderOpen className="mr-2 h-4 w-4" />
-                Categories
+                Kategorier
               </Button>
             </Link>
             <Link href="/admin/ai-prompts">
@@ -103,7 +103,7 @@ export default function AdminDashboard() {
               variant={isTriggeringCron ? "default" : "outline"}
             >
               <Newspaper className="mr-2 h-4 w-4" />
-              {isTriggeringCron ? "Job running..." : "Fetch weekly news"}
+              {isTriggeringCron ? "Job kører..." : "Hent ugens nyheder"}
             </Button>
           </div>
         </div>
@@ -131,9 +131,9 @@ export default function AdminDashboard() {
               <div className="flex h-full items-center justify-center text-muted-foreground">
                 <div className="text-center">
                   <h2 className="text-2xl font-semibold mb-2">
-                    Select an article to edit
+                    Vælg en artikel at redigere
                   </h2>
-                  <p>Choose an article from the list to view and edit it</p>
+                  <p>Vælg en artikel fra listen for at se og redigere den</p>
                 </div>
               </div>
             )}

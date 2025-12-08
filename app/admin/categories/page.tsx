@@ -99,7 +99,7 @@ export default function CategoryManagement() {
       }
     } catch (error) {
       console.error("Failed to load categories:", error);
-      toast.error("Failed to load categories");
+      toast.error("Kunne ikke indlæse kategorier");
     } finally {
       setIsLoading(false);
     }
@@ -141,7 +141,7 @@ export default function CategoryManagement() {
         throw new Error(error.error || "Failed to delete category");
       }
 
-      toast.success("Category deleted successfully");
+      toast.success("Kategori slettet");
 
       // If deleted category was selected, clear selection
       if (selectedCategory?.id === categoryToDelete.id) {
@@ -153,7 +153,7 @@ export default function CategoryManagement() {
     } catch (error) {
       console.error("Failed to delete category:", error);
       toast.error(
-        error instanceof Error ? error.message : "Failed to delete category"
+        error instanceof Error ? error.message : "Kunne ikke slette kategori"
       );
     } finally {
       setIsDeleting(null);
@@ -167,13 +167,13 @@ export default function CategoryManagement() {
 
     // Validate file type
     if (!file.type.startsWith("image/")) {
-      toast.error("Please select an image file");
+      toast.error("Vælg venligst en billedfil");
       return;
     }
 
     // Validate file size (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
-      toast.error("Image must be less than 5MB");
+      toast.error("Billede skal være mindre end 5MB");
       return;
     }
 
@@ -198,11 +198,11 @@ export default function CategoryManagement() {
 
       setHeroImage(data.url);
       setPreviewImage(data.url);
-      toast.success("Image uploaded successfully");
+      toast.success("Billede uploadet");
     } catch (error) {
       console.error("Failed to upload image:", error);
       toast.error(
-        error instanceof Error ? error.message : "Failed to upload image"
+        error instanceof Error ? error.message : "Kunne ikke uploade billede"
       );
     } finally {
       setIsUploading(false);
@@ -216,7 +216,7 @@ export default function CategoryManagement() {
 
   const handleSave = async () => {
     if (!name.trim()) {
-      toast.error("Category name is required");
+      toast.error("Kategorinavn er påkrævet");
       return;
     }
 
@@ -247,7 +247,7 @@ export default function CategoryManagement() {
         }
 
         const data = await response.json();
-        toast.success("Category created successfully");
+        toast.success("Kategori oprettet");
         await loadCategories();
 
         // Switch to the newly created category
@@ -270,10 +270,10 @@ export default function CategoryManagement() {
         });
 
         if (!response.ok) {
-          throw new Error("Failed to update category");
+          throw new Error("Kunne ikke opdatere kategori");
         }
 
-        toast.success("Category updated successfully");
+        toast.success("Kategori opdateret");
         await loadCategories();
 
         // Update selected category
@@ -288,7 +288,7 @@ export default function CategoryManagement() {
     } catch (error) {
       console.error("Failed to save category:", error);
       toast.error(
-        error instanceof Error ? error.message : "Failed to save category"
+        error instanceof Error ? error.message : "Kunne ikke gemme kategori"
       );
     } finally {
       setIsSaving(false);
@@ -299,7 +299,7 @@ export default function CategoryManagement() {
     return (
       <AdminRoute>
         <div className="flex h-screen items-center justify-center">
-          <p className="text-muted-foreground">Loading categories...</p>
+          <p className="text-muted-foreground">Indlæser kategorier...</p>
         </div>
       </AdminRoute>
     );
@@ -311,15 +311,15 @@ export default function CategoryManagement() {
         {/* Header */}
         <div className="border-b bg-background px-6 py-3 flex justify-between items-center">
           <div>
-            <h1 className="text-lg font-semibold">Category Management</h1>
+            <h1 className="text-lg font-semibold">Kategori Administration</h1>
             <p className="text-sm text-muted-foreground">
-              Manage category hero images and details
+              Administrer kategori hero-billeder og detaljer
             </p>
           </div>
           <div className="flex items-center gap-2">
             <Button size="sm" variant="default" onClick={handleCreateCategory}>
               <Plus className="mr-2 h-4 w-4" />
-              Add category
+              Tilføj kategori
             </Button>
             <Button
               variant="outline"
@@ -327,7 +327,7 @@ export default function CategoryManagement() {
               onClick={() => (window.location.href = "/admin")}
             >
               <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Dashboard
+              Tilbage til Dashboard
             </Button>
           </div>
         </div>
@@ -337,7 +337,7 @@ export default function CategoryManagement() {
           {/* Sidebar - Category List */}
           <div className="w-80 border-r bg-muted/30 overflow-auto">
             <div className="p-4">
-              <h2 className="font-semibold mb-3">Categories</h2>
+              <h2 className="font-semibold mb-3">Kategorier</h2>
               <div className="space-y-2">
                 {categories.map((category) => (
                   <div
@@ -384,12 +384,12 @@ export default function CategoryManagement() {
               <div className="max-w-2xl mx-auto space-y-6">
                 <div>
                   <h2 className="text-2xl font-bold mb-2">
-                    {isCreating ? "Create New Category" : selectedCategory?.name}
+                    {isCreating ? "Opret Ny Kategori" : selectedCategory?.name}
                   </h2>
                   <p className="text-sm text-muted-foreground">
                     {isCreating
-                      ? "Fill in the details for the new category"
-                      : "Edit category details and manage hero image"}
+                      ? "Udfyld detaljerne for den nye kategori"
+                      : "Rediger kategori detaljer og administrer hero-billede"}
                   </p>
                 </div>
 
@@ -397,33 +397,33 @@ export default function CategoryManagement() {
                   <div className="space-y-6">
                     {/* Category Name */}
                     <div className="space-y-2">
-                      <Label htmlFor="name">Category Name</Label>
+                      <Label htmlFor="name">Kategorinavn</Label>
                       <Input
                         id="name"
                         value={name}
                         onChange={(e) => setName(e.target.value)}
-                        placeholder="Category name"
+                        placeholder="Kategorinavn"
                       />
                       <p className="text-xs text-muted-foreground">
-                        Slug will be auto-generated from the name
+                        Slug genereres automatisk fra navnet
                       </p>
                     </div>
 
                     {/* Description */}
                     <div className="space-y-2">
-                      <Label htmlFor="description">Description</Label>
+                      <Label htmlFor="description">Beskrivelse</Label>
                       <Textarea
                         id="description"
                         value={description}
                         onChange={(e) => setDescription(e.target.value)}
-                        placeholder="Category description"
+                        placeholder="Kategori beskrivelse"
                         rows={3}
                       />
                     </div>
 
                     {/* Hero Image */}
                     <div className="space-y-2">
-                      <Label>Hero Image</Label>
+                      <Label>Hero-billede</Label>
 
                       {previewImage ? (
                         <div
@@ -443,7 +443,7 @@ export default function CategoryManagement() {
                             <div className="text-white text-center">
                               <Upload className="h-8 w-8 mx-auto mb-2" />
                               <p className="text-sm font-medium">
-                                Click to change image
+                                Klik for at ændre billede
                               </p>
                             </div>
                           </div>
@@ -469,17 +469,17 @@ export default function CategoryManagement() {
                             <div className="space-y-3">
                               <div className="h-12 w-12 mx-auto border-4 border-primary border-t-transparent rounded-full animate-spin" />
                               <p className="text-sm text-muted-foreground">
-                                Uploading...
+                                Uploader...
                               </p>
                             </div>
                           ) : (
                             <>
                               <Upload className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
                               <p className="text-sm font-medium mb-1">
-                                Click to upload hero image
+                                Klik for at uploade hero-billede
                               </p>
                               <p className="text-xs text-muted-foreground">
-                                Recommended: 1920x600px (3:1 ratio). Max 5MB.
+                                Anbefalet: 1920x600px (3:1 forhold). Maks 5MB.
                               </p>
                             </>
                           )}
@@ -494,7 +494,7 @@ export default function CategoryManagement() {
                         className="hidden"
                       />
                       <p className="text-xs text-muted-foreground text-center">
-                        JPG, PNG, or WebP formats supported
+                        JPG, PNG eller WebP formater understøttes
                       </p>
                     </div>
 
@@ -506,15 +506,15 @@ export default function CategoryManagement() {
                           onClick={handleCancelCreate}
                           disabled={isSaving}
                         >
-                          Cancel
+                          Annuller
                         </Button>
                       )}
                       <Button onClick={handleSave} disabled={isSaving}>
                         {isSaving
-                          ? "Saving..."
+                          ? "Gemmer..."
                           : isCreating
-                            ? "Create Category"
-                            : "Save Changes"}
+                            ? "Opret Kategori"
+                            : "Gem Ændringer"}
                       </Button>
                     </div>
                   </div>
@@ -524,9 +524,9 @@ export default function CategoryManagement() {
               <div className="flex h-full items-center justify-center text-muted-foreground">
                 <div className="text-center">
                   <h2 className="text-2xl font-semibold mb-2">
-                    Select a category to edit
+                    Vælg en kategori at redigere
                   </h2>
-                  <p>Choose a category from the list to manage its details</p>
+                  <p>Vælg en kategori fra listen for at administrere dens detaljer</p>
                 </div>
               </div>
             )}
@@ -540,19 +540,19 @@ export default function CategoryManagement() {
         >
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>Delete Category</AlertDialogTitle>
+              <AlertDialogTitle>Slet Kategori</AlertDialogTitle>
               <AlertDialogDescription>
-                Are you sure you want to delete &quot;{categoryToDelete?.name}
-                &quot;? This action cannot be undone.
+                Er du sikker på at du vil slette &quot;{categoryToDelete?.name}
+                &quot;? Denne handling kan ikke fortrydes.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogCancel>Annuller</AlertDialogCancel>
               <AlertDialogAction
                 onClick={handleDeleteConfirm}
                 className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               >
-                Delete
+                Slet
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>

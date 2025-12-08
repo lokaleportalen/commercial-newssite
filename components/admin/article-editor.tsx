@@ -129,11 +129,11 @@ export function ArticleEditor({
           );
           setHasChanges(false);
         } else {
-          toast.error("Failed to load article");
+          toast.error("Kunne ikke indlæse artikel");
         }
       } catch (error) {
         console.error("Error fetching article:", error);
-        toast.error("Error loading article");
+        toast.error("Fejl ved indlæsning af artikel");
       } finally {
         setIsLoading(false);
       }
@@ -197,13 +197,13 @@ export function ArticleEditor({
       if (response.ok) {
         const data = await response.json();
         handleFieldChange("image", data.url);
-        toast.success("Image uploaded successfully");
+        toast.success("Billede uploadet");
       } else {
-        toast.error("Failed to upload image");
+        toast.error("Kunne ikke uploade billede");
       }
     } catch (error) {
       console.error("Error uploading image:", error);
-      toast.error("Error uploading image");
+      toast.error("Fejl ved upload af billede");
     } finally {
       setIsUploading(false);
     }
@@ -215,7 +215,7 @@ export function ArticleEditor({
 
       // Validate required fields
       if (!formData.title || !formData.content) {
-        toast.error("Title and content are required");
+        toast.error("Titel og indhold er påkrævet");
         setIsSaving(false);
         return;
       }
@@ -247,8 +247,8 @@ export function ArticleEditor({
         setHasChanges(false);
         toast.success(
           isNewArticle
-            ? "Article created successfully"
-            : "Article saved successfully"
+            ? "Artikel oprettet"
+            : "Artikel gemt"
         );
 
         // If this was a new article, notify parent component
@@ -257,11 +257,11 @@ export function ArticleEditor({
         }
       } else {
         const error = await response.json();
-        toast.error(error.error || "Failed to save article");
+        toast.error(error.error || "Kunne ikke gemme artikel");
       }
     } catch (error) {
       console.error("Error saving article:", error);
-      toast.error("Error saving article");
+      toast.error("Fejl ved gemning af artikel");
     } finally {
       setIsSaving(false);
     }
@@ -271,14 +271,14 @@ export function ArticleEditor({
     if (articleId === "new") {
       // Close the editor for new unsaved articles
       onClose();
-      toast.info("Article creation cancelled");
+      toast.info("Artikeloprettelse annulleret");
     } else if (article) {
       setFormData(article);
       setSourcesDisplay(
         Array.isArray(article.sources) ? article.sources.join("\n") : ""
       );
       setHasChanges(false);
-      toast.info("Changes cancelled");
+      toast.info("Ændringer annulleret");
     }
   };
 
@@ -289,15 +289,15 @@ export function ArticleEditor({
       });
 
       if (response.ok) {
-        toast.success("Article deleted successfully");
+        toast.success("Artikel slettet");
         onClose();
         router.refresh();
       } else {
-        toast.error("Failed to delete article");
+        toast.error("Kunne ikke slette artikel");
       }
     } catch (error) {
       console.error("Error deleting article:", error);
-      toast.error("Error deleting article");
+      toast.error("Fejl ved sletning af artikel");
     }
     setShowDeleteDialog(false);
   };
@@ -325,7 +325,7 @@ export function ArticleEditor({
   if (!article) {
     return (
       <div className="flex h-full items-center justify-center text-muted-foreground">
-        Article not found
+        Artikel ikke fundet
       </div>
     );
   }
@@ -338,10 +338,10 @@ export function ArticleEditor({
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-2">
               <Badge variant={getStatusVariant(formData.status!)}>
-                {formData.status === "published" ? "Published" : "Draft"}
+                {formData.status === "published" ? "Publiceret" : "Kladde"}
               </Badge>
               <span className="text-sm text-muted-foreground">
-                Updated {new Date(article.updatedAt).toLocaleDateString()}
+                Opdateret {new Date(article.updatedAt).toLocaleDateString()}
               </span>
             </div>
             {formData.slug && (
@@ -363,7 +363,7 @@ export function ArticleEditor({
             {/* Publish/Unpublish Toggle */}
             <div className="flex items-center gap-2 mr-4">
               <Label htmlFor="publish-toggle" className="text-sm">
-                {formData.status === "published" ? "Published" : "Publish"}
+                {formData.status === "published" ? "Publiceret" : "Publicer"}
               </Label>
               <Switch
                 id="publish-toggle"
@@ -414,35 +414,35 @@ export function ArticleEditor({
         <div className="max-w-4xl mx-auto space-y-6">
           {/* Title */}
           <div className="space-y-2">
-            <Label htmlFor="title">Title *</Label>
+            <Label htmlFor="title">Titel *</Label>
             <Input
               id="title"
               value={formData.title || ""}
               onChange={(e) => handleFieldChange("title", e.target.value)}
-              placeholder="Article title"
+              placeholder="Artikeltitel"
             />
           </div>
 
           {/* Summary */}
           <div className="space-y-2">
-            <Label htmlFor="summary">Summary</Label>
+            <Label htmlFor="summary">Resumé</Label>
             <Textarea
               id="summary"
               value={formData.summary || ""}
               onChange={(e) => handleFieldChange("summary", e.target.value)}
-              placeholder="Brief article summary (2-3 sentences)"
+              placeholder="Kort artikel resumé (2-3 sætninger)"
               rows={3}
             />
           </div>
 
           {/* Content */}
           <div className="space-y-2">
-            <Label htmlFor="content">Content *</Label>
+            <Label htmlFor="content">Indhold *</Label>
             <Textarea
               id="content"
               value={formData.content || ""}
               onChange={(e) => handleFieldChange("content", e.target.value)}
-              placeholder="Article content in markdown"
+              placeholder="Artikelindhold i markdown"
               rows={20}
               className="font-mono text-sm"
             />
@@ -450,31 +450,31 @@ export function ArticleEditor({
 
           {/* Meta Description */}
           <div className="space-y-2">
-            <Label htmlFor="metaDescription">Meta Description</Label>
+            <Label htmlFor="metaDescription">Meta Beskrivelse</Label>
             <Textarea
               id="metaDescription"
               value={formData.metaDescription || ""}
               onChange={(e) =>
                 handleFieldChange("metaDescription", e.target.value)
               }
-              placeholder="SEO meta description (150-160 characters)"
+              placeholder="SEO meta beskrivelse (150-160 tegn)"
               rows={2}
               maxLength={160}
             />
             <p className="text-xs text-muted-foreground">
-              {formData.metaDescription?.length || 0}/160 characters
+              {formData.metaDescription?.length || 0}/160 tegn
             </p>
           </div>
 
           {/* Image */}
           <div className="space-y-2">
-            <Label htmlFor="image">Featured Image</Label>
+            <Label htmlFor="image">Fremhævet Billede</Label>
             <div className="space-y-2">
               <Input
                 id="image"
                 value={formData.image || ""}
                 onChange={(e) => handleFieldChange("image", e.target.value)}
-                placeholder="Image URL or upload below"
+                placeholder="Billede URL eller upload nedenfor"
               />
               <div className="flex gap-2">
                 <Button
@@ -484,7 +484,7 @@ export function ArticleEditor({
                   disabled={isUploading}
                 >
                   <Upload className="mr-2 h-4 w-4" />
-                  {isUploading ? "Uploading..." : "Upload Image"}
+                  {isUploading ? "Uploader..." : "Upload Billede"}
                 </Button>
                 <input
                   ref={fileInputRef}
@@ -500,7 +500,7 @@ export function ArticleEditor({
               {formData.image && (
                 <img
                   src={formData.image}
-                  alt="Preview"
+                  alt="Forhåndsvisning"
                   className="w-full max-w-md rounded-lg border"
                 />
               )}
@@ -509,29 +509,29 @@ export function ArticleEditor({
 
           {/* Categories */}
           <div className="space-y-2">
-            <Label htmlFor="categories">Categories (max 3)</Label>
+            <Label htmlFor="categories">Kategorier (maks 3)</Label>
             <CategorySelect
               selectedCategories={formData.categories || []}
               onCategoriesChange={handleCategoriesChange}
               maxCategories={3}
             />
             <p className="text-xs text-muted-foreground">
-              Search and select up to 3 categories for this article
+              Søg og vælg op til 3 kategorier til denne artikel
             </p>
           </div>
 
           {/* Sources */}
           <div className="space-y-2">
-            <Label htmlFor="sources">Sources</Label>
+            <Label htmlFor="sources">Kilder</Label>
             <Textarea
               id="sources"
               value={sourcesDisplay}
               onChange={(e) => handleSourcesChange(e.target.value)}
-              placeholder="Enter source URLs, one per line"
+              placeholder="Indtast kilde-URL'er, én pr. linje"
               rows={5}
             />
             <p className="text-xs text-muted-foreground">
-              Enter each source URL on a new line
+              Indtast hver kilde-URL på en ny linje
             </p>
           </div>
         </div>
@@ -541,19 +541,19 @@ export function ArticleEditor({
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Article?</AlertDialogTitle>
+            <AlertDialogTitle>Slet Artikel?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently delete the article. This action cannot be
-              undone.
+              Dette vil permanent slette artiklen. Denne handling kan ikke
+              fortrydes.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>Annuller</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              Delete
+              Slet
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
