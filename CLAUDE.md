@@ -183,6 +183,7 @@ npx trigger.dev@latest deploy  # Deploy to Trigger.dev
 ## Recent Changes
 
 **2025-12-08:**
+- **Removed onboarding flow** - New users are now redirected directly to `/profile/preferences` after signup instead of `/onboarding` for immediate email preference setup
 - **Email system implementation** - React Email templates (welcome, article notification, weekly digest, password reset) with Tailwind CSS and orange theme
 - **Mailgun integration** - Email sending functions in `lib/email.ts` with template rendering
 - **Unsubscribe system** - One-click unsubscribe endpoint at `/api/email/unsubscribe` with token-based authentication

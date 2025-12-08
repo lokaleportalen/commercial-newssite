@@ -6,8 +6,14 @@ import { ArticleCard } from "@/components/article/article-card";
 import { Pagination } from "@/components/article/pagination";
 import { Breadcrumbs } from "@/components/layout/breadcrumbs";
 import { CategoryHero } from "@/components/article/category-hero";
-import { ArticleSort, type SortOption } from "@/components/article/article-sort";
-import { getArticleCategoriesBulk, getCategoryHeroImage } from "@/lib/category-helpers";
+import {
+  ArticleSort,
+  type SortOption,
+} from "@/components/article/article-sort";
+import {
+  getArticleCategoriesBulk,
+  getCategoryHeroImage,
+} from "@/lib/category-helpers";
 import type { Metadata } from "next";
 
 const ARTICLES_PER_PAGE = 15;
@@ -129,16 +135,18 @@ export default async function CategoryPage({
   const totalPages = Math.ceil(totalCount / ARTICLES_PER_PAGE);
 
   // Get hero image (from DB or convention-based path)
-  const heroImageUrl = getCategoryHeroImage(categoryData.slug, categoryData.heroImage);
+  const heroImageUrl = getCategoryHeroImage(
+    categoryData.slug,
+    categoryData.heroImage
+  );
+
+  console.log("billede", categoryData.heroImage);
 
   return (
     <div className="flex-1">
       {/* Breadcrumbs - above hero */}
       <div className="container mx-auto px-4 pt-4 max-w-6xl">
-        <Breadcrumbs
-          items={[{ label: categoryData.name }]}
-          className="mb-0"
-        />
+        <Breadcrumbs items={[{ label: categoryData.name }]} className="mb-0" />
       </div>
 
       {/* Category Hero - only on first page */}

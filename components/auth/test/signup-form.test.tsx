@@ -118,7 +118,7 @@ describe('SignupForm', () => {
         email: 'test@example.com',
         password: 'password123',
       })
-      expect(mockPush).toHaveBeenCalledWith('/onboarding')
+      expect(mockPush).toHaveBeenCalledWith('/profile/preferences')
       expect(mockRefresh).toHaveBeenCalled()
     })
   })
