@@ -8,6 +8,8 @@ import {
   updateArticleCategories,
   getArticleCategories,
 } from "@/lib/category-helpers";
+import { tasks } from "@trigger.dev/sdk";
+import { sendArticleNotificationsTask } from "@/trigger/send-article-notifications";
 
 type RouteContext = {
   params: Promise<{ id: string }>;
@@ -106,6 +108,23 @@ export async function PUT(
       );
     }
 
+    // Fetch the current article to check if status is changing to "published"
+    const existingArticles = await db
+      .select()
+      .from(article)
+      .where(eq(article.id, id))
+      .limit(1);
+
+    if (!existingArticles || existingArticles.length === 0) {
+      return NextResponse.json(
+        { error: "Article not found" },
+        { status: 404 }
+      );
+    }
+
+    const oldStatus = existingArticles[0].status;
+    const isBeingPublished = oldStatus !== "published" && status === "published";
+
     // Process sources - ensure it's an array
     let sourcesArray: string[] | undefined = undefined;
     if (sources !== undefined) {
@@ -170,6 +189,23 @@ export async function PUT(
 
     // Fetch updated categories
     const updatedCategories = await getArticleCategories(id);
+
+    // If article was just published, trigger immediate notifications (non-blocking)
+    if (isBeingPublished) {
+      try {
+        console.log(
+          `Article ${id} published, triggering immediate notifications...`
+        );
+        await tasks.trigger<typeof sendArticleNotificationsTask>(
+          "send-article-notifications",
+          { articleId: id }
+        );
+        console.log("✓ Article notification task triggered");
+      } catch (error) {
+        // Don't fail the update if notification triggering fails
+        console.error("Failed to trigger article notifications:", error);
+      }
+    }
 
     return NextResponse.json(
       {

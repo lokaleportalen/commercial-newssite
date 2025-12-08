@@ -26,7 +26,8 @@
       "Bash(npx tsx:*)",
       "Bash(npx drizzle-kit version)",
       "Bash(npx drizzle-kit push:*)",
-      "WebFetch(domain:ui.shadcn.com)"
+      "WebFetch(domain:ui.shadcn.com)",
+      "Bash(dir /s /b \"C:\\Users\\emilc\\Desktop\\commercial-newssite\\database\")"
     ],
     "deny": [],
     "ask": []

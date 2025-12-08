@@ -65,6 +65,33 @@ lib/                          # Auth config, auth helpers, utilities
 `/admin/categories` - Category management with hero image upload (Vercel Blob), edit name/slug/description
 `/admin/ai-prompts` - AI prompt version management
 
+## Email System
+
+**Email Templates:** React Email with Tailwind CSS (in `emails/` directory)
+- `welcome-email.tsx` - Welcome email for new users (sent automatically on signup)
+- `article-notification.tsx` - Immediate notification for new articles (for users with "immediate" frequency)
+- `weekly-digest.tsx` - Weekly digest with all articles matching user preferences (sent Saturdays 10 AM)
+- `password-reset.tsx` - Password reset email with expiration (sent via Better-Auth)
+
+**Email Functions:** `lib/email.ts` - Mailgun integration with helper functions
+- `sendWelcomeEmail()` - Send welcome email to new users
+- `sendArticleNotification()` - Send immediate article notification (filters by user category preferences)
+- `sendWeeklyDigest()` - Send weekly digest with all articles matching preferences
+- `sendPasswordReset()` - Send password reset email
+
+**Automation:**
+- **Welcome Email:** Automatically sent when user signs up (Better-Auth hook in `lib/auth.ts`)
+- **Password Reset:** Automatically sent via Better-Auth `sendResetPassword` configuration
+- **Immediate Notifications:** Triggered automatically when admin changes article status from draft to "published" (via `app/api/admin/articles/[id]/route.ts`)
+- **Weekly Digest:** Scheduled task runs every Saturday at 10 AM Copenhagen time (`trigger/weekly-digest.ts`)
+
+**Manual Triggers:**
+- POST `/api/admin/articles/notify` (admin only) - Manually trigger article notifications for a specific article
+
+**Unsubscribe:** One-click unsubscribe at `/api/email/unsubscribe?token=xxx` - removes all category preferences and sets frequency to weekly (effectively unsubscribes)
+
+**Preview Emails:** `npm run email:dev` - Opens preview at http://localhost:3001
+
 ## Configuration
 
 **Required Env Vars:**
@@ -74,6 +101,9 @@ lib/                          # Auth config, auth helpers, utilities
 - `TRIGGER_SECRET_KEY` - Trigger.dev authentication
 - `NEXT_PUBLIC_BASE_URL` - Base URL for the application
 - `BLOB_READ_WRITE_TOKEN` - Vercel Blob for image uploads (article images, category hero images)
+- `MAILGUN_API_KEY` - Mailgun API key for sending emails
+- `MAILGUN_DOMAIN` - Mailgun domain for sending emails
+- `MAILGUN_HOST` - Mailgun API host (default: https://api.eu.mailgun.net)
 
 **Optional:** `CRON_SECRET` (deprecated - only needed if using old HTTP cron endpoint)
 
@@ -85,6 +115,9 @@ lib/                          # Auth config, auth helpers, utilities
 # App
 npm run dev|build|start|lint
 
+# Email Preview
+npm run email:dev  # Preview email templates at http://localhost:3001
+
 # Database (cd database/)
 npm run studio|generate|push|migrate|seed
 
@@ -94,11 +127,19 @@ cd database && DATABASE_URL="postgresql://..." npx tsx seed/reset.ts
 
 ## Trigger.dev Integration
 
-**Weekly news processing uses Trigger.dev v4 for long-running AI tasks (no timeouts!)**
+**Trigger.dev v4 for long-running AI tasks and email automation (no timeouts!)**
 
-**Scheduled Task:** `trigger/weekly-news.ts` - Runs every Wednesday at 6 AM Copenhagen time (native cron)
-**Article Processor:** `trigger/article-processor.ts` - Reusable helper for processing articles
-**Manual Trigger:** "Fetch weekly news" button in `/admin` dashboard OR POST `/api/admin/trigger-cron`
+**Scheduled Tasks:**
+- `trigger/weekly-news.ts` - Fetch weekly news every Sunday at 6 AM Copenhagen time
+- `trigger/weekly-digest.ts` - Send weekly digest emails every Saturday at 10 AM Copenhagen time
+
+**Event-driven Tasks:**
+- `trigger/send-article-notifications.ts` - Send immediate notifications when article published (filters by user preferences)
+- `trigger/article-processor.ts` - Reusable helper for processing individual articles (triggered by weekly-news task)
+
+**Manual Triggers:**
+- POST `/api/admin/trigger-cron` - Manually trigger weekly news fetch
+- POST `/api/admin/articles/notify` - Manually trigger article notifications for specific article
 
 **Development:**
 ```bash
@@ -114,12 +155,14 @@ npx trigger.dev@latest deploy  # Deploy to Trigger.dev
 
 ## Architecture
 
-**Trigger.dev Tasks:** Weekly scheduled task (no timeouts) + reusable article processor
+**Trigger.dev Tasks:** Scheduled tasks (weekly news, weekly digest) + event-driven tasks (article notifications)
 **GPT-4o:** Web search, high-quality output, JSON mode
-**Security:** Admin auth for manual triggers, env vars, validation
+**Mailgun:** Email delivery via React Email templates
+**Security:** Admin auth for manual triggers, env vars, validation, token-based unsubscribe
 
-**Article Flow:** Trigger.dev scheduled task → GPT-4o (news list) → Process each article → GPT-4o (research + write) → Gemini (image) → Vercel Blob → DB
-**Benefits:** No HTTP timeouts, automatic retries, progress tracking, wait.for() doesn't count toward compute time
+**Article Flow:** Trigger.dev scheduled task → GPT-4o (news list) → Process each article → GPT-4o (research + write) → Gemini (image) → Vercel Blob → DB (as draft) → Admin publishes → Trigger notifications
+**Email Flow:** User signup → Welcome email | Password reset → Reset email | Admin publishes article → Immediate notifications (filtered by preferences) | Saturday 10 AM → Weekly digest (filtered by preferences)
+**Benefits:** No HTTP timeouts, automatic retries, progress tracking, wait.for() doesn't count toward compute time, fully automated email system
 
 ## Patterns
 
@@ -138,6 +181,17 @@ npx trigger.dev@latest deploy  # Deploy to Trigger.dev
 
 
 ## Recent Changes
+
+**2025-12-08:**
+- **Email system implementation** - React Email templates (welcome, article notification, weekly digest, password reset) with Tailwind CSS and orange theme
+- **Mailgun integration** - Email sending functions in `lib/email.ts` with template rendering
+- **Unsubscribe system** - One-click unsubscribe endpoint at `/api/email/unsubscribe` with token-based authentication
+- **Email preview** - Added `npm run email:dev` script to preview templates at localhost:3001
+- **Automated welcome emails** - Better-Auth hook sends welcome email on user signup (`lib/auth.ts`)
+- **Password reset emails** - Better-Auth integration with custom email template
+- **Immediate article notifications** - Trigger.dev task (`trigger/send-article-notifications.ts`) sends emails to users with "immediate" frequency, filtered by category preferences, automatically triggered when admin changes article status to "published"
+- **Weekly digest emails** - New Trigger.dev scheduled task (`trigger/weekly-digest.ts`) sends digest every Saturday 10 AM with past week's articles filtered by user preferences
+- **Manual notification trigger** - Admin API endpoint `/api/admin/articles/notify` to manually trigger article notifications
 
 **2025-12-07:**
 - Category hero images - Static hero images for category pages (stored in DB or `public/categories/hero/`)

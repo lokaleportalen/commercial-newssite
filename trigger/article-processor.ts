@@ -492,6 +492,9 @@ Svar KUN med valid JSON i denne præcise struktur:
       logger.info("Skipping image generation - GEMINI_API_KEY not configured");
     }
 
+    // Note: Article notifications are NOT triggered here
+    // They will be triggered when an admin manually publishes the article from the dashboard
+
     return {
       success: true,
       articleId: insertedArticle.id,
