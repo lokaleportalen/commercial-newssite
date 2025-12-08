@@ -12,7 +12,7 @@ const getOpenAIClient = () => {
 
 // Fallback prompt for fetching commercial real estate news in Denmark
 // This is used if the database prompt is not available
-const FALLBACK_NEWS_PROMPT = `Find 10 nyheder fra ejendomsbranchen i Danmark, eller med relevans for Danmark, som har fået meget omtale den seneste uge - rank med de mest spændende, unikke og aktuelle først. Det skal være relevant for ejere af erhvervsejendomme (målgruppen er udlejere som bruger Lokaleportalen).
+const FALLBACK_NEWS_PROMPT = `Find 10 nyheder fra ejendomsbranchen i Danmark, eller med relevans for Danmark, som har fået meget omtale de seneste 24 timer - rank med de mest spændende, unikke og aktuelle først. Det skal være relevant for ejere af erhvervsejendomme (målgruppen er udlejere som bruger Lokaleportalen).
 
 KRITISK: Du SKAL returnere dit svar som RENT JSON uden nogen ekstra tekst, forklaringer eller kommentarer.
 
@@ -43,16 +43,16 @@ interface NewsItem {
 }
 
 /**
- * Weekly scheduled task to fetch and process commercial real estate news
- * Runs every Sunday at 6:00 AM Copenhagen time (CET/CEST)
+ * Daily scheduled task to fetch and process commercial real estate news
+ * Runs every day at 6:00 AM Copenhagen time (CET/CEST)
  */
-export const weeklyNewsTask = schedules.task({
-  id: "weekly-news-fetch",
-  // Run every Sunday at 6:00 AM Copenhagen time
-  cron: { pattern: "0 6 * * 0", timezone: "Europe/Copenhagen" },
+export const dailyNewsTask = schedules.task({
+  id: "daily-news-fetch",
+  // Run every day at 6:00 AM Copenhagen time
+  cron: { pattern: "0 6 * * *", timezone: "Europe/Copenhagen" },
   maxDuration: 3600, // 1 hour max (overrides global config if needed)
   run: async (payload) => {
-    logger.info("Starting weekly news fetch", {
+    logger.info("Starting daily news fetch", {
       timestamp: payload.timestamp,
       lastRun: payload.lastTimestamp,
     });
@@ -63,7 +63,7 @@ export const weeklyNewsTask = schedules.task({
     }
 
     // Step 1: Fetch news list from OpenAI
-    logger.info("Fetching weekly commercial real estate news from OpenAI...");
+    logger.info("Fetching daily commercial real estate news from OpenAI...");
 
     // Get the prompt from database, fallback to hardcoded if not found
     const newsPrompt =
@@ -192,7 +192,7 @@ export const weeklyNewsTask = schedules.task({
       (a) => !a.success && !a.duplicate
     ).length;
 
-    logger.info("Weekly news processing completed", {
+    logger.info("Daily news processing completed", {
       total: newsItems.length,
       successful: successCount,
       duplicates: duplicateCount,
@@ -202,7 +202,7 @@ export const weeklyNewsTask = schedules.task({
     // Return summary
     return {
       success: true,
-      message: "Weekly news processing completed",
+      message: "Daily news processing completed",
       totalItems: newsItems.length,
       successfulArticles: successCount,
       duplicateArticles: duplicateCount,

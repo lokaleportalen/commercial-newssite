@@ -70,9 +70,10 @@ export async function processArticle(
     logger.info("Researching news story with OpenAI (web search enabled)...");
 
     // Get research prompt from database
-    const sourcesText = newsItem.sources && newsItem.sources.length > 0
-      ? newsItem.sources.map((url, idx) => `${idx + 1}. ${url}`).join('\n')
-      : "";
+    const sourcesText =
+      newsItem.sources && newsItem.sources.length > 0
+        ? newsItem.sources.map((url, idx) => `${idx + 1}. ${url}`).join("\n")
+        : "";
 
     const researchPrompt = await getAiPromptWithVars("article_research", {
       title: newsItem.title,
@@ -183,7 +184,9 @@ Formatér artiklen i markdown med korrekte overskrifter (#, ##, ###).`;
       throw new Error("Failed to write article");
     }
 
-    logger.info(`Article written using ${articleResponse.provider}, generating metadata...`);
+    logger.info(
+      `Article written using ${articleResponse.provider}, generating metadata...`
+    );
 
     // Step 3: Generate metadata (slug, meta description, summary)
     // Get metadata prompt from database
@@ -263,7 +266,9 @@ Svar KUN med valid JSON i denne præcise struktur:
     const sourcesFromResearch: string[] = [];
 
     // Try to extract URLs from "Kilder brugt:" section
-    const sourcesMatch = researchFindings.match(/Kilder brugt:([^]*?)(?:\n\n|$)/i);
+    const sourcesMatch = researchFindings.match(
+      /Kilder brugt:([^]*?)(?:\n\n|$)/i
+    );
     if (sourcesMatch) {
       const sourcesSection = sourcesMatch[1];
       const urlRegex = /https?:\/\/[^\s)]+/g;
@@ -272,19 +277,20 @@ Svar KUN med valid JSON i denne præcise struktur:
     }
 
     // Combine with original sources from newsItem
-    const allSources = [
-      ...(newsItem.sources || []),
-      ...sourcesFromResearch
-    ];
+    const allSources = [...(newsItem.sources || []), ...sourcesFromResearch];
 
     // Remove duplicates and clean URLs
-    const uniqueSources = Array.from(new Set(
-      allSources
-        .map(url => url.trim())
-        .filter(url => url.startsWith('http'))
-    ));
+    const uniqueSources = Array.from(
+      new Set(
+        allSources
+          .map((url) => url.trim())
+          .filter((url) => url.startsWith("http"))
+      )
+    );
 
-    logger.info(`Saving article with ${uniqueSources.length} sources to database...`);
+    logger.info(
+      `Saving article with ${uniqueSources.length} sources to database...`
+    );
 
     // Step 4: Save the article to the database
     const [insertedArticle] = await db

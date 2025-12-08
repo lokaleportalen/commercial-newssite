@@ -101,7 +101,7 @@ export async function generateText(
       } else {
         // Regular chat completion
         const response = await openai.chat.completions.create({
-          model: "gpt-4o",
+          model: "gpt-5-mini",
           messages: [{ role: "user", content: prompt }],
           max_tokens: maxTokens,
         });
@@ -138,7 +138,7 @@ export async function generateText(
 
       // Claude doesn't have built-in web search
       const response = await anthropic.messages.create({
-        model: "claude-sonnet-4-20250514",
+        model: "claude-4-5-haiku-20250514",
         max_tokens: maxTokens,
         messages: [
           {

@@ -16,7 +16,7 @@ const AI_PROVIDERS = [
   {
     value: "openai" as const,
     label: "OpenAI (ChatGPT)",
-    description: "GPT-4o. Balanced performance for article writing and metadata generation. (Also used for research with web search)",
+    description: "GPT-5-mini. Fast, cost-effective model for article writing and metadata generation. (Also used for research with web search)",
   },
   {
     value: "gemini" as const,
@@ -26,7 +26,7 @@ const AI_PROVIDERS = [
   {
     value: "claude" as const,
     label: "Anthropic Claude",
-    description: "Claude Sonnet 4. Excellent for nuanced, detailed, and high-quality article writing.",
+    description: "Claude Haiku 4.5. Fast, cost-effective model for article writing and metadata generation.",
   },
 ];
 

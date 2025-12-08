@@ -1,23 +1,23 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth-helpers";
 import { tasks } from "@trigger.dev/sdk";
-import type { weeklyNewsTask } from "@/trigger/weekly-news";
+import type { dailyNewsTask } from "@/trigger/weekly-news";
 
 /**
- * Manual trigger endpoint for weekly news task (Trigger.dev)
- * Called by the "Fetch weekly news" button in admin dashboard
+ * Manual trigger endpoint for daily news task (Trigger.dev)
+ * Called by the "Fetch daily news" button in admin dashboard
  */
 export async function POST() {
   try {
     // Verify user is admin
     await requireAdmin();
 
-    console.log("Manual weekly news task trigger initiated by admin");
+    console.log("Manual daily news task trigger initiated by admin");
 
     // Trigger the Trigger.dev task
     // Scheduled tasks need a schedule-compatible payload when triggered manually
-    const handle = await tasks.trigger<typeof weeklyNewsTask>(
-      "weekly-news-fetch",
+    const handle = await tasks.trigger<typeof dailyNewsTask>(
+      "daily-news-fetch",
       {
         type: "IMPERATIVE" as const,
         timestamp: new Date(),
@@ -29,7 +29,7 @@ export async function POST() {
 
     return NextResponse.json({
       success: true,
-      message: "Weekly news task triggered successfully",
+      message: "Daily news task triggered successfully",
       taskId: handle.id,
       // You can monitor the task at: https://cloud.trigger.dev
       monitorUrl: `https://cloud.trigger.dev/runs/${handle.id}`,
@@ -42,10 +42,10 @@ export async function POST() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    console.error("Error triggering weekly news task:", error);
+    console.error("Error triggering daily news task:", error);
     return NextResponse.json(
       {
-        error: "Failed to trigger weekly news task",
+        error: "Failed to trigger daily news task",
         details: error instanceof Error ? error.message : "Unknown error",
       },
       { status: 500 }

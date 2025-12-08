@@ -144,7 +144,7 @@ export default function AdminDashboard() {
                   className="cursor-pointer"
                 >
                   <Newspaper className="mr-2 h-4 w-4" />
-                  <span>{isTriggeringCron ? "Job kører..." : "Hent ugens nyheder"}</span>
+                  <span>{isTriggeringCron ? "Job kører..." : "Hent dagens nyheder"}</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
