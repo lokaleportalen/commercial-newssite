@@ -1,7 +1,10 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { ArticleList, type ArticleListRef } from "@/components/admin/article-list";
+import {
+  ArticleList,
+  type ArticleListRef,
+} from "@/components/admin/article-list";
 import { ArticleEditor } from "@/components/admin/article-editor";
 import { Button } from "@/components/ui/button";
 import { AdminRoute } from "@/components/auth/admin-route";
@@ -26,13 +29,16 @@ export default function AdminDashboard() {
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.details || error.error || "Failed to trigger task");
+        throw new Error(
+          error.details || error.error || "Failed to trigger task"
+        );
       }
 
       const data = await response.json();
 
       toast.success("News fetch started!", {
-        description: "The job is running on Trigger.dev. New articles will appear when processing completes.",
+        description:
+          "The job is running on Trigger.dev. New articles will appear when processing completes.",
         duration: 5000,
       });
 
@@ -53,7 +59,6 @@ export default function AdminDashboard() {
   };
 
   const handleCreateArticle = () => {
-    // Open editor with special "new" ID - article will be created when user saves
     setSelectedArticleId("new");
   };
 
@@ -66,78 +71,74 @@ export default function AdminDashboard() {
   return (
     <AdminRoute>
       <div className="flex h-screen flex-col overflow-hidden">
-      {/* Header with manual cron trigger */}
-      <div className="border-b bg-background px-6 py-3 flex items-center justify-between">
-        <div>
-          <h1 className="text-lg font-semibold">Admin Dashboard</h1>
-          <p className="text-sm text-muted-foreground">
-            Manage articles and content
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button
-            onClick={handleCreateArticle}
-            size="sm"
-            variant="default"
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            Tilføj artikel
-          </Button>
-          <Link href="/admin/categories">
-            <Button size="sm" variant="outline">
-              <FolderOpen className="mr-2 h-4 w-4" />
-              Categories
+        {/* Header with manual cron trigger */}
+        <div className="border-b bg-background px-6 py-3 flex items-center justify-between">
+          <div>
+            <h1 className="text-lg font-semibold">Admin Dashboard</h1>
+            <p className="text-sm text-muted-foreground">
+              Manage articles and content
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button onClick={handleCreateArticle} size="sm" variant="default">
+              <Plus className="mr-2 h-4 w-4" />
+              Tilføj artikel
             </Button>
-          </Link>
-          <Link href="/admin/ai-prompts">
-            <Button size="sm" variant="outline">
-              <Sparkles className="mr-2 h-4 w-4" />
-              AI Prompts
+            <Link href="/admin/categories">
+              <Button size="sm" variant="outline">
+                <FolderOpen className="mr-2 h-4 w-4" />
+                Categories
+              </Button>
+            </Link>
+            <Link href="/admin/ai-prompts">
+              <Button size="sm" variant="outline">
+                <Sparkles className="mr-2 h-4 w-4" />
+                AI Prompts
+              </Button>
+            </Link>
+            <Button
+              onClick={handleTriggerCron}
+              disabled={isTriggeringCron}
+              size="sm"
+              variant={isTriggeringCron ? "default" : "outline"}
+            >
+              <Newspaper className="mr-2 h-4 w-4" />
+              {isTriggeringCron ? "Job running..." : "Fetch weekly news"}
             </Button>
-          </Link>
-          <Button
-            onClick={handleTriggerCron}
-            disabled={isTriggeringCron}
-            size="sm"
-            variant={isTriggeringCron ? "default" : "outline"}
-          >
-            <Newspaper className="mr-2 h-4 w-4" />
-            {isTriggeringCron ? "Job running..." : "Fetch weekly news"}
-          </Button>
-        </div>
-      </div>
-
-      {/* Main content */}
-      <div className="flex flex-1 overflow-hidden">
-        {/* Sidebar - Article List */}
-        <div className="w-80 border-r bg-muted/30">
-          <ArticleList
-            ref={articleListRef}
-            selectedArticleId={selectedArticleId}
-            onSelectArticle={setSelectedArticleId}
-          />
+          </div>
         </div>
 
-        {/* Main Content - Article Editor */}
-        <div className="flex-1 overflow-auto">
-          {selectedArticleId ? (
-            <ArticleEditor
-              articleId={selectedArticleId}
-              onClose={() => setSelectedArticleId(null)}
-              onArticleCreated={handleArticleCreated}
+        {/* Main content */}
+        <div className="flex flex-1 overflow-hidden">
+          {/* Sidebar - Article List */}
+          <div className="w-80 border-r bg-muted/30">
+            <ArticleList
+              ref={articleListRef}
+              selectedArticleId={selectedArticleId}
+              onSelectArticle={setSelectedArticleId}
             />
-          ) : (
-            <div className="flex h-full items-center justify-center text-muted-foreground">
-              <div className="text-center">
-                <h2 className="text-2xl font-semibold mb-2">
-                  Select an article to edit
-                </h2>
-                <p>Choose an article from the list to view and edit it</p>
+          </div>
+
+          {/* Main Content - Article Editor */}
+          <div className="flex-1 overflow-auto">
+            {selectedArticleId ? (
+              <ArticleEditor
+                articleId={selectedArticleId}
+                onClose={() => setSelectedArticleId(null)}
+                onArticleCreated={handleArticleCreated}
+              />
+            ) : (
+              <div className="flex h-full items-center justify-center text-muted-foreground">
+                <div className="text-center">
+                  <h2 className="text-2xl font-semibold mb-2">
+                    Select an article to edit
+                  </h2>
+                  <p>Choose an article from the list to view and edit it</p>
+                </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
-      </div>
       </div>
     </AdminRoute>
   );

@@ -7,8 +7,18 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
-import { ArrowLeft, Upload, X, Image as ImageIcon } from "lucide-react";
+import { ArrowLeft, Upload, X, Image as ImageIcon, Plus, Trash2 } from "lucide-react";
 import Image from "next/image";
 
 interface Category {
@@ -24,9 +34,15 @@ export default function CategoryManagement() {
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(
     null
   );
+  const [isCreating, setIsCreating] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [isDeleting, setIsDeleting] = useState<string | null>(null);
+  const [categoryToDelete, setCategoryToDelete] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
 
   // Form fields
@@ -54,6 +70,7 @@ export default function CategoryManagement() {
     );
   };
 
+
   useEffect(() => {
     loadCategories();
   }, []);
@@ -64,8 +81,14 @@ export default function CategoryManagement() {
       setDescription(selectedCategory.description || "");
       setHeroImage(selectedCategory.heroImage);
       setPreviewImage(selectedCategory.heroImage);
+    } else if (isCreating) {
+      // Clear form for new category
+      setName("");
+      setDescription("");
+      setHeroImage(null);
+      setPreviewImage(null);
     }
-  }, [selectedCategory]);
+  }, [selectedCategory, isCreating]);
 
   const loadCategories = async () => {
     try {
@@ -79,6 +102,62 @@ export default function CategoryManagement() {
       toast.error("Failed to load categories");
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleCreateCategory = () => {
+    setSelectedCategory(null);
+    setIsCreating(true);
+  };
+
+  const handleCancelCreate = () => {
+    setIsCreating(false);
+    setName("");
+    setDescription("");
+    setHeroImage(null);
+    setPreviewImage(null);
+  };
+
+  const handleDeleteClick = (categoryId: string, categoryName: string) => {
+    setCategoryToDelete({ id: categoryId, name: categoryName });
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!categoryToDelete) return;
+
+    setIsDeleting(categoryToDelete.id);
+
+    try {
+      const response = await fetch("/api/admin/categories", {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ id: categoryToDelete.id }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to delete category");
+      }
+
+      toast.success("Category deleted successfully");
+
+      // If deleted category was selected, clear selection
+      if (selectedCategory?.id === categoryToDelete.id) {
+        setSelectedCategory(null);
+        setIsCreating(false);
+      }
+
+      await loadCategories();
+    } catch (error) {
+      console.error("Failed to delete category:", error);
+      toast.error(
+        error instanceof Error ? error.message : "Failed to delete category"
+      );
+    } finally {
+      setIsDeleting(null);
+      setCategoryToDelete(null);
     }
   };
 
@@ -136,7 +215,10 @@ export default function CategoryManagement() {
   };
 
   const handleSave = async () => {
-    if (!selectedCategory) return;
+    if (!name.trim()) {
+      toast.error("Category name is required");
+      return;
+    }
 
     // Auto-generate slug from name
     const slug = generateSlug(name);
@@ -144,38 +226,70 @@ export default function CategoryManagement() {
     setIsSaving(true);
 
     try {
-      const response = await fetch("/api/admin/categories", {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          id: selectedCategory.id,
+      if (isCreating) {
+        // Create new category
+        const response = await fetch("/api/admin/categories", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            name,
+            slug,
+            description,
+            heroImage,
+          }),
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error || "Failed to create category");
+        }
+
+        const data = await response.json();
+        toast.success("Category created successfully");
+        await loadCategories();
+
+        // Switch to the newly created category
+        setIsCreating(false);
+        setSelectedCategory(data.category);
+      } else if (selectedCategory) {
+        // Update existing category
+        const response = await fetch("/api/admin/categories", {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            id: selectedCategory.id,
+            name,
+            slug,
+            description,
+            heroImage,
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to update category");
+        }
+
+        toast.success("Category updated successfully");
+        await loadCategories();
+
+        // Update selected category
+        setSelectedCategory({
+          ...selectedCategory,
           name,
           slug,
           description,
           heroImage,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to update category");
+        });
       }
-
-      toast.success("Category updated successfully");
-      await loadCategories();
-
-      // Update selected category
-      setSelectedCategory({
-        ...selectedCategory,
-        name,
-        slug,
-        description,
-        heroImage,
-      });
     } catch (error) {
       console.error("Failed to save category:", error);
-      toast.error("Failed to save category");
+      toast.error(
+        error instanceof Error ? error.message : "Failed to save category"
+      );
     } finally {
       setIsSaving(false);
     }
@@ -202,14 +316,20 @@ export default function CategoryManagement() {
               Manage category hero images and details
             </p>
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => (window.location.href = "/admin")}
-          >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Dashboard
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button size="sm" variant="default" onClick={handleCreateCategory}>
+              <Plus className="mr-2 h-4 w-4" />
+              Add category
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => (window.location.href = "/admin")}
+            >
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back to Dashboard
+            </Button>
+          </div>
         </div>
 
         {/* Main content */}
@@ -220,17 +340,39 @@ export default function CategoryManagement() {
               <h2 className="font-semibold mb-3">Categories</h2>
               <div className="space-y-2">
                 {categories.map((category) => (
-                  <button
+                  <div
                     key={category.id}
-                    onClick={() => setSelectedCategory(category)}
-                    className={`w-full text-left p-3 rounded-lg border transition-colors ${
-                      selectedCategory?.id === category.id
+                    className={`group relative rounded-lg border transition-colors ${
+                      selectedCategory?.id === category.id && !isCreating
                         ? "border-primary bg-background"
                         : "bg-background hover:bg-accent"
                     }`}
                   >
-                    <div className="font-medium">{category.name}</div>
-                  </button>
+                    <button
+                      onClick={() => {
+                        setSelectedCategory(category);
+                        setIsCreating(false);
+                      }}
+                      className="w-full text-left p-3 pr-10"
+                    >
+                      <div className="font-medium">{category.name}</div>
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteClick(category.id, category.name);
+                      }}
+                      disabled={isDeleting === category.id}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 opacity-0 group-hover:opacity-100 transition-opacity disabled:opacity-50"
+                      aria-label="Delete category"
+                    >
+                      {isDeleting === category.id ? (
+                        <div className="h-4 w-4 border-2 border-destructive border-t-transparent rounded-full animate-spin" />
+                      ) : (
+                        <Trash2 className="h-4 w-4" />
+                      )}
+                    </button>
+                  </div>
                 ))}
               </div>
             </div>
@@ -238,14 +380,16 @@ export default function CategoryManagement() {
 
           {/* Main Content - Category Editor */}
           <div className="flex-1 overflow-auto p-6">
-            {selectedCategory ? (
+            {selectedCategory || isCreating ? (
               <div className="max-w-2xl mx-auto space-y-6">
                 <div>
                   <h2 className="text-2xl font-bold mb-2">
-                    {selectedCategory.name}
+                    {isCreating ? "Create New Category" : selectedCategory?.name}
                   </h2>
                   <p className="text-sm text-muted-foreground">
-                    Edit category details and manage hero image
+                    {isCreating
+                      ? "Fill in the details for the new category"
+                      : "Edit category details and manage hero image"}
                   </p>
                 </div>
 
@@ -356,8 +500,21 @@ export default function CategoryManagement() {
 
                     {/* Save Button */}
                     <div className="flex justify-end gap-2 pt-4">
+                      {isCreating && (
+                        <Button
+                          variant="outline"
+                          onClick={handleCancelCreate}
+                          disabled={isSaving}
+                        >
+                          Cancel
+                        </Button>
+                      )}
                       <Button onClick={handleSave} disabled={isSaving}>
-                        {isSaving ? "Saving..." : "Save Changes"}
+                        {isSaving
+                          ? "Saving..."
+                          : isCreating
+                            ? "Create Category"
+                            : "Save Changes"}
                       </Button>
                     </div>
                   </div>
@@ -375,6 +532,31 @@ export default function CategoryManagement() {
             )}
           </div>
         </div>
+
+        {/* Delete Confirmation Dialog */}
+        <AlertDialog
+          open={!!categoryToDelete}
+          onOpenChange={(open) => !open && setCategoryToDelete(null)}
+        >
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete Category</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete &quot;{categoryToDelete?.name}
+                &quot;? This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleDeleteConfirm}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </AdminRoute>
   );

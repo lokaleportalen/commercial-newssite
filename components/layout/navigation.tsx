@@ -118,10 +118,11 @@ export function Navigation() {
 
               {/* Kategorier Dropdown */}
               <DropdownMenu>
-                <DropdownMenuTrigger asChild>
+                <DropdownMenuTrigger asChild suppressHydrationWarning>
                   <Button
                     variant="ghost"
                     className="hover:bg-transparent h-9 px-4 py-2 text-sm font-medium"
+                    suppressHydrationWarning
                   >
                     Kategorier
                     <ChevronDown className="ml-1 h-3 w-3" />
