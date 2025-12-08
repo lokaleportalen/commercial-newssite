@@ -112,7 +112,10 @@ export function AiPromptEditor({ promptId, onClose }: AiPromptEditorProps) {
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [hasChanges]);
 
-  const handleFieldChange = (field: keyof AiPrompt, value: string | Date | null) => {
+  const handleFieldChange = (
+    field: keyof AiPrompt,
+    value: string | Date | null
+  ) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
     setHasChanges(true);
   };
@@ -266,8 +269,8 @@ export function AiPromptEditor({ promptId, onClose }: AiPromptEditorProps) {
                     </div>
                   ) : versions.length === 0 ? (
                     <div className="text-center py-8 text-muted-foreground">
-                      Ingen versionshistorik endnu. Ændringer vil blive arkiveret her når
-                      du opdaterer prompten.
+                      Ingen versionshistorik endnu. Ændringer vil blive
+                      arkiveret her når du opdaterer prompten.
                     </div>
                   ) : (
                     <div className="space-y-4">
@@ -372,7 +375,9 @@ export function AiPromptEditor({ promptId, onClose }: AiPromptEditorProps) {
           <div className="space-y-2">
             <Label htmlFor="key">
               Prompt Nøgle{" "}
-              <span className="text-muted-foreground text-xs">(skrivebeskyttet)</span>
+              <span className="text-muted-foreground text-xs">
+                (skrivebeskyttet)
+              </span>
             </Label>
             <Input
               id="key"
@@ -486,11 +491,11 @@ export function AiPromptEditor({ promptId, onClose }: AiPromptEditorProps) {
           <div className="bg-muted/50 border rounded-lg p-4">
             <h3 className="font-semibold text-sm mb-2">Brugsoplysninger</h3>
             <p className="text-sm text-muted-foreground">
-              Denne prompt bruges i applikationskoden via nøglen "
+              Denne prompt bruges i applikationskoden via nøglen
               <code className="bg-background px-1 py-0.5 rounded">
                 {formData.key}
               </code>
-              ". Ændringer træder i kraft umiddelbart efter gem.
+              . Ændringer træder i kraft umiddelbart efter gem.
             </p>
           </div>
         </div>
