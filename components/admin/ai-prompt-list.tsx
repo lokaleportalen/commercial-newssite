@@ -89,7 +89,7 @@ export function AiPromptList({
       <div className="border-b p-4">
         <h2 className="text-xl font-bold mb-1">AI Prompts</h2>
         <p className="text-xs text-muted-foreground">
-          Select a prompt to view and edit
+          Vælg en prompt for at se og redigere
         </p>
       </div>
 
@@ -107,7 +107,7 @@ export function AiPromptList({
             ))
           ) : prompts.length === 0 ? (
             <div className="p-8 text-center text-muted-foreground">
-              No AI prompts configured yet
+              Ingen AI prompts konfigureret endnu
             </div>
           ) : (
             groupedPrompts.map(([section, sectionPrompts], sectionIndex) => (

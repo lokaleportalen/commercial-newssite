@@ -86,11 +86,11 @@ export function AiPromptEditor({ promptId, onClose }: AiPromptEditorProps) {
           setFormData(data.prompt);
           setHasChanges(false);
         } else {
-          toast.error("Failed to load AI prompt");
+          toast.error("Kunne ikke indlæse AI prompt");
         }
       } catch (error) {
         console.error("Error fetching AI prompt:", error);
-        toast.error("Error loading AI prompt");
+        toast.error("Fejl ved indlæsning af AI prompt");
       } finally {
         setIsLoading(false);
       }
@@ -149,15 +149,15 @@ export function AiPromptEditor({ promptId, onClose }: AiPromptEditorProps) {
         setFormData(data.prompt);
         setHasChanges(false);
         setChangeDescription("");
-        toast.success(data.message || "AI prompt saved successfully");
+        toast.success(data.message || "AI prompt gemt");
         // Refresh versions list
         fetchVersions();
       } else {
-        toast.error("Failed to save AI prompt");
+        toast.error("Kunne ikke gemme AI prompt");
       }
     } catch (error) {
       console.error("Error saving AI prompt:", error);
-      toast.error("Error saving AI prompt");
+      toast.error("Fejl ved gemning af AI prompt");
     } finally {
       setIsSaving(false);
     }
@@ -181,15 +181,15 @@ export function AiPromptEditor({ promptId, onClose }: AiPromptEditorProps) {
         setFormData(data.prompt);
         setHasChanges(false);
         setSelectedVersion(null);
-        toast.success(data.message || "Version restored successfully");
+        toast.success(data.message || "Version gendannet");
         // Refresh versions list
         fetchVersions();
       } else {
-        toast.error("Failed to restore version");
+        toast.error("Kunne ikke gendanne version");
       }
     } catch (error) {
       console.error("Error restoring version:", error);
-      toast.error("Error restoring version");
+      toast.error("Fejl ved gendannelse af version");
     } finally {
       setIsRestoring(false);
     }
@@ -199,7 +199,7 @@ export function AiPromptEditor({ promptId, onClose }: AiPromptEditorProps) {
     if (prompt) {
       setFormData(prompt);
       setHasChanges(false);
-      toast.info("Changes cancelled");
+      toast.info("Ændringer annulleret");
     }
   };
 
@@ -217,7 +217,7 @@ export function AiPromptEditor({ promptId, onClose }: AiPromptEditorProps) {
   if (!prompt) {
     return (
       <div className="flex h-full items-center justify-center text-muted-foreground">
-        AI prompt not found
+        AI prompt ikke fundet
       </div>
     );
   }
@@ -231,7 +231,7 @@ export function AiPromptEditor({ promptId, onClose }: AiPromptEditorProps) {
             <div className="flex items-center gap-2 mb-2">
               <Badge variant="outline">{formData.section}</Badge>
               <span className="text-sm text-muted-foreground">
-                Updated {new Date(prompt.updatedAt).toLocaleDateString()}
+                Opdateret {new Date(prompt.updatedAt).toLocaleDateString()}
               </span>
             </div>
             <h2 className="text-2xl font-bold">{formData.name}</h2>
@@ -247,14 +247,14 @@ export function AiPromptEditor({ promptId, onClose }: AiPromptEditorProps) {
               <SheetTrigger asChild>
                 <Button variant="outline" size="sm" onClick={fetchVersions}>
                   <History className="mr-2 h-4 w-4" />
-                  Version History
+                  Versionshistorik
                 </Button>
               </SheetTrigger>
               <SheetContent className="w-full sm:max-w-2xl overflow-y-auto">
                 <SheetHeader>
-                  <SheetTitle>Version History</SheetTitle>
+                  <SheetTitle>Versionshistorik</SheetTitle>
                   <SheetDescription>
-                    View and restore previous versions of this prompt
+                    Se og gendan tidligere versioner af denne prompt
                   </SheetDescription>
                 </SheetHeader>
                 <ScrollArea className="h-[calc(100vh-200px)] mt-6">
@@ -266,8 +266,8 @@ export function AiPromptEditor({ promptId, onClose }: AiPromptEditorProps) {
                     </div>
                   ) : versions.length === 0 ? (
                     <div className="text-center py-8 text-muted-foreground">
-                      No version history yet. Changes will be archived here when
-                      you update the prompt.
+                      Ingen versionshistorik endnu. Ændringer vil blive arkiveret her når
+                      du opdaterer prompten.
                     </div>
                   ) : (
                     <div className="space-y-4">
@@ -306,14 +306,14 @@ export function AiPromptEditor({ promptId, onClose }: AiPromptEditorProps) {
                               }
                             >
                               {selectedVersion?.id === version.id
-                                ? "Hide"
-                                : "View"}
+                                ? "Skjul"
+                                : "Vis"}
                             </Button>
                           </div>
                           {selectedVersion?.id === version.id && (
                             <div className="space-y-3 pt-3 border-t">
                               <div>
-                                <Label className="text-xs">Prompt Text</Label>
+                                <Label className="text-xs">Prompt Tekst</Label>
                                 <div className="mt-1 p-3 bg-muted rounded-md text-sm font-mono max-h-64 overflow-auto">
                                   {version.prompt}
                                 </div>
@@ -329,8 +329,8 @@ export function AiPromptEditor({ promptId, onClose }: AiPromptEditorProps) {
                                 >
                                   <RotateCcw className="mr-2 h-3 w-3" />
                                   {isRestoring
-                                    ? "Restoring..."
-                                    : "Restore This Version"}
+                                    ? "Gendanner..."
+                                    : "Gendan Denne Version"}
                                 </Button>
                               </div>
                             </div>
@@ -352,14 +352,14 @@ export function AiPromptEditor({ promptId, onClose }: AiPromptEditorProps) {
         {hasChanges && (
           <div className="flex items-center gap-2 pt-2 border-t">
             <Button onClick={handleSave} disabled={isSaving}>
-              {isSaving ? "Saving..." : "Save Changes"}
+              {isSaving ? "Gemmer..." : "Gem Ændringer"}
             </Button>
             <Button
               variant="outline"
               onClick={handleCancel}
               disabled={isSaving}
             >
-              Cancel
+              Annuller
             </Button>
           </div>
         )}
@@ -371,8 +371,8 @@ export function AiPromptEditor({ promptId, onClose }: AiPromptEditorProps) {
           {/* Key (read-only) */}
           <div className="space-y-2">
             <Label htmlFor="key">
-              Prompt Key{" "}
-              <span className="text-muted-foreground text-xs">(read-only)</span>
+              Prompt Nøgle{" "}
+              <span className="text-muted-foreground text-xs">(skrivebeskyttet)</span>
             </Label>
             <Input
               id="key"
@@ -382,31 +382,31 @@ export function AiPromptEditor({ promptId, onClose }: AiPromptEditorProps) {
               className="bg-muted"
             />
             <p className="text-xs text-muted-foreground">
-              This is the unique identifier used in code. Cannot be changed.
+              Dette er den unikke identifikator brugt i koden. Kan ikke ændres.
             </p>
           </div>
 
           {/* Name */}
           <div className="space-y-2">
             <Label htmlFor="name">
-              Display Name <span className="text-destructive">*</span>
+              Visningsnavn <span className="text-destructive">*</span>
             </Label>
             <Input
               id="name"
               value={formData.name || ""}
               onChange={(e) => handleFieldChange("name", e.target.value)}
-              placeholder="e.g., Weekly News Fetch"
+              placeholder="f.eks., Ugentlig Nyhedshentning"
             />
           </div>
 
           {/* Description */}
           <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
+            <Label htmlFor="description">Beskrivelse</Label>
             <Textarea
               id="description"
               value={formData.description || ""}
               onChange={(e) => handleFieldChange("description", e.target.value)}
-              placeholder="What does this prompt do?"
+              placeholder="Hvad gør denne prompt?"
               rows={2}
             />
           </div>
@@ -420,10 +420,10 @@ export function AiPromptEditor({ promptId, onClose }: AiPromptEditorProps) {
               id="model"
               value={formData.model || ""}
               onChange={(e) => handleFieldChange("model", e.target.value)}
-              placeholder="e.g., gpt-4o, gemini-3-pro"
+              placeholder="f.eks., gpt-4o, gemini-3-pro"
             />
             <p className="text-xs text-muted-foreground">
-              The AI model used for this prompt (e.g., gpt-4o, gpt-5-mini,
+              AI modellen brugt til denne prompt (f.eks., gpt-4o, gpt-5-mini,
               gemini-3-pro-image-preview)
             </p>
           </div>
@@ -431,16 +431,16 @@ export function AiPromptEditor({ promptId, onClose }: AiPromptEditorProps) {
           {/* Section */}
           <div className="space-y-2">
             <Label htmlFor="section">
-              Section <span className="text-destructive">*</span>
+              Sektion <span className="text-destructive">*</span>
             </Label>
             <Input
               id="section"
               value={formData.section || ""}
               onChange={(e) => handleFieldChange("section", e.target.value)}
-              placeholder="e.g., Weekly News, Article Generation"
+              placeholder="f.eks., Ugentlige Nyheder, Artikel Generering"
             />
             <p className="text-xs text-muted-foreground">
-              Category or section this prompt belongs to
+              Kategori eller sektion denne prompt tilhører
             </p>
           </div>
 
@@ -448,18 +448,18 @@ export function AiPromptEditor({ promptId, onClose }: AiPromptEditorProps) {
           {hasChanges && (
             <div className="space-y-2 bg-orange-50 dark:bg-orange-950/20 border border-orange-200 dark:border-orange-800 rounded-lg p-4">
               <Label htmlFor="changeDescription">
-                Change Description (Optional)
+                Ændringsbeskrivelse (Valgfrit)
               </Label>
               <Textarea
                 id="changeDescription"
                 value={changeDescription}
                 onChange={(e) => setChangeDescription(e.target.value)}
-                placeholder="Describe what you changed and why..."
+                placeholder="Beskriv hvad du ændrede og hvorfor..."
                 rows={2}
               />
               <p className="text-xs text-muted-foreground">
-                This description will be saved with the archived version for
-                future reference
+                Denne beskrivelse vil blive gemt med den arkiverede version til
+                fremtidig reference
               </p>
             </div>
           )}
@@ -467,30 +467,30 @@ export function AiPromptEditor({ promptId, onClose }: AiPromptEditorProps) {
           {/* Prompt */}
           <div className="space-y-2">
             <Label htmlFor="prompt">
-              Prompt Text <span className="text-destructive">*</span>
+              Prompt Tekst <span className="text-destructive">*</span>
             </Label>
             <Textarea
               id="prompt"
               value={formData.prompt || ""}
               onChange={(e) => handleFieldChange("prompt", e.target.value)}
-              placeholder="Enter the AI prompt text..."
+              placeholder="Indtast AI prompt teksten..."
               rows={25}
               className="font-mono text-sm"
             />
             <p className="text-xs text-muted-foreground">
-              {formData.prompt?.length || 0} characters
+              {formData.prompt?.length || 0} tegn
             </p>
           </div>
 
           {/* Info Box */}
           <div className="bg-muted/50 border rounded-lg p-4">
-            <h3 className="font-semibold text-sm mb-2">Usage Information</h3>
+            <h3 className="font-semibold text-sm mb-2">Brugsoplysninger</h3>
             <p className="text-sm text-muted-foreground">
-              This prompt is used in the application code via the key "
+              Denne prompt bruges i applikationskoden via nøglen "
               <code className="bg-background px-1 py-0.5 rounded">
                 {formData.key}
               </code>
-              ". Changes will take effect immediately after saving.
+              ". Ændringer træder i kraft umiddelbart efter gem.
             </p>
           </div>
         </div>

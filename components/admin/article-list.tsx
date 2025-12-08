@@ -136,15 +136,15 @@ export const ArticleList = forwardRef<ArticleListRef, ArticleListProps>(
       });
 
       if (response.ok) {
-        toast.success("Article deleted successfully");
+        toast.success("Artikel slettet");
         await fetchArticles();
         setSelectedArticles(new Set());
       } else {
-        toast.error("Failed to delete article");
+        toast.error("Kunne ikke slette artikel");
       }
     } catch (error) {
       console.error("Error deleting article:", error);
-      toast.error("Error deleting article");
+      toast.error("Fejl ved sletning af artikel");
     } finally {
       setIsDeleting(false);
       setShowDeleteDialog(false);
@@ -172,17 +172,17 @@ export const ArticleList = forwardRef<ArticleListRef, ArticleListProps>(
       const failCount = results.length - successCount;
 
       if (successCount > 0) {
-        toast.success(`${successCount} article${successCount > 1 ? "s" : ""} deleted successfully`);
+        toast.success(`${successCount} artikel${successCount > 1 ? "er" : ""} slettet`);
       }
       if (failCount > 0) {
-        toast.error(`Failed to delete ${failCount} article${failCount > 1 ? "s" : ""}`);
+        toast.error(`Kunne ikke slette ${failCount} artikel${failCount > 1 ? "er" : ""}`);
       }
 
       await fetchArticles();
       setSelectedArticles(new Set());
     } catch (error) {
       console.error("Error deleting articles:", error);
-      toast.error("Error deleting articles");
+      toast.error("Fejl ved sletning af artikler");
     } finally {
       setIsDeleting(false);
       setShowBulkDeleteDialog(false);
@@ -201,9 +201,9 @@ export const ArticleList = forwardRef<ArticleListRef, ArticleListProps>(
   const getStatusLabel = (status: string) => {
     switch (status) {
       case "published":
-        return "Published";
+        return "Publiceret";
       default:
-        return "Draft";
+        return "Kladde";
     }
   };
 
@@ -216,7 +216,7 @@ export const ArticleList = forwardRef<ArticleListRef, ArticleListProps>(
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
             type="search"
-            placeholder="Search articles..."
+            placeholder="Søg artikler..."
             className="pl-8"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -226,7 +226,7 @@ export const ArticleList = forwardRef<ArticleListRef, ArticleListProps>(
         {selectedArticles.size > 0 && (
           <div className="flex items-center justify-between gap-2 p-2 bg-muted rounded-md">
             <span className="text-sm font-medium">
-              {selectedArticles.size} selected
+              {selectedArticles.size} valgt
             </span>
             <Button
               size="sm"
@@ -235,7 +235,7 @@ export const ArticleList = forwardRef<ArticleListRef, ArticleListProps>(
               disabled={isDeleting}
             >
               <Trash2 className="mr-2 h-4 w-4" />
-              Delete Selected
+              Slet Valgte
             </Button>
           </div>
         )}
@@ -255,7 +255,7 @@ export const ArticleList = forwardRef<ArticleListRef, ArticleListProps>(
             ))
           ) : filteredArticles.length === 0 ? (
             <div className="p-8 text-center text-muted-foreground">
-              {searchQuery ? "No articles found" : "No articles yet"}
+              {searchQuery ? "Ingen artikler fundet" : "Ingen artikler endnu"}
             </div>
           ) : (
             <>
@@ -268,7 +268,7 @@ export const ArticleList = forwardRef<ArticleListRef, ArticleListProps>(
                   className="h-4 w-4 rounded border-gray-300"
                 />
                 <span className="text-sm text-muted-foreground">
-                  Select all
+                  Vælg alle
                 </span>
               </div>
               {filteredArticles.map((article) => (
@@ -344,27 +344,27 @@ export const ArticleList = forwardRef<ArticleListRef, ArticleListProps>(
 
       {/* Footer with count */}
       <div className="border-t p-4 text-sm text-muted-foreground">
-        {filteredArticles.length} {filteredArticles.length === 1 ? "article" : "articles"}
-        {searchQuery && ` (filtered)`}
+        {filteredArticles.length} {filteredArticles.length === 1 ? "artikel" : "artikler"}
+        {searchQuery && ` (filtreret)`}
       </div>
 
       {/* Individual Delete Dialog */}
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Article?</AlertDialogTitle>
+            <AlertDialogTitle>Slet Artikel?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently delete this article. This action cannot be undone.
+              Dette vil permanent slette denne artikel. Denne handling kan ikke fortrydes.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel disabled={isDeleting}>Annuller</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDeleteConfirm}
               disabled={isDeleting}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              {isDeleting ? "Deleting..." : "Delete"}
+              {isDeleting ? "Sletter..." : "Slet"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -374,19 +374,19 @@ export const ArticleList = forwardRef<ArticleListRef, ArticleListProps>(
       <AlertDialog open={showBulkDeleteDialog} onOpenChange={setShowBulkDeleteDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete {selectedArticles.size} Article{selectedArticles.size > 1 ? "s" : ""}?</AlertDialogTitle>
+            <AlertDialogTitle>Slet {selectedArticles.size} Artikel{selectedArticles.size > 1 ? "er" : ""}?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently delete {selectedArticles.size} article{selectedArticles.size > 1 ? "s" : ""}. This action cannot be undone.
+              Dette vil permanent slette {selectedArticles.size} artikel{selectedArticles.size > 1 ? "er" : ""}. Denne handling kan ikke fortrydes.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel disabled={isDeleting}>Annuller</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleBulkDeleteConfirm}
               disabled={isDeleting}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              {isDeleting ? "Deleting..." : "Delete All"}
+              {isDeleting ? "Sletter..." : "Slet Alle"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

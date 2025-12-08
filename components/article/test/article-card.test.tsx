@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { ArticleCard } from '../article-card'
+import type { Category } from '@/lib/category-helpers'
 
 // Mock Next.js Image component
 vi.mock('next/image', () => ({
@@ -10,13 +11,18 @@ vi.mock('next/image', () => ({
 }))
 
 describe('ArticleCard', () => {
+  const mockCategories: Category[] = [
+    { id: '1', name: 'Investering', slug: 'investering', description: null },
+    { id: '2', name: 'Byggeri', slug: 'byggeri', description: null },
+  ]
+
   const mockArticle = {
     title: 'Test Article Title',
     slug: 'test-article-title',
     summary: 'This is a test article summary that describes the content.',
     image: '/test-image.jpg',
     publishedDate: new Date('2025-01-15'),
-    categories: 'Investering, Byggeri',
+    categories: mockCategories,
   }
 
   it('renders article with default variant', () => {
@@ -71,8 +77,8 @@ describe('ArticleCard', () => {
     expect(screen.getByText('Test Article Title')).toBeInTheDocument()
   })
 
-  it('handles null categories', () => {
-    render(<ArticleCard {...mockArticle} categories={null} />)
+  it('handles empty categories', () => {
+    render(<ArticleCard {...mockArticle} categories={[]} />)
 
     expect(screen.getByText('Test Article Title')).toBeInTheDocument()
   })

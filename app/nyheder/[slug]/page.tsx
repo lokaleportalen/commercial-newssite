@@ -7,6 +7,9 @@ import { format } from "date-fns";
 import { da } from "date-fns/locale";
 import { CategoryLink } from "@/components/article/category-link";
 import { ArticleContent } from "@/components/article/article-content";
+import { RelatedArticles } from "@/components/article/related-articles";
+import { ShareButtons } from "@/components/article/share-buttons";
+import { Breadcrumbs } from "@/components/layout/breadcrumbs";
 import { getCurrentUser } from "@/lib/auth-helpers";
 import { getArticleCategories } from "@/lib/category-helpers";
 import type { Metadata } from "next";
@@ -68,15 +71,38 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
   // Fetch categories from junction table
   const categories = await getArticleCategories(articleData.id);
 
+  // Get primary category for breadcrumb (first category)
+  const primaryCategory = categories.length > 0 ? categories[0] : null;
+
   // Format date in Danish
   const formattedDate = format(articleData.publishedDate, "d. MMMM yyyy", {
     locale: da,
   });
 
+  // Construct full URL for sharing
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
+  const articleUrl = `${baseUrl}/nyheder/${articleData.slug}`;
+
   return (
     <article className="min-h-screen">
       <header className="bg-muted/50 border-b">
         <div className="container mx-auto px-4 py-12 max-w-4xl">
+          {/* Breadcrumbs */}
+          <Breadcrumbs
+            items={
+              primaryCategory
+                ? [
+                    {
+                      label: primaryCategory.name,
+                      href: `/${primaryCategory.slug}`,
+                    },
+                    { label: articleData.title },
+                  ]
+                : [{ label: articleData.title }]
+            }
+            className="mb-6"
+          />
+
           {categories.length > 0 && (
             <div className="flex flex-wrap gap-2 mb-4">
               {categories.map((category) => (
@@ -120,7 +146,17 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
           content={articleData.content}
           isAuthenticated={isAuthenticated}
         />
+
+        {/* Share Buttons */}
+        <ShareButtons
+          title={articleData.title}
+          url={articleUrl}
+          summary={articleData.summary}
+        />
       </div>
+
+      {/* Related Articles */}
+      <RelatedArticles articleId={articleData.id} />
     </article>
   );
 }

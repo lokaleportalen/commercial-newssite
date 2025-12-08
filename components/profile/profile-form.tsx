@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { authClient } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,12 +11,17 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  Field,
-  FieldGroup,
-  FieldLabel,
-} from "@/components/ui/field";
+import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { PreferencesForm } from "./preferences-form";
 
 export function ProfileForm() {
   const router = useRouter();
@@ -27,6 +31,8 @@ export function ProfileForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [preferencesDialogOpen, setPreferencesDialogOpen] = useState(false);
 
   useEffect(() => {
     if (session?.user) {
@@ -67,10 +73,6 @@ export function ProfileForm() {
   };
 
   const handleDeleteAccount = async () => {
-    if (!confirm("Er du sikker på, at du vil slette din konto? Denne handling kan ikke fortrydes.")) {
-      return;
-    }
-
     setIsLoading(true);
 
     try {
@@ -88,23 +90,10 @@ export function ProfileForm() {
     } catch (err) {
       setError("Der opstod en fejl ved sletning af konto. Prøv venligst igen.");
       setIsLoading(false);
+    } finally {
+      setDeleteDialogOpen(false);
     }
   };
-
-  if (!session) {
-    return (
-      <Card>
-        <CardContent className="py-8 text-center">
-          <p className="text-muted-foreground">
-            Du skal være logget ind for at se din profil.
-          </p>
-          <Button asChild className="mt-4">
-            <Link href="/login">Log ind</Link>
-          </Button>
-        </CardContent>
-      </Card>
-    );
-  }
 
   return (
     <div className="space-y-6">
@@ -112,7 +101,8 @@ export function ProfileForm() {
         <CardHeader>
           <CardTitle>Administrer dine data</CardTitle>
           <CardDescription>
-            Se og opdater dine oplysninger, eller slet dem helt fra Ejendomsmyt.dk.
+            Se og opdater dine oplysninger, eller slet dem helt fra
+            Ejendomsmyt.dk.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -172,35 +162,68 @@ export function ProfileForm() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Button asChild variant="outline" className="w-full">
-            <Link href="/profile/preferences">
-              Rediger nyhedspræferencer
-            </Link>
+          <Button
+            variant="outline"
+            className="w-full"
+            onClick={() => setPreferencesDialogOpen(true)}
+          >
+            Rediger nyhedspræferencer
           </Button>
         </CardContent>
       </Card>
 
-      {/* Delete Account */}
-      <Card className="border-destructive">
-        <CardHeader>
-          <CardTitle className="text-destructive">Slet alle data</CardTitle>
-          <CardDescription>
-            Når du sletter alle data, fjerner vi dine oplysninger fra vores systemer i henhold til vores
-            databeskyttelsespolitik.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Button
-            type="button"
-            variant="destructive"
-            onClick={handleDeleteAccount}
-            disabled={isLoading}
-            className="w-full"
-          >
-            Slet alle data
-          </Button>
-        </CardContent>
-      </Card>
+      {/* Delete Account - More subtle without border */}
+      <Button
+        type="button"
+        variant="outline"
+        onClick={() => setDeleteDialogOpen(true)}
+        disabled={isLoading}
+        className="w-full"
+      >
+        Slet alle data
+      </Button>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Slet alle data</DialogTitle>
+            <DialogDescription>
+              Når du sletter alle data, fjerner vi dine oplysninger fra vores
+              systemer i henhold til vores databeskyttelsespolitik.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setDeleteDialogOpen(false)}
+              disabled={isLoading}
+            >
+              Annuller
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDeleteAccount}
+              disabled={isLoading}
+            >
+              {isLoading ? "Sletter..." : "Slet alle data"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Preferences Dialog */}
+      <Dialog
+        open={preferencesDialogOpen}
+        onOpenChange={setPreferencesDialogOpen}
+      >
+        <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Definér hvilke nyheder du vil have</DialogTitle>
+          </DialogHeader>
+          <PreferencesForm onClose={() => setPreferencesDialogOpen(false)} />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

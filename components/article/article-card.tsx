@@ -4,6 +4,7 @@ import { format } from "date-fns";
 import { da } from "date-fns/locale";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { ArticleCategories } from "@/components/article/article-categories";
+import { cn } from "@/lib/utils";
 import type { Category } from "@/lib/category-helpers";
 
 interface ArticleCardProps {
@@ -14,6 +15,7 @@ interface ArticleCardProps {
   publishedDate: Date;
   categories: Category[];
   variant?: "default" | "small";
+  className?: string;
 }
 
 export function ArticleCard({
@@ -24,6 +26,7 @@ export function ArticleCard({
   publishedDate,
   categories,
   variant = "default",
+  className,
 }: ArticleCardProps) {
   // Truncate summary to ~150 characters
   const truncatedSummary = summary
@@ -38,7 +41,12 @@ export function ArticleCard({
   // Small variant - horizontal layout
   if (variant === "small") {
     return (
-      <Card className="h-full overflow-hidden transition-shadow hover:shadow-lg p-0 gap-0 group">
+      <Card
+        className={cn(
+          "h-full overflow-hidden transition-shadow hover:shadow-lg p-0 gap-0 group",
+          className
+        )}
+      >
         {/* Image - 1/4 width */}
         <div className="flex h-full">
           <div className="relative w-1/4 min-h-20 overflow-hidden bg-muted shrink-0">
@@ -60,7 +68,7 @@ export function ArticleCard({
           {/* Content - 3/4 width */}
           <div className="flex flex-col p-3 flex-1">
             {/* Category */}
-            <ArticleCategories categories={categories.map(c => c.name)} />
+            <ArticleCategories categories={categories.map((c) => c.name)} />
 
             {/* Title */}
             <Link href={`/nyheder/${slug}`} className="mb-2">
@@ -82,10 +90,15 @@ export function ArticleCard({
 
   // Default variant - vertical layout
   return (
-    <Card className="h-full overflow-hidden transition-shadow hover:shadow-lg p-0 gap-0 group">
+    <Card
+      className={cn(
+        "h-full overflow-hidden transition-shadow hover:shadow-lg p-0 gap-0 group",
+        className
+      )}
+    >
       <Link href={`/nyheder/${slug}`}>
         {/* Article Image - smaller aspect ratio */}
-        <div className="relative aspect-video w-full overflow-hidden bg-muted max-h-[300px]">
+        <div className="relative aspect-video w-full overflow-hidden bg-muted max-h-[175px]">
           {image ? (
             <Image
               src={image}
@@ -104,7 +117,7 @@ export function ArticleCard({
 
       <div className="flex flex-col p-4 flex-1">
         {/* Categories */}
-        <ArticleCategories categories={categories.map(c => c.name)} />
+        <ArticleCategories categories={categories.map((c) => c.name)} />
 
         {/* Title */}
         <Link href={`/nyheder/${slug}`}>
