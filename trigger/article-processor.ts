@@ -9,7 +9,7 @@ import {
   getAiPromptWithVars,
   getAiPromptObject,
 } from "@/lib/ai-prompts";
-import { generateText, generateJSON, getAIProvider } from "@/lib/ai-client";
+import { generateText, generateJSON } from "@/lib/ai-client";
 
 // Initialize Gemini client lazily (fallback for build phase - still used for image generation)
 const getGeminiClient = () => {
@@ -122,13 +122,14 @@ Formatér dine research-resultater tydeligt med overskrifter og punkter.`;
 
     logger.info("Research completed with OpenAI, writing article...");
 
-    // Get the configured AI provider for article writing
-    const aiProvider = await getAIProvider();
-    logger.info(`Using ${aiProvider} for article writing...`);
-
     // Step 2: Write a structured article based on the research
-    // Get article writing prompt from database
+    // Get article writing prompt from database (includes model configuration)
     const articlePromptObj = await getAiPromptObject("article_writing");
+    const articleModel = articlePromptObj?.model || "gpt-5-mini";
+    logger.info(
+      `Using model "${articleModel}" for article writing (from database)...`
+    );
+
     const articlePrompt = articlePromptObj
       ? articlePromptObj.prompt
           .replace(/\{\{title\}\}/g, newsItem.title)
@@ -176,6 +177,7 @@ Formatér artiklen i markdown med korrekte overskrifter (#, ##, ###).`;
       prompt: finalArticlePrompt,
       useWebSearch: false,
       maxTokens: 8192, // Longer for article content
+      model: articleModel, // Use model from database
     });
 
     const articleContent = articleResponse.text;
@@ -315,7 +317,7 @@ Svar KUN med valid JSON i denne præcise struktur:
         metaDescription: metadata.metaDescription,
         sources: uniqueSources,
         status: "draft",
-        publishedDate: null,
+        publishedDate: undefined,
         promptId: articlePromptObj?.id || null,
       })
       .returning();

@@ -9,6 +9,13 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Label } from "@/components/ui/label";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -421,16 +428,55 @@ export function AiPromptEditor({ promptId, onClose }: AiPromptEditorProps) {
             <Label htmlFor="model">
               AI Model <span className="text-destructive">*</span>
             </Label>
-            <Input
-              id="model"
-              value={formData.model || ""}
-              onChange={(e) => handleFieldChange("model", e.target.value)}
-              placeholder="f.eks., gpt-4o, gemini-3-pro"
-            />
-            <p className="text-xs text-muted-foreground">
-              AI modellen brugt til denne prompt (f.eks., gpt-4o, gpt-5-mini,
-              gemini-3-pro-image-preview)
-            </p>
+            {formData.key === "article_writing" ? (
+              <>
+                <Select
+                  value={
+                    formData.model === "gpt-5-mini"
+                      ? "ChatGPT"
+                      : formData.model === "gemini-3-pro-exp"
+                      ? "Gemini"
+                      : formData.model === "claude-haiku-4-5"
+                      ? "Claude"
+                      : "ChatGPT"
+                  }
+                  onValueChange={(value) => {
+                    const modelMap: Record<string, string> = {
+                      ChatGPT: "gpt-5-mini",
+                      Gemini: "gemini-3-pro-exp",
+                      Claude: "claude-haiku-4-5",
+                    };
+                    handleFieldChange("model", modelMap[value]);
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Vælg AI model" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ChatGPT">ChatGPT</SelectItem>
+                    <SelectItem value="Gemini">Gemini</SelectItem>
+                    <SelectItem value="Claude">Claude</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  Vælg AI modellen til artikel-skrivning (ChatGPT: gpt-5-mini,
+                  Gemini: gemini-3-pro-exp, Claude: claude-haiku-4-5)
+                </p>
+              </>
+            ) : (
+              <>
+                <Input
+                  id="model"
+                  value={formData.model || ""}
+                  readOnly
+                  disabled
+                  className="bg-muted"
+                />
+                <p className="text-xs text-muted-foreground">
+                  AI modellen for denne prompt er fast og kan ikke ændres
+                </p>
+              </>
+            )}
           </div>
 
           {/* Section */}

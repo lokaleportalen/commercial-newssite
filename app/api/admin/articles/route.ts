@@ -145,7 +145,7 @@ export async function POST(request: NextRequest) {
         image: image || null,
         sources: sourcesArray,
         status: articleStatus,
-        publishedDate: articleStatus === "published" ? new Date() : null,
+        publishedDate: articleStatus === "published" ? new Date() : undefined,
       })
       .returning();
 

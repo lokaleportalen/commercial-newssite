@@ -65,11 +65,22 @@ export interface GenerateTextOptions {
   prompt: string;
   useWebSearch?: boolean;
   maxTokens?: number;
+  model?: string; // Optional model override (e.g., "gpt-5-mini", "gemini-3-pro-exp", "claude-haiku-4-5")
 }
 
 export interface GenerateTextResponse {
   text: string;
   provider: AIProvider;
+}
+
+/**
+ * Determine provider from model name
+ */
+function getProviderFromModel(model: string): AIProvider {
+  if (model.startsWith("gpt-")) return "openai";
+  if (model.startsWith("gemini-")) return "gemini";
+  if (model.startsWith("claude-")) return "claude";
+  return "openai"; // Default fallback
 }
 
 /**
@@ -79,17 +90,22 @@ export interface GenerateTextResponse {
 export async function generateText(
   options: GenerateTextOptions
 ): Promise<GenerateTextResponse> {
-  const provider = await getAIProvider();
-  const { prompt, useWebSearch = false, maxTokens = 4096 } = options;
+  const { prompt, useWebSearch = false, maxTokens = 4096, model } = options;
+
+  // If model is provided, use it to determine provider; otherwise use global setting
+  const provider = model
+    ? getProviderFromModel(model)
+    : await getAIProvider();
 
   switch (provider) {
     case "openai": {
       const openai = getOpenAIClient();
+      const openaiModel = model || "gpt-5-mini";
 
       // OpenAI uses the responses API for web search
       if (useWebSearch) {
         const response = await openai.responses.create({
-          model: "gpt-5-mini",
+          model: openaiModel,
           tools: [{ type: "web_search" }],
           input: prompt,
         });
@@ -101,7 +117,7 @@ export async function generateText(
       } else {
         // Regular chat completion
         const response = await openai.chat.completions.create({
-          model: "gpt-5-mini",
+          model: openaiModel,
           messages: [{ role: "user", content: prompt }],
           max_tokens: maxTokens,
         });
@@ -115,10 +131,11 @@ export async function generateText(
 
     case "gemini": {
       const genAI = getGeminiClient();
+      const geminiModel = model || "gemini-3-pro-exp";
 
       // Gemini doesn't have built-in web search, so we use the same model for both
       const response = await genAI.models.generateContent({
-        model: "gemini-3-pro-exp",
+        model: geminiModel,
         contents: prompt,
       });
 
@@ -135,10 +152,11 @@ export async function generateText(
 
     case "claude": {
       const anthropic = getClaudeClient();
+      const claudeModel = model || "claude-haiku-4-5";
 
       // Claude doesn't have built-in web search
       const response = await anthropic.messages.create({
-        model: "claude-haiku-4-5",
+        model: claudeModel,
         max_tokens: maxTokens,
         messages: [
           {
