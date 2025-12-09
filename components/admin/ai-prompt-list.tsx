@@ -25,7 +25,7 @@ type AiPromptListProps = {
 };
 
 // Define the order of sections
-const SECTION_ORDER = ["Weekly News", "Article Generation", "Image Generation"];
+const SECTION_ORDER = ["Daily News", "Article Generation", "Image Generation"];
 
 export function AiPromptList({
   selectedPromptId,

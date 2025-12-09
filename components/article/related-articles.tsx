@@ -40,10 +40,12 @@ export function RelatedArticles({ articleId }: RelatedArticlesProps) {
         if (response.ok) {
           const data = await response.json();
           // Convert date strings to Date objects
-          const articlesWithDates = data.articles.map((article: ArticleFromAPI): Article => ({
-            ...article,
-            publishedDate: new Date(article.publishedDate),
-          }));
+          const articlesWithDates = data.articles.map(
+            (article: ArticleFromAPI): Article => ({
+              ...article,
+              publishedDate: new Date(article.publishedDate),
+            })
+          );
           setArticles(articlesWithDates);
         }
       } catch (error) {
@@ -64,7 +66,9 @@ export function RelatedArticles({ articleId }: RelatedArticlesProps) {
   return (
     <section className="mt-8 border-t pt-12">
       <div className="container mx-auto px-4 max-w-4xl">
-        <h2 className="text-2xl font-bold mb-6">Relaterede artikler</h2>
+        <h2 className="text-2xl font-bold mb-6">
+          Andre artikler, du måske vil finde interessante
+        </h2>
 
         {loading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

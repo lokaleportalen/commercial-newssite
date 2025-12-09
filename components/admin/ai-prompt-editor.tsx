@@ -486,18 +486,6 @@ export function AiPromptEditor({ promptId, onClose }: AiPromptEditorProps) {
               {formData.prompt?.length || 0} tegn
             </p>
           </div>
-
-          {/* Info Box */}
-          <div className="bg-muted/50 border rounded-lg p-4">
-            <h3 className="font-semibold text-sm mb-2">Brugsoplysninger</h3>
-            <p className="text-sm text-muted-foreground">
-              Denne prompt bruges i applikationskoden via nøglen
-              <code className="bg-background px-1 py-0.5 rounded">
-                {formData.key}
-              </code>
-              . Ændringer træder i kraft umiddelbart efter gem.
-            </p>
-          </div>
         </div>
       </div>
     </div>

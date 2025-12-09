@@ -7,11 +7,11 @@ export async function seedAiPrompts() {
   const prompts = [
     {
       key: "news_fetch",
-      name: "Weekly News Fetch",
+      name: "Daily News Fetch",
       description:
-        "Fetches 10 commercial real estate news items from Denmark with high relevance for property owners",
+        "Fetches commercial real estate news items from Denmark with high relevance for property owners",
       model: "gpt-5-nano",
-      section: "Weekly News",
+      section: "Daily News",
       prompt: `Find 10 nyheder fra ejendomsbranchen i Danmark, eller med relevans for Danmark, som har fået meget omtale den seneste uge - rank med de mest spændende, unikke og aktuelle først. Det skal være relevant for ejere af erhvervsejendomme (målgruppen er udlejere som bruger Lokaleportalen).
 
 KRITISK: Du SKAL returnere dit svar som RENT JSON uden nogen ekstra tekst, forklaringer eller kommentarer.

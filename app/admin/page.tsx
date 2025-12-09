@@ -9,7 +9,15 @@ import { ArticleEditor } from "@/components/admin/article-editor";
 import { Button } from "@/components/ui/button";
 import { AdminRoute } from "@/components/auth/admin-route";
 import { toast } from "sonner";
-import { Newspaper, Sparkles, Plus, FolderOpen, Mail, Settings } from "lucide-react";
+import {
+  Newspaper,
+  Sparkles,
+  Plus,
+  FolderOpen,
+  Mail,
+  Settings,
+  Users,
+} from "lucide-react";
 import Link from "next/link";
 import {
   DropdownMenu,
@@ -19,12 +27,17 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { UserSearchModal } from "@/components/admin/user-search-modal";
+import { UserEditModal } from "@/components/admin/user-edit-modal";
 
 export default function AdminDashboard() {
   const [selectedArticleId, setSelectedArticleId] = useState<string | null>(
     null
   );
   const [isTriggeringCron, setIsTriggeringCron] = useState(false);
+  const [showUserSearch, setShowUserSearch] = useState(false);
+  const [showUserEdit, setShowUserEdit] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<any>(null);
   const articleListRef = useRef<ArticleListRef>(null);
 
   const handleTriggerCron = async () => {
@@ -58,7 +71,7 @@ export default function AdminDashboard() {
         setIsTriggeringCron(false);
       }, 300000); // 5 minutes
     } catch (error) {
-      console.error("Error triggering weekly news task:", error);
+      console.error("Error triggering daily news task:", error);
       toast.error("Kunne ikke starte nyhedshentning", {
         description: error instanceof Error ? error.message : "Ukendt fejl",
       });
@@ -76,6 +89,22 @@ export default function AdminDashboard() {
     articleListRef.current?.refresh();
   };
 
+  const handleUserSelect = (user: any) => {
+    setSelectedUser(user);
+    setShowUserSearch(false);
+    setShowUserEdit(true);
+  };
+
+  const handleUserUpdated = () => {
+    // Could refresh user data here if needed
+    setSelectedUser(null);
+  };
+
+  const handleBackToSearch = () => {
+    setShowUserEdit(false);
+    setShowUserSearch(true);
+  };
+
   return (
     <AdminRoute>
       <div className="flex h-screen flex-col overflow-hidden">
@@ -91,6 +120,14 @@ export default function AdminDashboard() {
             <Button onClick={handleCreateArticle} size="sm" variant="default">
               <Plus className="mr-2 h-4 w-4" />
               Tilføj artikel
+            </Button>
+            <Button
+              onClick={() => setShowUserSearch(true)}
+              size="sm"
+              variant="outline"
+            >
+              <Users className="mr-2 h-4 w-4" />
+              Find bruger
             </Button>
 
             <DropdownMenu>
@@ -119,7 +156,10 @@ export default function AdminDashboard() {
                 </DropdownMenuItem>
 
                 <DropdownMenuItem asChild>
-                  <Link href="/admin/email-templates" className="cursor-pointer">
+                  <Link
+                    href="/admin/email-templates"
+                    className="cursor-pointer"
+                  >
                     <Mail className="mr-2 h-4 w-4" />
                     <span>Email Skabeloner</span>
                   </Link>
@@ -144,7 +184,9 @@ export default function AdminDashboard() {
                   className="cursor-pointer"
                 >
                   <Newspaper className="mr-2 h-4 w-4" />
-                  <span>{isTriggeringCron ? "Job kører..." : "Hent dagens nyheder"}</span>
+                  <span>
+                    {isTriggeringCron ? "Job kører..." : "Hent dagens nyheder"}
+                  </span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -182,6 +224,22 @@ export default function AdminDashboard() {
             )}
           </div>
         </div>
+
+        {/* User Search Modal */}
+        <UserSearchModal
+          open={showUserSearch}
+          onOpenChange={setShowUserSearch}
+          onUserSelect={handleUserSelect}
+        />
+
+        {/* User Edit Modal */}
+        <UserEditModal
+          open={showUserEdit}
+          onOpenChange={setShowUserEdit}
+          user={selectedUser}
+          onUserUpdated={handleUserUpdated}
+          onBack={handleBackToSearch}
+        />
       </div>
     </AdminRoute>
   );
