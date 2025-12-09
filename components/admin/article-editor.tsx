@@ -67,6 +67,7 @@ export function ArticleEditor({
   const [isUploading, setIsUploading] = useState(false);
   const [sourcesDisplay, setSourcesDisplay] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const sourcesTextareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Helper function to generate URL-friendly slug from title
   const generateSlug = (title: string): string => {
@@ -155,6 +156,17 @@ export function ArticleEditor({
     window.addEventListener("beforeunload", handleBeforeUnload);
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [hasChanges]);
+
+  // Auto-resize sources textarea to fit content
+  useEffect(() => {
+    const textarea = sourcesTextareaRef.current;
+    if (textarea) {
+      // Reset height to auto to get the correct scrollHeight
+      textarea.style.height = "auto";
+      // Set height to scrollHeight to fit all content
+      textarea.style.height = `${textarea.scrollHeight}px`;
+    }
+  }, [sourcesDisplay]);
 
   const handleFieldChange = (
     field: keyof Article,
@@ -535,11 +547,13 @@ export function ArticleEditor({
           <div className="space-y-2">
             <Label htmlFor="sources">Kilder</Label>
             <Textarea
+              ref={sourcesTextareaRef}
               id="sources"
               value={sourcesDisplay}
               onChange={(e) => handleSourcesChange(e.target.value)}
               placeholder="Indtast kilde-URL'er, én pr. linje"
-              rows={5}
+              rows={2}
+              className="resize-none overflow-hidden"
             />
             <p className="text-xs text-muted-foreground">
               Indtast hver kilde-URL på en ny linje
