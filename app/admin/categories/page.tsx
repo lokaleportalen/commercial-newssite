@@ -18,8 +18,16 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
-import { ArrowLeft, Upload, X, Image as ImageIcon, Plus, Trash2 } from "lucide-react";
+import {
+  ArrowLeft,
+  Upload,
+  X,
+  Image as ImageIcon,
+  Plus,
+  Trash2,
+} from "lucide-react";
 import Image from "next/image";
+import SettingsButton from "@/components/admin/settings-btn";
 
 interface Category {
   id: string;
@@ -69,7 +77,6 @@ export default function CategoryManagement() {
         .replace(/^-+|-+$/g, "")
     );
   };
-
 
   useEffect(() => {
     loadCategories();
@@ -326,14 +333,17 @@ export default function CategoryManagement() {
               <Plus className="mr-2 h-4 w-4" />
               Tilføj kategori
             </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => (window.location.href = "/admin")}
-            >
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Tilbage til Dashboard
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => (window.location.href = "/admin")}
+              >
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Tilbage til Dashboard
+              </Button>
+              <SettingsButton />
+            </div>
           </div>
         </div>
 
@@ -531,7 +541,10 @@ export default function CategoryManagement() {
                   <h2 className="text-2xl font-semibold mb-2">
                     Vælg en kategori at redigere
                   </h2>
-                  <p>Vælg en kategori fra listen for at administrere dens detaljer</p>
+                  <p>
+                    Vælg en kategori fra listen for at administrere dens
+                    detaljer
+                  </p>
                 </div>
               </div>
             )}

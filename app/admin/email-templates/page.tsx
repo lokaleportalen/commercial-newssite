@@ -7,6 +7,7 @@ import { EmailTemplateEditor } from "@/components/admin/email-template-editor";
 import { AdminRoute } from "@/components/auth/admin-route";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
+import SettingsButton from "@/components/admin/settings-btn";
 
 export default function EmailTemplatesAdminPage() {
   const router = useRouter();
@@ -20,19 +21,24 @@ export default function EmailTemplatesAdminPage() {
         {/* Header */}
         <div className="border-b bg-background px-6 py-3 flex justify-between items-center">
           <div>
-            <h1 className="text-lg font-semibold">Email Template Administration</h1>
+            <h1 className="text-lg font-semibold">
+              Email Template Administration
+            </h1>
             <p className="text-sm text-muted-foreground">
               Administrer email-skabeloner og tilpas indhold
             </p>
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => router.push("/admin")}
-          >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Tilbage til Dashboard
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => router.push("/admin")}
+            >
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Tilbage til Dashboard
+            </Button>
+            <SettingsButton />
+          </div>
         </div>
         {/* Main content */}
         <div className="flex flex-1 overflow-hidden">

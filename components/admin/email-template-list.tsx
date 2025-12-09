@@ -110,14 +110,8 @@ export function EmailTemplateList({
                     </p>
                   )}
                   <div className="flex items-center gap-2">
-                    <Badge variant="outline" className="text-xs">
-                      {template.key}
-                    </Badge>
                     {template.isActive ? (
-                      <Badge
-                        variant="default"
-                        className="text-xs bg-green-600"
-                      >
+                      <Badge variant="default" className="text-xs bg-green-600">
                         Aktiv
                       </Badge>
                     ) : (
