@@ -288,11 +288,23 @@ Svar KUN med valid JSON i denne præcise struktur:
       )
     );
 
+    // Validate minimum source requirement
+    const MIN_SOURCES_REQUIRED = 3;
+    if (uniqueSources.length < MIN_SOURCES_REQUIRED) {
+      logger.warn(
+        `Insufficient sources for article "${newsItem.title}": found ${uniqueSources.length}, required ${MIN_SOURCES_REQUIRED}. Skipping article.`
+      );
+      return {
+        success: false,
+        error: `Insufficient sources: found ${uniqueSources.length}, required ${MIN_SOURCES_REQUIRED}`,
+      };
+    }
+
     logger.info(
       `Saving article with ${uniqueSources.length} sources to database...`
     );
 
-    // Step 4: Save the article to the database
+    // Step 4: Save the article to the database as draft (requires manual admin publish)
     const [insertedArticle] = await db
       .insert(article)
       .values({
@@ -302,8 +314,8 @@ Svar KUN med valid JSON i denne præcise struktur:
         summary: metadata.summary,
         metaDescription: metadata.metaDescription,
         sources: uniqueSources,
-        status: "published",
-        publishedDate: new Date(),
+        status: "draft",
+        publishedDate: null,
         promptId: articlePromptObj?.id || null,
       })
       .returning();

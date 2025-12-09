@@ -133,6 +133,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create the article
+    const articleStatus = status || "draft";
     const [newArticle] = await db
       .insert(article)
       .values({
@@ -143,8 +144,8 @@ export async function POST(request: NextRequest) {
         metaDescription: metaDescription || null,
         image: image || null,
         sources: sourcesArray,
-        status: status || "draft",
-        publishedDate: new Date(),
+        status: articleStatus,
+        publishedDate: articleStatus === "published" ? new Date() : null,
       })
       .returning();
 

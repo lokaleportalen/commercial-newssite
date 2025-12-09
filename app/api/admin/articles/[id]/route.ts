@@ -151,6 +151,8 @@ export async function PUT(
         ...(sourcesArray !== undefined && { sources: sourcesArray }),
         status,
         updatedAt: new Date(),
+        // Set publishedDate when article is first published
+        ...(isBeingPublished && { publishedDate: new Date() }),
       })
       .where(eq(article.id, id))
       .returning();
