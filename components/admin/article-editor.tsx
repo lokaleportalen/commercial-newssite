@@ -20,8 +20,9 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { CategorySelect } from "@/components/admin/category-select";
-import { Upload, X, Trash2 } from "lucide-react";
+import { Upload, X, Trash2, Info } from "lucide-react";
 import { toast } from "sonner";
+import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 
 type Category = {
   id: string;
@@ -155,7 +156,10 @@ export function ArticleEditor({
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [hasChanges]);
 
-  const handleFieldChange = (field: keyof Article, value: string | string[] | Date | Category[] | null) => {
+  const handleFieldChange = (
+    field: keyof Article,
+    value: string | string[] | Date | Category[] | null
+  ) => {
     setFormData((prev) => {
       const newData = { ...prev, [field]: value };
 
@@ -245,11 +249,7 @@ export function ArticleEditor({
             : ""
         );
         setHasChanges(false);
-        toast.success(
-          isNewArticle
-            ? "Artikel oprettet"
-            : "Artikel gemt"
-        );
+        toast.success(isNewArticle ? "Artikel oprettet" : "Artikel gemt");
 
         // If this was a new article, notify parent component
         if (isNewArticle && data.article.id) {
@@ -352,7 +352,8 @@ export function ArticleEditor({
                   rel="noopener noreferrer"
                   className="hover:underline hover:text-foreground transition-colors"
                 >
-                  {typeof window !== "undefined" ? window.location.origin : ""}/nyheder/
+                  {typeof window !== "undefined" ? window.location.origin : ""}
+                  /nyheder/
                   <span className="font-medium">{formData.slug}</span>
                 </a>
               </div>
@@ -425,7 +426,17 @@ export function ArticleEditor({
 
           {/* Summary */}
           <div className="space-y-2">
-            <Label htmlFor="summary">Resumé</Label>
+            <div className="flex gap-2">
+              <Label htmlFor="summary">Resumé</Label>
+              <Popover>
+                <PopoverTrigger>
+                  <Info className="h-4 w-4" />
+                </PopoverTrigger>
+                <PopoverContent className="text-sm">
+                  Bruges til preview af artikler og i e-mails.{" "}
+                </PopoverContent>
+              </Popover>
+            </div>
             <Textarea
               id="summary"
               value={formData.summary || ""}

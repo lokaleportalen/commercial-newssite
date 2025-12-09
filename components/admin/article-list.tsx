@@ -33,12 +33,6 @@ type Article = {
   summary: string | null;
   createdAt: Date;
   updatedAt: Date;
-  prompt?: {
-    id: string;
-    key: string;
-    name: string;
-    model: string;
-  } | null;
 };
 
 type ArticleListProps = {
@@ -313,14 +307,6 @@ export const ArticleList = forwardRef<ArticleListRef, ArticleListProps>(
                     )}
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
                       <span>{new Date(article.updatedAt).toLocaleDateString()}</span>
-                      {article.prompt && (
-                        <>
-                          <span>•</span>
-                          <Badge variant="outline" className="text-xs">
-                            {article.prompt.name}
-                          </Badge>
-                        </>
-                      )}
                     </div>
                   </button>
                   {/* Delete button */}

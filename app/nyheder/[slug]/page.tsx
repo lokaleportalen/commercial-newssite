@@ -1,5 +1,5 @@
 import { db } from "@/database/db";
-import { article } from "@/database/schema";
+import { article, aiPrompt } from "@/database/schema";
 import { eq } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import Image from "next/image";
@@ -52,17 +52,24 @@ export async function generateMetadata({
 export default async function ArticlePage({ params }: ArticlePageProps) {
   const { slug } = await params;
 
-  // Fetch article by slug
-  const [articleData] = await db
-    .select()
+  // Fetch article by slug with prompt information
+  const [result] = await db
+    .select({
+      article: article,
+      prompt: aiPrompt,
+    })
     .from(article)
+    .leftJoin(aiPrompt, eq(article.promptId, aiPrompt.id))
     .where(eq(article.slug, slug))
     .limit(1);
 
   // Return 404 if article not found
-  if (!articleData) {
+  if (!result) {
     notFound();
   }
+
+  const articleData = result.article;
+  const promptData = result.prompt;
 
   // Check authentication status
   const user = await getCurrentUser();
@@ -130,6 +137,12 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
               <time dateTime={articleData.publishedDate.toISOString()}>
                 {formattedDate}
               </time>
+              {promptData && (
+                <>
+                  <span>•</span>
+                  <span>Prompt ID: {promptData.id}</span>
+                </>
+              )}
             </div>
           </div>
         </header>
