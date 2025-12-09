@@ -130,6 +130,7 @@ export const dailyNewsTask = schedules.task({
       id?: string;
       error?: string;
       duplicate?: boolean;
+      insufficientSources?: boolean;
     }> = [];
 
     // Delay between articles to avoid rate limiting (60 seconds)
@@ -160,10 +161,12 @@ export const dailyNewsTask = schedules.task({
           });
           logger.info(`✓ Article processed successfully: ${result.slug}`);
         } else {
+          const isInsufficientSources = result.error?.includes("Insufficient sources");
           processedArticles.push({
             success: false,
             title: newsItem.title,
             error: result.error || "Unknown error",
+            insufficientSources: isInsufficientSources,
           });
         }
       } catch (error) {
@@ -188,14 +191,18 @@ export const dailyNewsTask = schedules.task({
     // Summary
     const successCount = processedArticles.filter((a) => a.success).length;
     const duplicateCount = processedArticles.filter((a) => a.duplicate).length;
+    const insufficientSourcesCount = processedArticles.filter(
+      (a) => a.insufficientSources
+    ).length;
     const errorCount = processedArticles.filter(
-      (a) => !a.success && !a.duplicate
+      (a) => !a.success && !a.duplicate && !a.insufficientSources
     ).length;
 
     logger.info("Daily news processing completed", {
       total: newsItems.length,
       successful: successCount,
       duplicates: duplicateCount,
+      insufficientSources: insufficientSourcesCount,
       errors: errorCount,
     });
 
@@ -206,6 +213,7 @@ export const dailyNewsTask = schedules.task({
       totalItems: newsItems.length,
       successfulArticles: successCount,
       duplicateArticles: duplicateCount,
+      insufficientSourcesArticles: insufficientSourcesCount,
       errorArticles: errorCount,
       processedArticles,
     };
