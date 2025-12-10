@@ -4,6 +4,7 @@ import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import { Markdown } from "tiptap-markdown";
 import { useEffect } from "react";
+import { Undo2, Redo2, List, ListOrdered } from "lucide-react";
 import "./rich-text-editor.css";
 
 interface RichTextEditorContentProps {
@@ -69,7 +70,9 @@ export default function RichTextEditorContent({
   }
 
   return (
-    <div className={`rounded-lg border border-border bg-background ${className || ""}`}>
+    <div
+      className={`rounded-lg border border-border bg-background ${className || ""}`}
+    >
       {/* Toolbar */}
       <div className="flex flex-wrap gap-1 border-b border-border p-2">
         {/* Bold */}
@@ -116,7 +119,11 @@ export default function RichTextEditorContent({
             key={level}
             type="button"
             onClick={() =>
-              editor.chain().focus().toggleHeading({ level: level as 1 | 2 | 3 | 4 | 5 | 6 }).run()
+              editor
+                .chain()
+                .focus()
+                .toggleHeading({ level: level as 1 | 2 | 3 | 4 | 5 | 6 })
+                .run()
             }
             className={`rounded px-2 py-1 text-sm font-medium transition-colors hover:bg-muted ${
               editor.isActive("heading", { level }) ? "bg-muted" : ""
@@ -138,7 +145,7 @@ export default function RichTextEditorContent({
           }`}
           title="Bullet List"
         >
-          •
+          <List />
         </button>
 
         {/* Ordered List */}
@@ -150,8 +157,34 @@ export default function RichTextEditorContent({
           }`}
           title="Numbered List"
         >
-          1.
+          <ListOrdered />
         </button>
+
+        <div className="mx-1 w-px bg-border" />
+
+        {/* Undo */}
+        <div className="ml-auto flex items-center gap-1">
+          <button
+            type="button"
+            onClick={() => editor.chain().focus().undo().run()}
+            disabled={!editor.can().undo()}
+            className="rounded px-3 py-1 text-sm transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
+            title="Undo (Ctrl+Z)"
+          >
+            <Undo2 className="h-4 w-4" />
+          </button>
+
+          {/* Redo */}
+          <button
+            type="button"
+            onClick={() => editor.chain().focus().redo().run()}
+            disabled={!editor.can().redo()}
+            className="rounded px-3 py-1 text-sm transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
+            title="Redo (Ctrl+Y)"
+          >
+            <Redo2 className="h-4 w-4" />
+          </button>
+        </div>
       </div>
 
       {/* Editor Content */}
