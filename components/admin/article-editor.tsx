@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { CategorySelect } from "@/components/admin/category-select";
 import { RichTextEditor } from "@/components/admin/rich-text-editor";
+import { SaveCancelButtons } from "@/components/admin/save-cancel-buttons";
 import { Upload, X, Trash2, Info } from "lucide-react";
 import { toast } from "sonner";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
@@ -407,20 +408,13 @@ export function ArticleEditor({
         </div>
 
         {/* Save/Cancel Buttons */}
-        {hasChanges && (
-          <div className="flex items-center gap-2 pt-2 border-t">
-            <Button onClick={handleSave} disabled={isSaving}>
-              {isSaving ? "Gemmer..." : "Gem"}
-            </Button>
-            <Button
-              variant="outline"
-              onClick={handleCancel}
-              disabled={isSaving}
-            >
-              Annuller
-            </Button>
-          </div>
-        )}
+        <SaveCancelButtons
+          onSave={handleSave}
+          onCancel={handleCancel}
+          isSaving={isSaving}
+          hasChanges={hasChanges}
+          className="pt-2 border-t"
+        />
       </div>
 
       {/* Editor Form */}
@@ -557,6 +551,15 @@ export function ArticleEditor({
               Indtast hver kilde-URL på en ny linje
             </p>
           </div>
+
+          {/* Save/Cancel Buttons at Bottom */}
+          <SaveCancelButtons
+            onSave={handleSave}
+            onCancel={handleCancel}
+            isSaving={isSaving}
+            hasChanges={hasChanges}
+            className="pt-4 border-t"
+          />
         </div>
       </div>
 
