@@ -116,6 +116,16 @@ export function Navigation() {
                 Alle nyheder
               </Link>
 
+              <Link
+                href="/om-os"
+                className={cn(
+                  navigationMenuTriggerStyle(),
+                  "hover:bg-transparent"
+                )}
+              >
+                Om os
+              </Link>
+
               {/* Kategorier Dropdown */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild suppressHydrationWarning>
@@ -227,6 +237,20 @@ export function Navigation() {
                   )}
                 >
                   Alle nyheder
+                </Link>
+
+                {/* Om os Link */}
+                <Link
+                  href="/om-os"
+                  onClick={() => setDrawerOpen(false)}
+                  className={cn(
+                    "rounded-md px-4 py-3 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground",
+                    pathname === "/om-os"
+                      ? "bg-accent text-accent-foreground"
+                      : "text-foreground"
+                  )}
+                >
+                  Om os
                 </Link>
 
                 <Separator className="my-2" />

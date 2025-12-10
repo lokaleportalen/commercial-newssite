@@ -35,34 +35,11 @@ export function Footer() {
               Få de seneste nyheder direkte i din indbakke
             </p>
             <Link
-              href="/nyhedsbrev"
+              href="/signup"
               className="text-sm text-primary hover:underline"
             >
               Tilmeld dig her
             </Link>
-          </div>
-
-          {/* Archive Section */}
-          <div>
-            <h3 className="font-semibold text-foreground mb-4">Arkiv</h3>
-            <ul className="space-y-2">
-              <li>
-                <Link
-                  href="/arkiv"
-                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  Alle artikler
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/kategorier"
-                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  Kategorier
-                </Link>
-              </li>
-            </ul>
           </div>
 
           {/* Follow Us Section */}
@@ -96,7 +73,7 @@ export function Footer() {
         {/* Bottom Bar */}
         <div className="mt-8 pt-8 border-t">
           <p className="text-center text-sm text-muted-foreground">
-            © {new Date().getFullYear()} Nyheder - Del af{" "}
+            © {new Date().getFullYear()} Estate News - En del af{" "}
             <a
               href="https://www.lokaleportalen.dk"
               target="_blank"
