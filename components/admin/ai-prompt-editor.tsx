@@ -382,26 +382,6 @@ export function AiPromptEditor({ promptId, onClose }: AiPromptEditorProps) {
       {/* Editor Form */}
       <div className="flex-1 overflow-auto p-6">
         <div className="max-w-4xl mx-auto space-y-6">
-          {/* Key (read-only) */}
-          <div className="space-y-2">
-            <Label htmlFor="key">
-              Prompt Nøgle{" "}
-              <span className="text-muted-foreground text-xs">
-                (skrivebeskyttet)
-              </span>
-            </Label>
-            <Input
-              id="key"
-              value={formData.key || ""}
-              readOnly
-              disabled
-              className="bg-muted"
-            />
-            <p className="text-xs text-muted-foreground">
-              Dette er den unikke identifikator brugt i koden. Kan ikke ændres.
-            </p>
-          </div>
-
           {/* Name */}
           <div className="space-y-2">
             <Label htmlFor="name">
