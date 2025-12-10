@@ -65,6 +65,13 @@ lib/                          # Auth config, auth helpers, utilities
 `/admin/categories` - Category management with hero image upload (Vercel Blob), edit name/slug/description
 `/admin/ai-prompts` - AI prompt version management
 
+**Image Regeneration:** Admin can regenerate article images with custom descriptions
+- Click "Generer nyt billede" button in article editor (requires saved article)
+- Optional custom description dialog (appends to base Gemini prompt)
+- Side-by-side comparison UI to choose between original and new image
+- Rejected image automatically deleted from Vercel Blob
+- Keeps original image until admin confirms selection
+
 ## Email System
 
 **Email Templates:** React Email with Tailwind CSS (in `emails/` directory)
@@ -181,6 +188,12 @@ npx trigger.dev@latest deploy  # Deploy to Trigger.dev
 
 
 ## Recent Changes
+
+**2025-12-11:**
+- **Image regeneration feature** - Admin can regenerate article images with optional custom descriptions via "Generer nyt billede" button
+- **Image selection UI** - Side-by-side comparison dialog for choosing between original and new AI-generated images
+- **Smart blob cleanup** - Automatically deletes rejected images from Vercel Blob after admin selection
+- **Safe regeneration workflow** - Original image preserved until admin explicitly confirms new image choice
 
 **2025-12-08:**
 - **Automatic blob cleanup on deletion** - Articles and categories now automatically delete their associated images from Vercel Blob when deleted to prevent orphaned files and reduce storage costs

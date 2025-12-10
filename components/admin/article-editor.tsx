@@ -22,9 +22,12 @@ import {
 import { CategorySelect } from "@/components/admin/category-select";
 import { RichTextEditor } from "@/components/admin/rich-text-editor";
 import { SaveCancelButtons } from "@/components/admin/save-cancel-buttons";
-import { Upload, X, Trash2, Info } from "lucide-react";
+import { RegenerateImageDialog } from "@/components/admin/regenerate-image-dialog";
+import { ImageSelectionDialog } from "@/components/admin/image-selection-dialog";
+import { Upload, X, Trash2, Info, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
+import { deleteBlobImageSafe } from "@/lib/blob-helpers";
 
 type Category = {
   id: string;
@@ -68,6 +71,13 @@ export function ArticleEditor({
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [sourcesDisplay, setSourcesDisplay] = useState("");
+  const [showRegenerateDialog, setShowRegenerateDialog] = useState(false);
+  const [showImageSelectionDialog, setShowImageSelectionDialog] =
+    useState(false);
+  const [isGeneratingImage, setIsGeneratingImage] = useState(false);
+  const [pendingNewImage, setPendingNewImage] = useState<string | null>(null);
+  const [originalImageBeforeRegenerate, setOriginalImageBeforeRegenerate] =
+    useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const sourcesTextareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -316,6 +326,99 @@ export function ArticleEditor({
     setShowDeleteDialog(false);
   };
 
+  const handleRegenerateImage = async (customDescription?: string) => {
+    if (articleId === "new") {
+      toast.error("Gem artiklen først før du genererer et billede");
+      return;
+    }
+
+    try {
+      setIsGeneratingImage(true);
+
+      const response = await fetch(
+        `/api/admin/articles/${articleId}/regenerate-image`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ customDescription }),
+        }
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        setPendingNewImage(data.newImageUrl);
+        setOriginalImageBeforeRegenerate(formData.image || null);
+        setShowRegenerateDialog(false);
+        setShowImageSelectionDialog(true);
+      } else {
+        const error = await response.json();
+        toast.error(error.error || "Kunne ikke generere billede");
+      }
+    } catch (error) {
+      console.error("Error regenerating image:", error);
+      toast.error("Fejl ved generering af billede");
+    } finally {
+      setIsGeneratingImage(false);
+    }
+  };
+
+  const handleImageSelection = async (selectedImageUrl: string) => {
+    try {
+      // Determine which image was rejected
+      const rejectedImageUrl =
+        selectedImageUrl === originalImageBeforeRegenerate
+          ? pendingNewImage
+          : originalImageBeforeRegenerate;
+
+      // Update the article's image field
+      handleFieldChange("image", selectedImageUrl);
+
+      // Delete the rejected image from Vercel Blob
+      if (rejectedImageUrl) {
+        const deleteSuccess = await deleteBlobImageSafe(rejectedImageUrl);
+        if (!deleteSuccess) {
+          console.warn("Failed to delete rejected image, but continuing...");
+        }
+      }
+
+      // Reset state
+      setPendingNewImage(null);
+      setOriginalImageBeforeRegenerate(null);
+      setShowImageSelectionDialog(false);
+
+      toast.success(
+        selectedImageUrl === pendingNewImage
+          ? "Nyt billede valgt"
+          : "Nuværende billede beholdt"
+      );
+    } catch (error) {
+      console.error("Error handling image selection:", error);
+      toast.error("Fejl ved valg af billede");
+    }
+  };
+
+  const handleCancelImageSelection = async () => {
+    try {
+      // User cancelled - delete the new image and keep the original
+      if (pendingNewImage) {
+        const deleteSuccess = await deleteBlobImageSafe(pendingNewImage);
+        if (!deleteSuccess) {
+          console.warn("Failed to delete pending image, but continuing...");
+        }
+      }
+
+      // Reset state
+      setPendingNewImage(null);
+      setOriginalImageBeforeRegenerate(null);
+      setShowImageSelectionDialog(false);
+
+      toast.info("Nuværende billede beholdt");
+    } catch (error) {
+      console.error("Error cancelling image selection:", error);
+      toast.error("Fejl ved annullering");
+    }
+  };
+
   const getStatusVariant = (status: string) => {
     switch (status) {
       case "published":
@@ -501,6 +604,15 @@ export function ArticleEditor({
                   <Upload className="mr-2 h-4 w-4" />
                   {isUploading ? "Uploader..." : "Upload Billede"}
                 </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setShowRegenerateDialog(true)}
+                  disabled={articleId === "new"}
+                >
+                  <Sparkles className="mr-2 h-4 w-4" />
+                  Generer nyt billede
+                </Button>
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -512,6 +624,11 @@ export function ArticleEditor({
                   }}
                 />
               </div>
+              {articleId === "new" && (
+                <p className="text-xs text-muted-foreground">
+                  Gem artiklen først for at generere AI-billede
+                </p>
+              )}
               {formData.image && (
                 <img
                   src={formData.image}
@@ -584,6 +701,26 @@ export function ArticleEditor({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Regenerate Image Dialog */}
+      <RegenerateImageDialog
+        open={showRegenerateDialog}
+        onOpenChange={setShowRegenerateDialog}
+        onGenerate={handleRegenerateImage}
+        isGenerating={isGeneratingImage}
+      />
+
+      {/* Image Selection Dialog */}
+      {pendingNewImage && (
+        <ImageSelectionDialog
+          open={showImageSelectionDialog}
+          onOpenChange={setShowImageSelectionDialog}
+          originalImageUrl={originalImageBeforeRegenerate}
+          newImageUrl={pendingNewImage}
+          onSelect={handleImageSelection}
+          onCancel={handleCancelImageSelection}
+        />
+      )}
     </div>
   );
 }

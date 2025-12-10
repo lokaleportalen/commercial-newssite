@@ -5,6 +5,7 @@ import { ArticleCard } from "@/components/article/article-card";
 import { Pagination } from "@/components/article/pagination";
 import { getArticleCategoriesBulk } from "@/lib/category-helpers";
 import { CategoryFilterWrapper } from "@/components/article/category-filter-wrapper";
+import { SortOption } from "@/components/article/article-sort";
 import { Metadata } from "next";
 
 const ARTICLES_PER_PAGE = 20;
@@ -103,7 +104,7 @@ export default async function NyhederPage({ searchParams }: NyhederProps) {
 
       <CategoryFilterWrapper
         selectedCategory={selectedCategory}
-        currentSort={selectedSort}
+        currentSort={selectedSort as SortOption}
         basePath="/nyheder"
       />
 
