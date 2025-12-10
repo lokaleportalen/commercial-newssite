@@ -280,7 +280,7 @@ export function AiPromptEditor({ promptId, onClose }: AiPromptEditorProps) {
                       arkiveret her når du opdaterer prompten.
                     </div>
                   ) : (
-                    <div className="space-y-4">
+                    <div className="space-y-4 p-2">
                       {versions.map((version) => (
                         <div
                           key={version.id}
@@ -293,9 +293,13 @@ export function AiPromptEditor({ promptId, onClose }: AiPromptEditorProps) {
                                   v{version.versionNumber}
                                 </Badge>
                                 <Badge variant="outline">{version.model}</Badge>
-                                <span className="text-xs text-muted-foreground">
-                                  {new Date(version.createdAt).toLocaleString()}
-                                </span>
+                                {new Date(version.createdAt).toLocaleString(
+                                  undefined,
+                                  {
+                                    dateStyle: "medium",
+                                    timeStyle: "short",
+                                  }
+                                )}
                               </div>
                               <h4 className="font-semibold mt-2">
                                 {version.name}
@@ -435,10 +439,10 @@ export function AiPromptEditor({ promptId, onClose }: AiPromptEditorProps) {
                     formData.model === "gpt-5-mini"
                       ? "ChatGPT"
                       : formData.model === "gemini-3-pro-exp"
-                      ? "Gemini"
-                      : formData.model === "claude-haiku-4-5"
-                      ? "Claude"
-                      : "ChatGPT"
+                        ? "Gemini"
+                        : formData.model === "claude-haiku-4-5"
+                          ? "Claude"
+                          : "ChatGPT"
                   }
                   onValueChange={(value) => {
                     const modelMap: Record<string, string> = {
