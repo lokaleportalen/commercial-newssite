@@ -120,9 +120,70 @@ Formatér dine research-resultater tydeligt med overskrifter og punkter.`;
       throw new Error("Failed to research news story");
     }
 
-    logger.info("Research completed with OpenAI, writing article...");
+    logger.info("Research completed, extracting and validating sources...");
 
-    // Step 2: Write a structured article based on the research
+    // Step 2: Extract and validate sources BEFORE writing the article
+    const sourcesFromResearch: string[] = [];
+
+    // Try to extract URLs from "Kilder brugt:" section
+    const sourcesMatch = researchFindings.match(
+      /Kilder brugt:([^]*?)(?:\n\n|$)/i
+    );
+    if (sourcesMatch) {
+      const sourcesSection = sourcesMatch[1];
+      const urlRegex = /https?:\/\/[^\s)]+/g;
+      const extractedUrls = sourcesSection.match(urlRegex) || [];
+      sourcesFromResearch.push(...extractedUrls);
+    }
+
+    // Also try to extract any URLs from the entire research findings as fallback
+    if (sourcesFromResearch.length === 0) {
+      logger.info(
+        "No sources found in 'Kilder brugt:' section, scanning entire research text..."
+      );
+      const urlRegex = /https?:\/\/[^\s)]+/g;
+      const allUrls = researchFindings.match(urlRegex) || [];
+      sourcesFromResearch.push(...allUrls);
+    }
+
+    // Combine with original sources from newsItem
+    const originalSources = newsItem.sources || [];
+    logger.info(`Original sources from news fetch: ${originalSources.length}`);
+    logger.info(
+      `Sources extracted from research: ${sourcesFromResearch.length}`
+    );
+
+    const allSources = [...originalSources, ...sourcesFromResearch];
+
+    // Remove duplicates and clean URLs
+    const uniqueSources = Array.from(
+      new Set(
+        allSources
+          .map((url) => url.trim())
+          .filter((url) => url.startsWith("http"))
+      )
+    );
+
+    logger.info(`Total unique sources found: ${uniqueSources.length}`);
+    logger.debug(`Sources: ${JSON.stringify(uniqueSources.slice(0, 5))}...`);
+
+    // Validate minimum source requirement BEFORE writing article
+    const MIN_SOURCES_REQUIRED = 3;
+    if (uniqueSources.length < MIN_SOURCES_REQUIRED) {
+      logger.warn(
+        `❌ Insufficient sources for article "${newsItem.title}": found ${uniqueSources.length}, required ${MIN_SOURCES_REQUIRED}. Skipping article processing to save compute time.`
+      );
+      return {
+        success: false,
+        error: `Insufficient sources: found ${uniqueSources.length}, required ${MIN_SOURCES_REQUIRED}`,
+      };
+    }
+
+    logger.info(
+      `✓ Source validation passed (${uniqueSources.length} sources), proceeding to write article...`
+    );
+
+    // Step 3: Write a structured article based on the research
     // Get article writing prompt from database (includes model configuration)
     const articlePromptObj = await getAiPromptObject("article_writing");
     const articleModel = articlePromptObj?.model || "gpt-5-mini";
@@ -190,7 +251,7 @@ Formatér artiklen i markdown med korrekte overskrifter (#, ##, ###).`;
       `Article written using ${articleResponse.provider}, generating metadata...`
     );
 
-    // Step 3: Generate metadata (slug, meta description, summary)
+    // Step 4: Generate metadata (slug, meta description, summary)
     // Get metadata prompt from database
     const metadataPrompt = await getAiPromptWithVars("article_metadata", {
       articleContent: articleContent,
@@ -262,51 +323,11 @@ Svar KUN med valid JSON i denne præcise struktur:
       };
     }
 
-    logger.info("Metadata generated, extracting sources from research...");
-
-    // Extract sources from research findings
-    const sourcesFromResearch: string[] = [];
-
-    // Try to extract URLs from "Kilder brugt:" section
-    const sourcesMatch = researchFindings.match(
-      /Kilder brugt:([^]*?)(?:\n\n|$)/i
-    );
-    if (sourcesMatch) {
-      const sourcesSection = sourcesMatch[1];
-      const urlRegex = /https?:\/\/[^\s)]+/g;
-      const extractedUrls = sourcesSection.match(urlRegex) || [];
-      sourcesFromResearch.push(...extractedUrls);
-    }
-
-    // Combine with original sources from newsItem
-    const allSources = [...(newsItem.sources || []), ...sourcesFromResearch];
-
-    // Remove duplicates and clean URLs
-    const uniqueSources = Array.from(
-      new Set(
-        allSources
-          .map((url) => url.trim())
-          .filter((url) => url.startsWith("http"))
-      )
-    );
-
-    // Validate minimum source requirement
-    const MIN_SOURCES_REQUIRED = 3;
-    if (uniqueSources.length < MIN_SOURCES_REQUIRED) {
-      logger.warn(
-        `Insufficient sources for article "${newsItem.title}": found ${uniqueSources.length}, required ${MIN_SOURCES_REQUIRED}. Skipping article.`
-      );
-      return {
-        success: false,
-        error: `Insufficient sources: found ${uniqueSources.length}, required ${MIN_SOURCES_REQUIRED}`,
-      };
-    }
-
     logger.info(
-      `Saving article with ${uniqueSources.length} sources to database...`
+      `Metadata generated, saving article with ${uniqueSources.length} sources to database...`
     );
 
-    // Step 4: Save the article to the database as draft (requires manual admin publish)
+    // Step 5: Save the article to the database as draft (requires manual admin publish)
     const [insertedArticle] = await db
       .insert(article)
       .values({
@@ -324,7 +345,7 @@ Svar KUN med valid JSON i denne præcise struktur:
 
     logger.info(`Article saved to database with ID: ${insertedArticle.id}`);
 
-    // Step 5: Link article to categories using the junction table
+    // Step 6: Link article to categories using the junction table
     if (metadata.categories) {
       // Parse categories from comma-separated string
       const categoryNames = metadata.categories
@@ -355,7 +376,7 @@ Svar KUN med valid JSON i denne præcise struktur:
       }
     }
 
-    // Step 6: Generate hero image using Gemini 3 Pro Image Preview
+    // Step 7: Generate hero image using Gemini 3 Pro Image Preview
     let imageUrl: string | null = null;
 
     if (process.env.GEMINI_API_KEY) {
