@@ -20,6 +20,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { CategorySelect } from "@/components/admin/category-select";
+import { RichTextEditor } from "@/components/admin/rich-text-editor";
 import { Upload, X, Trash2, Info } from "lucide-react";
 import { toast } from "sonner";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
@@ -461,13 +462,10 @@ export function ArticleEditor({
           {/* Content */}
           <div className="space-y-2">
             <Label htmlFor="content">Indhold *</Label>
-            <Textarea
-              id="content"
+            <RichTextEditor
               value={formData.content || ""}
-              onChange={(e) => handleFieldChange("content", e.target.value)}
-              placeholder="Artikelindhold i markdown"
-              rows={20}
-              className="font-mono text-sm"
+              onChange={(markdown) => handleFieldChange("content", markdown)}
+              placeholder="Skriv dit artikelindhold her..."
             />
           </div>
 
