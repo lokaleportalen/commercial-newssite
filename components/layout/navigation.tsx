@@ -113,7 +113,17 @@ export function Navigation() {
                   "hover:bg-transparent"
                 )}
               >
-                Alle nyheder
+                Forside
+              </Link>
+
+              <Link
+                href="/nyheder"
+                className={cn(
+                  navigationMenuTriggerStyle(),
+                  "hover:bg-transparent"
+                )}
+              >
+                Nyheder
               </Link>
 
               <Link
@@ -133,12 +143,29 @@ export function Navigation() {
                     variant="ghost"
                     className="hover:bg-transparent h-9 px-4 py-2 text-sm font-medium"
                     suppressHydrationWarning
+                    onMouseEnter={(e) => {
+                      // Trigger dropdown on hover
+                      const trigger = e.currentTarget;
+                      trigger.click();
+                    }}
                   >
                     Kategorier
                     <ChevronDown className="ml-1 h-3 w-3" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" className="w-[300px]">
+                <DropdownMenuContent
+                  align="start"
+                  className="w-[300px]"
+                  onMouseLeave={(e) => {
+                    // Close dropdown when mouse leaves
+                    const content = e.currentTarget;
+                    const trigger =
+                      content.previousElementSibling as HTMLElement;
+                    if (trigger) {
+                      trigger.click();
+                    }
+                  }}
+                >
                   <div className="grid grid-cols-2 gap-1 p-2">
                     {categories.map((category) => (
                       <DropdownMenuItem key={category.id} asChild>
@@ -225,7 +252,7 @@ export function Navigation() {
                 </DrawerClose>
               </DrawerHeader>
               <div className="flex flex-col gap-2 p-4 h-full overflow-y-auto">
-                {/* Alle nyheder Link */}
+                {/* Forside Link */}
                 <Link
                   href="/"
                   onClick={() => setDrawerOpen(false)}
@@ -236,7 +263,21 @@ export function Navigation() {
                       : "text-foreground"
                   )}
                 >
-                  Alle nyheder
+                  Forside
+                </Link>
+
+                {/* Nyheder Link */}
+                <Link
+                  href="/nyheder"
+                  onClick={() => setDrawerOpen(false)}
+                  className={cn(
+                    "rounded-md px-4 py-3 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground",
+                    pathname === "/nyheder"
+                      ? "bg-accent text-accent-foreground"
+                      : "text-foreground"
+                  )}
+                >
+                  Nyheder
                 </Link>
 
                 {/* Om os Link */}

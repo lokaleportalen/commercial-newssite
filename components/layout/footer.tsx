@@ -1,6 +1,19 @@
 import Link from "next/link";
+import { db } from "@/database/db";
+import { category } from "@/database/schema";
+import { desc } from "drizzle-orm";
 
-export function Footer() {
+export async function Footer() {
+  // Fetch categories for footer
+  const categories = await db
+    .select({
+      id: category.id,
+      name: category.name,
+      slug: category.slug,
+    })
+    .from(category)
+    .orderBy(category.name);
+
   return (
     <footer className="border-t bg-muted/30 mt-auto">
       <div className="container mx-auto px-4 py-12 max-w-6xl">
@@ -25,6 +38,33 @@ export function Footer() {
                   Kontakt
                 </Link>
               </li>
+            </ul>
+          </div>
+
+          {/* Categories Section */}
+          <div>
+            <h3 className="font-semibold text-foreground mb-4">Kategorier</h3>
+            <ul className="space-y-2">
+              {categories.slice(0, 6).map((cat) => (
+                <li key={cat.id}>
+                  <Link
+                    href={`/${cat.slug}`}
+                    className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    {cat.name}
+                  </Link>
+                </li>
+              ))}
+              {categories.length > 6 && (
+                <li>
+                  <Link
+                    href="/nyheder"
+                    className="text-sm text-primary hover:underline"
+                  >
+                    Se alle kategorier →
+                  </Link>
+                </li>
+              )}
             </ul>
           </div>
 

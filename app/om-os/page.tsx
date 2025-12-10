@@ -1,6 +1,7 @@
 import { Metadata } from "next";
 import { Building2, Sparkles, Users, TrendingUp } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import Image from "next/image";
 
 export const metadata: Metadata = {
   title: "Om os | Estate News",
@@ -8,17 +9,39 @@ export const metadata: Metadata = {
     "Læs mere om Estate News - din kilde til nyheder om erhvervsejendomme i Danmark",
 };
 
+// About page hero image from Vercel Blob
+const HERO_IMAGE_URL =
+  process.env.NEXT_PUBLIC_ABOUT_HERO_IMAGE ||
+  "https://jnnkfrf3idhu2tvz.public.blob.vercel-storage.com/about-us-newsroom.png";
+
 export default function AboutPage() {
   return (
     <div className="flex-1">
-      {/* Hero Section */}
-      <section className="bg-gradient-to-br from-primary/10 via-primary/5 to-background border-b">
-        <div className="container mx-auto px-4 py-16 max-w-4xl">
-          <div className="text-center space-y-4">
+      {/* Hero Section with Background Image */}
+      <section className="relative bg-gradient-to-br from-primary/10 via-primary/5 to-background border-b overflow-hidden">
+        {/* Background Image Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-r from-background/95 via-background/80 to-background/70 z-0" />
+
+        {/* Background Image */}
+        <div className="absolute inset-0 z-0">
+          <Image
+            src={HERO_IMAGE_URL}
+            alt="Professional newsroom environment"
+            fill
+            className="object-cover opacity-20"
+            priority
+          />
+        </div>
+
+        <div className="container relative z-10 mx-auto px-4 py-20 max-w-4xl">
+          <div className="text-center space-y-6">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 mb-4">
+              <Building2 className="w-8 h-8 text-primary" />
+            </div>
             <h1 className="text-4xl md:text-5xl font-bold text-foreground">
               Om Estate News
             </h1>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
               Din daglige kilde til indsigt og nyheder om det danske marked for
               erhvervsejendomme
             </p>
@@ -42,9 +65,8 @@ export default function AboutPage() {
                 Lokaleportalen.dk
               </a>{" "}
               og leverer daglige nyheder og analyser om erhvervsejendomme i
-              Danmark. Vi kombinerer avanceret AI-teknologi med journalistisk
-              grundighed for at give dig de mest relevante historier fra
-              branchen.
+              Danmark. Vi giver dig de mest relevante og opdaterede historier
+              fra branchen.
             </p>
           </div>
         </section>
@@ -92,6 +114,21 @@ export default function AboutPage() {
               <p className="text-muted-foreground">
                 Skræddersyet til investorer, udviklere, mæglere og andre
                 professionelle i erhvervsejendomssektoren.
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="hover:shadow-lg transition-shadow">
+            <CardHeader>
+              <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
+                <Sparkles className="w-6 h-6 text-primary" />
+              </div>
+              <CardTitle>Daglig Opdatering</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground">
+                Få de seneste nyheder og opdateringer fra
+                erhvervsejendomsmarkedet hver dag.
               </p>
             </CardContent>
           </Card>

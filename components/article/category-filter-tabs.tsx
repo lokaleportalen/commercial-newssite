@@ -50,28 +50,24 @@ export function CategoryFilterTabs({
   }
 
   return (
-    <div className="border-b bg-background">
-      <div className="container mx-auto px-4 max-w-6xl">
-        <div className="flex gap-2 overflow-x-auto py-4 scrollbar-hide">
-          <Badge
-            variant={selectedCategory === "all" ? "default" : "outline"}
-            className="cursor-pointer whitespace-nowrap"
-            onClick={() => onCategoryChange("all")}
-          >
-            Alle kategorier
-          </Badge>
-          {categories.map((category) => (
-            <Badge
-              key={category.id}
-              variant={selectedCategory === category.slug ? "default" : "outline"}
-              className="cursor-pointer whitespace-nowrap"
-              onClick={() => onCategoryChange(category.slug)}
-            >
-              {category.name}
-            </Badge>
-          ))}
-        </div>
-      </div>
+    <div className="flex gap-2 overflow-x-auto scrollbar-hide">
+      <Badge
+        variant={selectedCategory === "all" ? "default" : "outline"}
+        className="cursor-pointer whitespace-nowrap"
+        onClick={() => onCategoryChange("all")}
+      >
+        Alle kategorier
+      </Badge>
+      {categories.map((category) => (
+        <Badge
+          key={category.id}
+          variant={selectedCategory === category.slug ? "default" : "outline"}
+          className="cursor-pointer whitespace-nowrap"
+          onClick={() => onCategoryChange(category.slug)}
+        >
+          {category.name}
+        </Badge>
+      ))}
     </div>
   );
 }
