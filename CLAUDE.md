@@ -190,6 +190,7 @@ npx trigger.dev@latest deploy  # Deploy to Trigger.dev
 ## Recent Changes
 
 **2025-12-11:**
+- **Password reset pages** - Created `/glemt-adgangskode` and `/nulstil-adgangskode` pages with Better-Auth integration for complete password reset flow
 - **Image regeneration feature** - Admin can regenerate article images with optional custom descriptions via "Generer nyt billede" button
 - **Image selection UI** - Side-by-side comparison dialog for choosing between original and new AI-generated images
 - **Smart blob cleanup** - Automatically deletes rejected images from Vercel Blob after admin selection

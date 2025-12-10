@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { authClient } from "@/lib/auth-client";
 import { cn } from "@/lib/utils";
@@ -20,16 +19,15 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Loader2 } from "lucide-react";
+import { Loader2, CheckCircle2 } from "lucide-react";
 
-export function LoginForm({
+export function ForgotPasswordForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
-  const router = useRouter();
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -37,31 +35,60 @@ export function LoginForm({
     setError("");
     setIsLoading(true);
 
-    const { data, error: signInError } = await authClient.signIn.email({
-      email,
-      password,
-    });
+    try {
+      const { error: resetError } = await authClient.forgetPassword({
+        email,
+        redirectTo: "/nulstil-adgangskode",
+      });
 
-    setIsLoading(false);
+      setIsLoading(false);
 
-    if (signInError) {
-      setError("Forkert e-mail eller adgangskode");
-      return;
-    }
+      if (resetError) {
+        setError("Der opstod en fejl. Prøv venligst igen.");
+        return;
+      }
 
-    if (data) {
-      router.push("/");
-      router.refresh();
+      setSuccess(true);
+    } catch (err) {
+      setIsLoading(false);
+      setError("Der opstod en fejl. Prøv venligst igen.");
     }
   };
+
+  if (success) {
+    return (
+      <div className={cn("flex flex-col gap-6", className)} {...props}>
+        <Card>
+          <CardHeader>
+            <div className="flex justify-center mb-4">
+              <CheckCircle2 className="h-12 w-12 text-green-600" />
+            </div>
+            <CardTitle className="text-center">Email sendt!</CardTitle>
+            <CardDescription className="text-center">
+              Hvis der findes en konto med denne e-mail, har vi sendt et link
+              til at nulstille din adgangskode. Tjek din indbakke.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="text-center">
+              <Link href="/login" className="text-sm underline">
+                Tilbage til login
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card>
         <CardHeader>
-          <CardTitle>Log ind på din konto</CardTitle>
+          <CardTitle>Glemt adgangskode?</CardTitle>
           <CardDescription>
-            Indtast din e-mail og adgangskode for at logge ind
+            Indtast din e-mail, så sender vi dig et link til at nulstille din
+            adgangskode.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -85,40 +112,24 @@ export function LoginForm({
                 />
               </Field>
               <Field>
-                <div className="flex items-center">
-                  <FieldLabel htmlFor="password">Adgangskode</FieldLabel>
-                  <Link
-                    href="/glemt-adgangskode"
-                    className="ml-auto inline-block text-sm underline-offset-4 hover:underline"
-                  >
-                    Glemt adgangskode?
-                  </Link>
-                </div>
-                <Input
-                  id="password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  disabled={isLoading}
-                />
-              </Field>
-              <Field>
                 <Button
                   type="submit"
                   disabled={isLoading}
                   className="w-full cursor-pointer"
                 >
                   {isLoading ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Sender...
+                    </>
                   ) : (
-                    "Log ind"
+                    "Send nulstillingslink"
                   )}
                 </Button>
                 <FieldDescription className="text-center">
-                  Har du ikke en konto?{" "}
-                  <Link href="/signup" className="underline">
-                    Opret konto
+                  Husker du din adgangskode?{" "}
+                  <Link href="/login" className="underline">
+                    Log ind
                   </Link>
                 </FieldDescription>
               </Field>
