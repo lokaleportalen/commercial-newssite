@@ -1,5 +1,6 @@
 import { Metadata } from "next";
 import { Building2, Sparkles, Users, TrendingUp } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export const metadata: Metadata = {
   title: "Om os | Estate News",
@@ -50,38 +51,50 @@ export default function AboutPage() {
 
         {/* Feature Grid */}
         <section className="grid md:grid-cols-2 gap-8 mb-16">
-          <div className="bg-card border rounded-lg p-6 hover:shadow-lg transition-shadow">
-            <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
-              <Building2 className="w-6 h-6 text-primary" />
-            </div>
-            <h3 className="text-xl font-semibold mb-3">Fokus på Erhverv</h3>
-            <p className="text-muted-foreground">
-              Specialiseret dækning af kontorer, butikker, logistik og andre
-              erhvervsejendomme på det danske marked.
-            </p>
-          </div>
+          <Card className="hover:shadow-lg transition-shadow">
+            <CardHeader>
+              <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
+                <Building2 className="w-6 h-6 text-primary" />
+              </div>
+              <CardTitle>Fokus på Erhverv</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground">
+                Specialiseret dækning af kontorer, butikker, logistik og andre
+                erhvervsejendomme på det danske marked.
+              </p>
+            </CardContent>
+          </Card>
 
-          <div className="bg-card border rounded-lg p-6 hover:shadow-lg transition-shadow">
-            <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
-              <TrendingUp className="w-6 h-6 text-primary" />
-            </div>
-            <h3 className="text-xl font-semibold mb-3">Markedsindsigt</h3>
-            <p className="text-muted-foreground">
-              Få dybdegående analyser af trends, transaktioner og udviklinger i
-              erhvervsejendomsbranchen.
-            </p>
-          </div>
+          <Card className="hover:shadow-lg transition-shadow">
+            <CardHeader>
+              <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
+                <TrendingUp className="w-6 h-6 text-primary" />
+              </div>
+              <CardTitle>Markedsindsigt</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground">
+                Få dybdegående analyser af trends, transaktioner og udviklinger
+                i erhvervsejendomsbranchen.
+              </p>
+            </CardContent>
+          </Card>
 
-          <div className="bg-card border rounded-lg p-6 hover:shadow-lg transition-shadow">
-            <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
-              <Users className="w-6 h-6 text-primary" />
-            </div>
-            <h3 className="text-xl font-semibold mb-3">For Fagfolk</h3>
-            <p className="text-muted-foreground">
-              Skræddersyet til investorer, udviklere, mæglere og andre
-              professionelle i erhvervsejendomssektoren.
-            </p>
-          </div>
+          <Card className="hover:shadow-lg transition-shadow">
+            <CardHeader>
+              <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
+                <Users className="w-6 h-6 text-primary" />
+              </div>
+              <CardTitle>For Fagfolk</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground">
+                Skræddersyet til investorer, udviklere, mæglere og andre
+                professionelle i erhvervsejendomssektoren.
+              </p>
+            </CardContent>
+          </Card>
         </section>
 
         {/* Partnership Section */}

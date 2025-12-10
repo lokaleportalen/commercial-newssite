@@ -70,7 +70,7 @@ export default function AdminDashboard() {
     <AdminRoute>
       <div className="flex h-screen flex-col overflow-hidden">
         {/* Header with manual cron trigger */}
-        <div className="border-b bg-background px-6 py-3 flex items-center justify-between">
+        <header className="border-b bg-background px-6 py-3 flex items-center justify-between">
           <div>
             <h1 className="text-lg font-semibold">Admin Dashboard</h1>
             <p className="text-sm text-muted-foreground">
@@ -93,21 +93,24 @@ export default function AdminDashboard() {
 
             <SettingsButton />
           </div>
-        </div>
+        </header>
 
         {/* Main content */}
         <div className="flex flex-1 overflow-hidden">
           {/* Sidebar - Article List */}
-          <div className="w-80 border-r bg-muted/30">
+          <aside
+            aria-label="Article list"
+            className="w-80 border-r bg-muted/30"
+          >
             <ArticleList
               ref={articleListRef}
               selectedArticleId={selectedArticleId}
               onSelectArticle={setSelectedArticleId}
             />
-          </div>
+          </aside>
 
           {/* Main Content - Article Editor */}
-          <div className="flex-1 overflow-auto">
+          <main className="flex-1 overflow-auto">
             {selectedArticleId ? (
               <ArticleEditor
                 articleId={selectedArticleId}
@@ -124,7 +127,7 @@ export default function AdminDashboard() {
                 </div>
               </div>
             )}
-          </div>
+          </main>
         </div>
 
         {/* User Search Modal */}

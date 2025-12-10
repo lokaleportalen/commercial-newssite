@@ -86,10 +86,12 @@ function SearchResultsContent() {
         if (response.ok) {
           const data = await response.json();
           // Convert date strings to Date objects
-          const articlesWithDates = data.articles.map((article: ArticleFromAPI): Article => ({
-            ...article,
-            publishedDate: new Date(article.publishedDate),
-          }));
+          const articlesWithDates = data.articles.map(
+            (article: ArticleFromAPI): Article => ({
+              ...article,
+              publishedDate: new Date(article.publishedDate),
+            })
+          );
           setResults(articlesWithDates);
         }
       } catch (error) {
@@ -177,7 +179,7 @@ function SearchResultsContent() {
       <main className="container mx-auto px-4 py-12 max-w-6xl">
         {/* Filters and Sort */}
         {searched && queryParam.length >= 4 && (
-          <div className="mb-8 space-y-4">
+          <nav aria-label="Filter options" className="mb-8 space-y-4">
             {/* Category Filter */}
             <div>
               <div className="flex items-center gap-2 mb-3">
@@ -235,7 +237,9 @@ function SearchResultsContent() {
                   Titel A-Å
                 </Badge>
                 <Badge
-                  variant={selectedSort === "title-desc" ? "default" : "outline"}
+                  variant={
+                    selectedSort === "title-desc" ? "default" : "outline"
+                  }
                   className="cursor-pointer"
                   onClick={() => handleSortChange("title-desc")}
                 >
@@ -243,7 +247,7 @@ function SearchResultsContent() {
                 </Badge>
               </div>
             </div>
-          </div>
+          </nav>
         )}
 
         {loading && (
@@ -252,15 +256,21 @@ function SearchResultsContent() {
           </div>
         )}
 
-        {!loading && searched && queryParam.length >= 4 && results.length === 0 && (
-          <div className="text-center py-16">
-            <Search className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-            <h2 className="text-2xl font-semibold mb-2">Ingen resultater fundet</h2>
-            <p className="text-muted-foreground">
-              Prøv at søge med andre ord eller udtryk{selectedCategory !== "all" && ", eller vælg en anden kategori"}
-            </p>
-          </div>
-        )}
+        {!loading &&
+          searched &&
+          queryParam.length >= 4 &&
+          results.length === 0 && (
+            <div className="text-center py-16">
+              <Search className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+              <h2 className="text-2xl font-semibold mb-2">
+                Ingen resultater fundet
+              </h2>
+              <p className="text-muted-foreground">
+                Prøv at søge med andre ord eller udtryk
+                {selectedCategory !== "all" && ", eller vælg en anden kategori"}
+              </p>
+            </div>
+          )}
 
         {!loading && !searched && (
           <div className="text-center py-16">
@@ -274,15 +284,24 @@ function SearchResultsContent() {
 
         {!loading && results.length > 0 && (
           <>
-            <div className="mb-6">
+            <header className="mb-6">
               <p className="text-muted-foreground">
-                {results.length} {results.length === 1 ? "resultat" : "resultater"}{" "}
-                fundet for <span className="font-medium text-foreground">&quot;{queryParam}&quot;</span>
+                {results.length}{" "}
+                {results.length === 1 ? "resultat" : "resultater"} fundet for{" "}
+                <span className="font-medium text-foreground">
+                  &quot;{queryParam}&quot;
+                </span>
                 {selectedCategory !== "all" && (
-                  <span> i kategori <span className="font-medium text-foreground">{selectedCategory}</span></span>
+                  <span>
+                    {" "}
+                    i kategori{" "}
+                    <span className="font-medium text-foreground">
+                      {selectedCategory}
+                    </span>
+                  </span>
                 )}
               </p>
-            </div>
+            </header>
 
             <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {results.map((article) => (
@@ -306,21 +325,23 @@ function SearchResultsContent() {
 
 export default function SearchResultsPage() {
   return (
-    <Suspense fallback={
-      <div className="flex-1">
-        <div className="border-b bg-muted/30">
-          <div className="container mx-auto px-4 py-8 max-w-6xl">
-            <h1 className="text-3xl font-bold mb-6">Søgeresultater</h1>
-            <div className="max-w-2xl h-12 animate-pulse rounded-md bg-muted" />
+    <Suspense
+      fallback={
+        <div className="flex-1">
+          <div className="border-b bg-muted/30">
+            <div className="container mx-auto px-4 py-8 max-w-6xl">
+              <h1 className="text-3xl font-bold mb-6">Søgeresultater</h1>
+              <div className="max-w-2xl h-12 animate-pulse rounded-md bg-muted" />
+            </div>
           </div>
+          <main className="container mx-auto px-4 py-12 max-w-6xl">
+            <div className="flex items-center justify-center py-16">
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            </div>
+          </main>
         </div>
-        <main className="container mx-auto px-4 py-12 max-w-6xl">
-          <div className="flex items-center justify-center py-16">
-            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-          </div>
-        </main>
-      </div>
-    }>
+      }
+    >
       <SearchResultsContent />
     </Suspense>
   );
