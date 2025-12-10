@@ -78,22 +78,23 @@ Research-resultater:
 {{researchFindings}}
 
 Skriv en velstruktureret artikel med:
-1. En engagerende overskrift (# heading) - kun én h1. Du skal finde på din egen, og ikke kopiere en eksisterende.
-2. Et overbevisende indledende afsnit
-3. Klare brødtekst-sektioner med 2-3 underoverskrifter (## heading) - maksimalt 3
-4. Brug kun ### overskrifter hvis det er absolut nødvendigt
-5. Citater og specifikke detaljer fra research
-6. Kontekst om det danske erhvervsejendomsmarked
-7. Professionel, journalistisk tone
+1. Start med et overbevisende indledende afsnit (IKKE en overskrift - titlen vises allerede øverst på siden)
+2. Klare brødtekst-sektioner med 2-3 underoverskrifter (## heading) - maksimalt 3
+3. Brug kun ### overskrifter hvis det er absolut nødvendigt
+4. Citater og specifikke detaljer fra research
+5. Kontekst om det danske erhvervsejendomsmarked
+6. Professionel, journalistisk tone
 
 VIGTIGT:
 - Artiklen skal være på DANSK
+- Start IKKE artiklen med en # overskrift (h1) - siden har allerede en titel
+- Brug kun ## (h2) eller ### (h3) overskrifter i artikelteksten
 - Inkludér IKKE "Kilde:" eller kildehenvisninger i bunden af artiklen
 - Returner KUN artikelindholdet i markdown format
 - Inkludér IKKE opfølgende spørgsmål eller meta-kommentarer
 - Artiklen skal slutte med det faktiske indhold, ikke med spørgsmål til læseren
 
-Formatér artiklen i markdown med korrekte overskrifter (#, ##, ###).`,
+Formatér artiklen i markdown med korrekte overskrifter (##, ###).`,
     },
     {
       key: "article_metadata",
