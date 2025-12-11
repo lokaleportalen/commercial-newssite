@@ -1,32 +1,10 @@
 import { db } from "@/database/db";
 import { category, articleCategory } from "@/database/schema";
 import { eq, inArray } from "drizzle-orm";
+import type { Category, ArticleWithCategories } from "@/types";
 
-// Type definitions
-export interface Category {
-  id: string;
-  name: string;
-  slug: string;
-  description: string | null;
-  heroImage?: string | null;
-}
-
-export interface ArticleWithCategories {
-  id: string;
-  title: string;
-  slug: string;
-  content: string;
-  summary: string | null;
-  metaDescription: string | null;
-  image: string | null;
-  sourceUrl: string | null;
-  status: string;
-  publishedDate: Date;
-  createdAt: Date;
-  updatedAt: Date;
-  promptId: string | null;
-  categories: Category[];
-}
+// Re-export types from centralized location
+export type { Category, ArticleWithCategories };
 
 /**
  * Resolve category input (names or IDs) to category IDs

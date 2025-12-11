@@ -18,12 +18,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Badge } from "@/components/ui/badge";
-
-type Category = {
-  id: string;
-  name: string;
-  slug: string;
-};
+import type { Category } from "@/types";
 
 type CategorySelectProps = {
   selectedCategories: Category[];

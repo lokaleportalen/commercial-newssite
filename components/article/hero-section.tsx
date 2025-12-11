@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ArticleCard } from "@/components/article/article-card";
 import { CategoryLink } from "@/components/article/category-link";
-import type { Category } from "@/lib/category-helpers";
+import type { Category } from "@/types";
 
 interface Article {
   id: string;

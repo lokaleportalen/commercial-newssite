@@ -6,13 +6,7 @@ import { authClient } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-
-interface Category {
-  id: string;
-  name: string;
-  slug: string;
-  description: string | null;
-}
+import type { Category } from "@/types";
 
 interface PreferencesFormProps {
   onClose?: () => void;

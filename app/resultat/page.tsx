@@ -6,7 +6,7 @@ import { Search, Loader2, SlidersHorizontal } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { ArticleCard } from "@/components/article/article-card";
-import type { Category } from "@/lib/category-helpers";
+import type { Category } from "@/types";
 
 interface Article {
   id: string;
@@ -28,10 +28,6 @@ interface ArticleFromAPI {
   categories: Category[];
 }
 
-interface CategoryWithCount extends Category {
-  articleCount: number;
-}
-
 function SearchResultsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -43,7 +39,7 @@ function SearchResultsContent() {
   const [selectedCategory, setSelectedCategory] = useState(categoryParam);
   const [selectedSort, setSelectedSort] = useState(sortParam);
   const [results, setResults] = useState<Article[]>([]);
-  const [categories, setCategories] = useState<CategoryWithCount[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
 

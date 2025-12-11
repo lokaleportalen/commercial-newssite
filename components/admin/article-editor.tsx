@@ -28,28 +28,7 @@ import { Upload, X, Trash2, Info, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { deleteBlobImageSafe } from "@/lib/blob-helpers";
-
-type Category = {
-  id: string;
-  name: string;
-  slug: string;
-};
-
-type Article = {
-  id: string;
-  title: string;
-  slug: string;
-  content: string;
-  summary: string | null;
-  metaDescription: string | null;
-  image: string | null;
-  sources: string[] | null;
-  categories: Category[];
-  status: string;
-  publishedDate: Date;
-  createdAt: Date;
-  updatedAt: Date;
-};
+import type { Category, Article } from "@/types";
 
 type ArticleEditorProps = {
   articleId: string;

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { ArticleCard } from "@/components/article/article-card";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { Category } from "@/lib/category-helpers";
+import type { Category } from "@/types";
 
 interface Article {
   id: string;

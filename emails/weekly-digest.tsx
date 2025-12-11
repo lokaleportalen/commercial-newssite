@@ -9,7 +9,8 @@ import {
 import * as React from "react";
 import { EmailLayout } from "./components/email-layout";
 
-interface Article {
+// Email-specific Article type (used in email templates)
+interface EmailArticle {
   id: string;
   title: string;
   summary: string;
@@ -20,7 +21,7 @@ interface Article {
 
 interface WeeklyDigestProps {
   userName: string;
-  articles: Article[];
+  articles: EmailArticle[];
   baseUrl: string;
   preferencesUrl: string;
   unsubscribeUrl: string;

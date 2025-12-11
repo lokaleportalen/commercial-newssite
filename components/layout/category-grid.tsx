@@ -14,14 +14,7 @@ import {
   Home,
   Leaf,
 } from "lucide-react";
-
-interface Category {
-  id: string;
-  name: string;
-  slug: string;
-  description: string | null;
-  articleCount: number;
-}
+import type { Category } from "@/types";
 
 // Icon mapping for categories
 const categoryIcons: Record<string, React.ReactNode> = {

@@ -32,14 +32,7 @@ import {
 } from "@/components/ui/drawer";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
-
-interface Category {
-  id: string;
-  name: string;
-  slug: string;
-  description: string | null;
-  articleCount: number;
-}
+import type { Category } from "@/types";
 
 export function Navigation() {
   const router = useRouter();

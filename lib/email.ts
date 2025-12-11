@@ -229,7 +229,8 @@ export async function sendArticleNotification({
   });
 }
 
-interface Article {
+// Email-specific Article type (different from main Article type)
+interface EmailArticle {
   id: string;
   title: string;
   summary: string;
@@ -242,7 +243,7 @@ interface SendWeeklyDigestParams {
   to: string;
   userName: string;
   userId: string;
-  articles: Article[];
+  articles: EmailArticle[];
   weekStart: string;
   weekEnd: string;
 }

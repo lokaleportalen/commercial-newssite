@@ -1,7 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { CategoryHero } from '../category-hero'
-import type { Category } from '@/lib/category-helpers'
 
 // Mock Next.js Image component
 vi.mock('next/image', () => ({
@@ -11,33 +10,18 @@ vi.mock('next/image', () => ({
 }))
 
 describe('CategoryHero', () => {
-  const mockCategories: Category[] = [
-    { id: '1', name: 'Investering', slug: 'investering', description: null },
-    { id: '2', name: 'Byggeri', slug: 'byggeri', description: null },
-  ]
-
-  const mockFeaturedArticle = {
-    id: '1',
-    title: 'Featured Category Article',
-    slug: 'featured-category-article',
-    summary: 'This is the featured article in this category',
-    image: '/category-featured.jpg',
-    publishedDate: new Date('2025-01-15'),
-    categories: mockCategories,
-  }
-
-  describe('with featured article', () => {
-    it('renders category name badge', () => {
+  describe('with hero image', () => {
+    it('renders category name', () => {
       render(
         <CategoryHero
           categoryName="Investering"
           categoryDescription="Investment news"
-          featuredArticle={mockFeaturedArticle}
+          heroImage="/hero-investering.jpg"
           totalArticles={25}
         />
       )
 
-      expect(screen.getByText('Investering')).toBeInTheDocument()
+      expect(screen.getByRole('heading', { level: 1, name: 'Investering' })).toBeInTheDocument()
     })
 
     it('renders article count badge', () => {
@@ -45,7 +29,7 @@ describe('CategoryHero', () => {
         <CategoryHero
           categoryName="Investering"
           categoryDescription={null}
-          featuredArticle={mockFeaturedArticle}
+          heroImage="/hero-investering.jpg"
           totalArticles={25}
         />
       )
@@ -58,7 +42,7 @@ describe('CategoryHero', () => {
         <CategoryHero
           categoryName="Investering"
           categoryDescription={null}
-          featuredArticle={mockFeaturedArticle}
+          heroImage="/hero-investering.jpg"
           totalArticles={1}
         />
       )
@@ -71,7 +55,7 @@ describe('CategoryHero', () => {
         <CategoryHero
           categoryName="Investering"
           categoryDescription="Investment news and updates"
-          featuredArticle={mockFeaturedArticle}
+          heroImage="/hero-investering.jpg"
           totalArticles={25}
         />
       )
@@ -79,149 +63,69 @@ describe('CategoryHero', () => {
       expect(screen.getByText('Investment news and updates')).toBeInTheDocument()
     })
 
-    it('renders featured article title', () => {
+    it('does not display description when null', () => {
       render(
         <CategoryHero
           categoryName="Investering"
           categoryDescription={null}
-          featuredArticle={mockFeaturedArticle}
+          heroImage="/hero-investering.jpg"
           totalArticles={25}
         />
       )
 
-      expect(screen.getByText('Featured Category Article')).toBeInTheDocument()
+      // Only the heading and badge should be present
+      expect(screen.getByRole('heading', { level: 1 })).toBeInTheDocument()
+      expect(screen.getByText('25 artikler')).toBeInTheDocument()
     })
 
-    it('renders featured article summary', () => {
+    it('displays hero image', () => {
       render(
         <CategoryHero
           categoryName="Investering"
           categoryDescription={null}
-          featuredArticle={mockFeaturedArticle}
+          heroImage="/hero-investering.jpg"
           totalArticles={25}
         />
       )
 
-      expect(screen.getByText('This is the featured article in this category')).toBeInTheDocument()
-    })
-
-    it('displays featured article image', () => {
-      render(
-        <CategoryHero
-          categoryName="Investering"
-          categoryDescription={null}
-          featuredArticle={mockFeaturedArticle}
-          totalArticles={25}
-        />
-      )
-
-      const image = screen.getByAltText('Featured Category Article')
+      const image = screen.getByAltText('Investering hero image')
       expect(image).toBeInTheDocument()
-      expect(image).toHaveAttribute('src', '/category-featured.jpg')
+      expect(image).toHaveAttribute('src', '/hero-investering.jpg')
     })
 
-    it('shows fallback when featured article has no image', () => {
-      const articleWithoutImage = {
-        ...mockFeaturedArticle,
-        image: null,
-      }
-
-      render(
+    it('uses section element with hero image', () => {
+      const { container } = render(
         <CategoryHero
           categoryName="Investering"
           categoryDescription={null}
-          featuredArticle={articleWithoutImage}
+          heroImage="/hero-investering.jpg"
           totalArticles={25}
         />
       )
 
-      expect(screen.getByText('Intet foto')).toBeInTheDocument()
-    })
-
-    it('renders "Se artikel" button', () => {
-      render(
-        <CategoryHero
-          categoryName="Investering"
-          categoryDescription={null}
-          featuredArticle={mockFeaturedArticle}
-          totalArticles={25}
-        />
-      )
-
-      expect(screen.getByRole('button', { name: /se artikel/i })).toBeInTheDocument()
-    })
-
-    it('has correct link to featured article', () => {
-      render(
-        <CategoryHero
-          categoryName="Investering"
-          categoryDescription={null}
-          featuredArticle={mockFeaturedArticle}
-          totalArticles={25}
-        />
-      )
-
-      const links = screen.getAllByRole('link')
-      const articleLinks = links.filter(link =>
-        link.getAttribute('href') === '/nyheder/featured-category-article'
-      )
-      expect(articleLinks.length).toBeGreaterThan(0)
-    })
-
-    it('displays "Seneste artikel" label', () => {
-      render(
-        <CategoryHero
-          categoryName="Investering"
-          categoryDescription={null}
-          featuredArticle={mockFeaturedArticle}
-          totalArticles={25}
-        />
-      )
-
-      expect(screen.getByText('Seneste artikel')).toBeInTheDocument()
-    })
-
-    it('handles article without summary', () => {
-      const articleWithoutSummary = {
-        ...mockFeaturedArticle,
-        summary: null,
-      }
-
-      render(
-        <CategoryHero
-          categoryName="Investering"
-          categoryDescription={null}
-          featuredArticle={articleWithoutSummary}
-          totalArticles={25}
-        />
-      )
-
-      expect(screen.getByText('Featured Category Article')).toBeInTheDocument()
-      expect(screen.queryByText('This is the featured article in this category')).not.toBeInTheDocument()
+      const section = container.querySelector('section')
+      expect(section).toBeInTheDocument()
     })
   })
 
-  describe('without featured article', () => {
-    it('renders text-only header', () => {
+  describe('without hero image (text-only mode)', () => {
+    it('renders category name', () => {
       render(
         <CategoryHero
           categoryName="Investering"
           categoryDescription="Investment news"
-          featuredArticle={null}
           totalArticles={25}
         />
       )
 
-      expect(screen.getByText('Investering')).toBeInTheDocument()
-      expect(screen.getByText('Investment news')).toBeInTheDocument()
+      expect(screen.getByRole('heading', { level: 1, name: 'Investering' })).toBeInTheDocument()
     })
 
-    it('shows article count badge in text-only mode', () => {
+    it('renders article count badge', () => {
       render(
         <CategoryHero
           categoryName="Investering"
           categoryDescription={null}
-          featuredArticle={null}
           totalArticles={10}
         />
       )
@@ -229,18 +133,16 @@ describe('CategoryHero', () => {
       expect(screen.getByText('10 artikler')).toBeInTheDocument()
     })
 
-    it('does not render article-specific elements', () => {
+    it('displays category description when provided', () => {
       render(
         <CategoryHero
           categoryName="Investering"
-          categoryDescription={null}
-          featuredArticle={null}
+          categoryDescription="Investment news and updates"
           totalArticles={25}
         />
       )
 
-      expect(screen.queryByText('Seneste artikel')).not.toBeInTheDocument()
-      expect(screen.queryByRole('button', { name: /se artikel/i })).not.toBeInTheDocument()
+      expect(screen.getByText('Investment news and updates')).toBeInTheDocument()
     })
 
     it('renders with zero articles', () => {
@@ -248,12 +150,38 @@ describe('CategoryHero', () => {
         <CategoryHero
           categoryName="Investering"
           categoryDescription={null}
-          featuredArticle={null}
           totalArticles={0}
         />
       )
 
       expect(screen.getByText('0 artikler')).toBeInTheDocument()
+    })
+
+    it('uses header element without hero image', () => {
+      const { container } = render(
+        <CategoryHero
+          categoryName="Investering"
+          categoryDescription={null}
+          totalArticles={25}
+        />
+      )
+
+      const header = container.querySelector('header')
+      expect(header).toBeInTheDocument()
+    })
+
+    it('does not render hero image when null', () => {
+      render(
+        <CategoryHero
+          categoryName="Investering"
+          categoryDescription="Investment news"
+          heroImage={null}
+          totalArticles={25}
+        />
+      )
+
+      const images = screen.queryAllByRole('img')
+      expect(images).toHaveLength(0)
     })
   })
 
@@ -263,7 +191,6 @@ describe('CategoryHero', () => {
         <CategoryHero
           categoryName="Investering"
           categoryDescription={null}
-          featuredArticle={null}
           totalArticles={25}
         />
       )
@@ -277,7 +204,7 @@ describe('CategoryHero', () => {
         <CategoryHero
           categoryName="Investering"
           categoryDescription={null}
-          featuredArticle={mockFeaturedArticle}
+          heroImage="/hero.jpg"
           totalArticles={25}
         />
       )
@@ -286,12 +213,11 @@ describe('CategoryHero', () => {
       expect(section).toBeInTheDocument()
     })
 
-    it('has heading hierarchy with h1 in text-only mode', () => {
+    it('has proper heading hierarchy with h1', () => {
       render(
         <CategoryHero
           categoryName="Investering"
           categoryDescription={null}
-          featuredArticle={null}
           totalArticles={25}
         />
       )
@@ -300,18 +226,53 @@ describe('CategoryHero', () => {
       expect(heading).toHaveTextContent('Investering')
     })
 
-    it('has heading hierarchy with h2 for article title in hero mode', () => {
+    it('hero image has descriptive alt text', () => {
       render(
         <CategoryHero
-          categoryName="Investering"
+          categoryName="Byggeri"
           categoryDescription={null}
-          featuredArticle={mockFeaturedArticle}
-          totalArticles={25}
+          heroImage="/hero-byggeri.jpg"
+          totalArticles={15}
         />
       )
 
-      const heading = screen.getByRole('heading', { level: 2 })
-      expect(heading).toHaveTextContent('Featured Category Article')
+      const image = screen.getByAltText('Byggeri hero image')
+      expect(image).toBeInTheDocument()
+    })
+  })
+
+  describe('article count pluralization', () => {
+    it('shows "artikel" for 1 article', () => {
+      render(
+        <CategoryHero
+          categoryName="Test"
+          totalArticles={1}
+        />
+      )
+
+      expect(screen.getByText('1 artikel')).toBeInTheDocument()
+    })
+
+    it('shows "artikler" for 0 articles', () => {
+      render(
+        <CategoryHero
+          categoryName="Test"
+          totalArticles={0}
+        />
+      )
+
+      expect(screen.getByText('0 artikler')).toBeInTheDocument()
+    })
+
+    it('shows "artikler" for multiple articles', () => {
+      render(
+        <CategoryHero
+          categoryName="Test"
+          totalArticles={42}
+        />
+      )
+
+      expect(screen.getByText('42 artikler')).toBeInTheDocument()
     })
   })
 })

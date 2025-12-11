@@ -21,28 +21,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  emailVerified: boolean;
-  image: string | null;
-  createdAt: string;
-  updatedAt: string;
-}
-
-interface UserPreferences {
-  emailFrequency: "immediate" | "weekly";
-  allCategories: boolean;
-  categories: Array<{ id: string; name: string; slug: string }>;
-}
-
-interface Category {
-  id: string;
-  name: string;
-  slug: string;
-}
+import type { User, UserPreferences, Category } from "@/types";
 
 interface UserEditModalProps {
   open: boolean;
@@ -98,7 +77,7 @@ export function UserEditModal({
           setEmailFrequency(prefsData.preferences.emailFrequency || "weekly");
           setAllCategories(prefsData.preferences.allCategories ?? true);
           setSelectedCategories(
-            prefsData.preferences.categories?.map((c: any) => c.id) || []
+            prefsData.preferences.categories?.map((c: Category) => c.id) || []
           );
         }
       } catch (error) {

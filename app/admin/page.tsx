@@ -30,6 +30,7 @@ import {
 import { UserSearchModal } from "@/components/admin/user-search-modal";
 import { UserEditModal } from "@/components/admin/user-edit-modal";
 import SettingsButton from "@/components/admin/settings-btn";
+import type { User } from "@/types";
 
 export default function AdminDashboard() {
   const [selectedArticleId, setSelectedArticleId] = useState<string | null>(
@@ -37,7 +38,7 @@ export default function AdminDashboard() {
   );
   const [showUserSearch, setShowUserSearch] = useState(false);
   const [showUserEdit, setShowUserEdit] = useState(false);
-  const [selectedUser, setSelectedUser] = useState<any>(null);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const articleListRef = useRef<ArticleListRef>(null);
 
   const handleCreateArticle = () => {
@@ -50,7 +51,7 @@ export default function AdminDashboard() {
     articleListRef.current?.refresh();
   };
 
-  const handleUserSelect = (user: any) => {
+  const handleUserSelect = (user: User) => {
     setSelectedUser(user);
     setShowUserSearch(false);
     setShowUserEdit(true);

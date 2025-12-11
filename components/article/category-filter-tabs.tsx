@@ -3,14 +3,7 @@
 import { useState, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Loader2 } from "lucide-react";
-
-interface Category {
-  id: string;
-  name: string;
-  slug: string;
-  description: string | null;
-  articleCount: number;
-}
+import type { Category } from "@/types";
 
 interface CategoryFilterTabsProps {
   selectedCategory: string;

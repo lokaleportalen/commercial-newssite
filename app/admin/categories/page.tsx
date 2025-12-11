@@ -28,14 +28,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import SettingsButton from "@/components/admin/settings-btn";
-
-interface Category {
-  id: string;
-  name: string;
-  slug: string;
-  description: string | null;
-  heroImage: string | null;
-}
+import type { Category } from "@/types";
 
 export default function CategoryManagement() {
   const [categories, setCategories] = useState<Category[]>([]);
@@ -86,8 +79,8 @@ export default function CategoryManagement() {
     if (selectedCategory) {
       setName(selectedCategory.name);
       setDescription(selectedCategory.description || "");
-      setHeroImage(selectedCategory.heroImage);
-      setPreviewImage(selectedCategory.heroImage);
+      setHeroImage(selectedCategory.heroImage ?? null);
+      setPreviewImage(selectedCategory.heroImage ?? null);
     } else if (isCreating) {
       // Clear form for new category
       setName("");
