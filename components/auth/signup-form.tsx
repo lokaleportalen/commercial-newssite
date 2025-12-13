@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { authClient } from "@/lib/auth-client";
+import { validatePassword } from "@/lib/validation";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -38,8 +39,10 @@ export function SignupForm({ ...props }: React.ComponentProps<typeof Card>) {
       return;
     }
 
-    if (password.length < 8) {
-      setError("Adgangskoden skal være mindst 8 tegn lang");
+    // Validate password strength
+    const passwordValidation = validatePassword(password);
+    if (!passwordValidation.isValid) {
+      setError(passwordValidation.errors.join(". "));
       return;
     }
 
@@ -113,8 +116,11 @@ export function SignupForm({ ...props }: React.ComponentProps<typeof Card>) {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 disabled={isLoading}
+                aria-describedby="password-requirements"
               />
-              <FieldDescription>Skal være mindst 8 tegn lang.</FieldDescription>
+              <FieldDescription id="password-requirements">
+                Skal indeholde mindst 8 tegn, store og små bogstaver, tal og specialtegn.
+              </FieldDescription>
             </Field>
             <Field>
               <FieldLabel htmlFor="confirm-password">

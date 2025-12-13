@@ -44,7 +44,17 @@
 }
 
 :root {
+  /* Border Radius Tokens - Variable sizes for different components */
   --radius: 0.75rem;
+  --radius-xs: 0.375rem;
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.5rem;
+  --radius-2xl: 2rem;
+  --radius-full: 9999px;
+
+  /* Colors */
   --background: oklch(1 0 0);
   --foreground: oklch(0.141 0.005 285.823);
   --card: oklch(1 0 0);
@@ -116,8 +126,91 @@
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground;
+    font-feature-settings: "kern" 1, "liga" 1, "calt" 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Smooth scrolling */
+  html {
+    scroll-behavior: smooth;
+  }
+
+  /* Reduce motion for users who prefer it */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+
+  /* Improved Font Hierarchy */
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-bold;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+  }
+
+  h1 {
+    @apply text-4xl md:text-5xl lg:text-6xl;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+  }
+
+  h2 {
+    @apply text-3xl md:text-4xl lg:text-5xl;
+    font-weight: 700;
+  }
+
+  h3 {
+    @apply text-2xl md:text-3xl lg:text-4xl;
+    font-weight: 700;
+  }
+
+  h4 {
+    @apply text-xl md:text-2xl lg:text-3xl;
+    font-weight: 600;
+  }
+
+  h5 {
+    @apply text-lg md:text-xl lg:text-2xl;
+    font-weight: 600;
+  }
+
+  h6 {
+    @apply text-base md:text-lg lg:text-xl;
+    font-weight: 600;
+  }
+
+  /* Body text improvements */
+  p {
+    line-height: 1.7;
+    letter-spacing: -0.005em;
+  }
+
+  /* Small text */
+  small,
+  .text-sm {
+    line-height: 1.5;
+  }
+
+  /* Lead text for article summaries */
+  .lead {
+    @apply text-xl md:text-2xl;
+    line-height: 1.6;
+    font-weight: 400;
+    letter-spacing: -0.01em;
   }
 }
 
@@ -219,5 +312,92 @@
 
   .prose em {
     @apply italic;
+  }
+
+  /* Micro-animations for modern feel */
+  .animate-fade-in {
+    animation: fadeIn 0.3s ease-in-out;
+  }
+
+  .animate-slide-up {
+    animation: slideUp 0.4s ease-out;
+  }
+
+  .animate-scale-in {
+    animation: scaleIn 0.2s ease-out;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes slideUp {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes scaleIn {
+    from {
+      opacity: 0;
+      transform: scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  /* Button interactions */
+  button:not(:disabled) {
+    @apply transition-all duration-200 ease-out;
+  }
+
+  button:not(:disabled):hover {
+    @apply transform;
+  }
+
+  button:not(:disabled):active {
+    @apply scale-[0.98];
+  }
+
+  /* Card hover effects */
+  [class*="card"]:hover {
+    @apply transition-all duration-300 ease-out;
+  }
+
+  /* Input focus effects */
+  input:focus,
+  textarea:focus,
+  select:focus {
+    @apply transition-all duration-200 ease-out;
+  }
+
+  /* Link hover effects */
+  a {
+    @apply transition-colors duration-200 ease-out;
+  }
+
+  /* Image smooth loading */
+  img {
+    @apply transition-opacity duration-300;
+  }
+
+  img[loading="lazy"] {
+    @apply opacity-0;
+  }
+
+  img[loading="lazy"].loaded {
+    @apply opacity-100;
   }
 }

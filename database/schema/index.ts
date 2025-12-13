@@ -6,4 +6,5 @@ export * from "./roles-schema";
 export * from "./ai-prompts-schema";
 export * from "./ai-prompt-versions-schema";
 export * from "./email-templates-schema";
+export * from "./email-log-schema";
 export * from "./system-settings-schema";

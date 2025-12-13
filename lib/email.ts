@@ -6,8 +6,8 @@ import { ArticleNotification } from "@/emails/article-notification";
 import { WeeklyDigest } from "@/emails/weekly-digest";
 import { PasswordReset } from "@/emails/password-reset";
 import { db } from "@/database/db";
-import { emailTemplate } from "@/database/schema";
-import { eq } from "drizzle-orm";
+import { emailTemplate, emailLog } from "@/database/schema";
+import { eq, and, gte, sql } from "drizzle-orm";
 import type {
   WelcomeEmailContent,
   ArticleNotificationContent,
@@ -37,14 +37,70 @@ export interface SendEmailOptions {
   text: string;
   html?: string;
   from?: string;
+  userId?: string;
+  emailType?: string;
+}
+
+const MAX_EMAILS_PER_DAY = 10;
+
+/**
+ * Check if user has exceeded daily email rate limit
+ */
+async function checkEmailRateLimit(userId: string): Promise<boolean> {
+  // Get emails sent in last 24 hours
+  const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+
+  const emailCount = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(emailLog)
+    .where(
+      and(
+        eq(emailLog.userId, userId),
+        gte(emailLog.sentAt, twentyFourHoursAgo)
+      )
+    );
+
+  const count = Number(emailCount[0]?.count || 0);
+
+  return count < MAX_EMAILS_PER_DAY;
+}
+
+/**
+ * Log email send to database
+ */
+async function logEmailSend(
+  userId: string,
+  recipient: string,
+  subject: string,
+  emailType: string
+): Promise<void> {
+  await db.insert(emailLog).values({
+    userId,
+    recipient,
+    subject,
+    emailType,
+  });
 }
 
 export async function sendEmail(options: SendEmailOptions) {
-  const { to, subject, text, html, from } = options;
+  const { to, subject, text, html, from, userId, emailType } = options;
 
   const domain = process.env.MAILGUN_DOMAIN;
   if (!domain || !mg) {
     throw new Error("Mailgun is not configured");
+  }
+
+  // Check rate limit if userId is provided
+  if (userId) {
+    const withinLimit = await checkEmailRateLimit(userId);
+    if (!withinLimit) {
+      console.warn(
+        `Email rate limit exceeded for user ${userId}. Email not sent.`
+      );
+      throw new Error(
+        "Email rate limit exceeded. Maximum 10 emails per day allowed."
+      );
+    }
   }
 
   try {
@@ -55,6 +111,11 @@ export async function sendEmail(options: SendEmailOptions) {
       text,
       html: html || text,
     });
+
+    // Log successful send if userId provided
+    if (userId && emailType) {
+      await logEmailSend(userId, to, subject, emailType);
+    }
 
     return result;
   } catch (error) {
@@ -175,6 +236,8 @@ export async function sendWelcomeEmail({
     subject,
     text: `Hej ${userName}, velkommen til Estate News! Besøg ${urls.articlesUrl} for at læse de nyeste artikler.`,
     html,
+    userId,
+    emailType: "welcome",
   });
 }
 
@@ -226,6 +289,8 @@ export async function sendArticleNotification({
     subject,
     text: `${articleTitle}\n\n${articleSummary}\n\nLæs mere: ${articleUrl}`,
     html,
+    userId,
+    emailType: "article_notification",
   });
 }
 
@@ -286,6 +351,8 @@ export async function sendWeeklyDigest({
     subject,
     text: `Hej ${userName}, her er ugens nyheder fra Estate News (${weekStart} - ${weekEnd}). Besøg ${urls.baseUrl} for at læse artiklerne.`,
     html,
+    userId,
+    emailType: "weekly_digest",
   });
 }
 
@@ -294,6 +361,7 @@ interface SendPasswordResetParams {
   userName: string;
   resetUrl: string;
   expirationMinutes?: number;
+  userId?: string;
 }
 
 export async function sendPasswordReset({
@@ -301,6 +369,7 @@ export async function sendPasswordReset({
   userName,
   resetUrl,
   expirationMinutes = 60,
+  userId,
 }: SendPasswordResetParams) {
   // Fetch template content from database
   const { template, content } = await getEmailTemplate("password_reset");
@@ -324,5 +393,7 @@ export async function sendPasswordReset({
     subject,
     text: `Hej ${userName}, klik på dette link for at nulstille din adgangskode: ${resetUrl} (Gyldigt i ${expirationMinutes} minutter)`,
     html,
+    userId,
+    emailType: "password_reset",
   });
 }

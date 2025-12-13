@@ -14,6 +14,7 @@ export const auth = betterAuth({
         to: user.email,
         userName: user.name,
         resetUrl: url,
+        userId: user.id,
       });
     },
   },

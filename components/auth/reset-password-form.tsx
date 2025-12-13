@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { authClient } from "@/lib/auth-client";
+import { validatePassword } from "@/lib/validation";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -53,13 +54,15 @@ export function ResetPasswordForm({
       return;
     }
 
-    if (password.length < 8) {
-      setError("Adgangskoden skal være mindst 8 tegn");
+    if (password !== confirmPassword) {
+      setError("Adgangskoderne matcher ikke");
       return;
     }
 
-    if (password !== confirmPassword) {
-      setError("Adgangskoderne matcher ikke");
+    // Validate password strength
+    const passwordValidation = validatePassword(password);
+    if (!passwordValidation.isValid) {
+      setError(passwordValidation.errors.join(". "));
       return;
     }
 
@@ -158,7 +161,7 @@ export function ResetPasswordForm({
         <CardHeader>
           <CardTitle>Opret ny adgangskode</CardTitle>
           <CardDescription>
-            Indtast din nye adgangskode nedenfor. Den skal være mindst 8 tegn.
+            Indtast din nye adgangskode. Den skal indeholde mindst 8 tegn, store og små bogstaver, tal og specialtegn.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -179,7 +182,11 @@ export function ResetPasswordForm({
                   required
                   disabled={isLoading}
                   minLength={8}
+                  aria-describedby="password-requirements"
                 />
+                <FieldDescription id="password-requirements">
+                  Store og små bogstaver, tal og specialtegn påkrævet.
+                </FieldDescription>
               </Field>
               <Field>
                 <FieldLabel htmlFor="confirmPassword">
