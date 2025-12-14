@@ -5,8 +5,8 @@ import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { Menu, X, Search, ChevronDown } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
-import { useUserRole } from "@/hooks/use-user-role";
 import { Button } from "@/components/ui/button";
+import type { ClientSessionData } from "@/types/auth";
 import { Separator } from "@/components/ui/separator";
 import { SearchDialog } from "@/components/layout/search-dialog";
 import {
@@ -37,7 +37,7 @@ import type { Category } from "@/types";
 export function Navigation() {
   const router = useRouter();
   const pathname = usePathname();
-  const { data: session, isPending } = authClient.useSession();
+  const { data: session, isPending } = authClient.useSession() as { data: ClientSessionData | null; isPending: boolean };
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);

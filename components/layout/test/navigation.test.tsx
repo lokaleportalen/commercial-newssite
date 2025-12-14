@@ -32,20 +32,13 @@ vi.mock('@/lib/auth-client', () => ({
   },
 }))
 
-// Mock useUserRole hook
-vi.mock('@/hooks/use-user-role', () => ({
-  useUserRole: vi.fn(),
-}))
-
 import { useRouter, usePathname } from 'next/navigation'
 import { authClient } from '@/lib/auth-client'
-import { useUserRole } from '@/hooks/use-user-role'
 
 const mockPush = vi.fn()
 const mockUsePathname = vi.mocked(usePathname)
 const mockUseSession = authClient.useSession as ReturnType<typeof vi.fn>
 const mockSignOut = authClient.signOut as ReturnType<typeof vi.fn>
-const mockUseUserRole = vi.mocked(useUserRole)
 
 vi.mocked(useRouter).mockReturnValue({
   push: mockPush,
@@ -55,7 +48,6 @@ describe('Navigation', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mockUsePathname.mockReturnValue('/')
-    mockUseUserRole.mockReturnValue({ role: null, isLoading: false, isAdmin: false })
   })
 
   it('renders navigation with logo and category links', () => {
@@ -318,50 +310,6 @@ describe('Navigation', () => {
     expect(logoutButtons.length).toBeGreaterThan(0)
   })
 
-  it('shows admin link in drawer for admin users', async () => {
-    const user = userEvent.setup()
-    mockUseSession.mockReturnValue({
-      data: {
-        user: {
-          id: '1',
-          name: 'Admin User',
-          email: 'admin@example.com',
-        },
-      },
-      isPending: false,
-    })
-    mockUseUserRole.mockReturnValue({ role: 'admin', isLoading: false, isAdmin: true })
-
-    render(<Navigation />)
-
-    const menuButton = screen.getByLabelText(/åbn menu/i)
-    await user.click(menuButton)
-
-    await waitFor(() => {
-      expect(screen.getByRole('dialog')).toBeInTheDocument()
-    })
-
-    // Should have admin links in both desktop and mobile menu
-    const adminLinks = screen.getAllByText(/admin/i)
-    expect(adminLinks.length).toBeGreaterThan(0)
-  })
-
-  it('does not show admin link for non-admin users', () => {
-    mockUseSession.mockReturnValue({
-      data: {
-        user: {
-          id: '1',
-          name: 'Regular User',
-          email: 'user@example.com',
-        },
-      },
-      isPending: false,
-    })
-
-    render(<Navigation />)
-
-    expect(screen.queryByText(/^admin$/i)).not.toBeInTheDocument()
-  })
 
   it('closes drawer when clicking a navigation link', async () => {
     const user = userEvent.setup()

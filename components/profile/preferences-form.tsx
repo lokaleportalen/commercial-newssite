@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import type { Category } from "@/types";
+import type { ClientSessionData } from "@/types/auth";
 
 interface PreferencesFormProps {
   onClose?: () => void;
@@ -14,7 +15,7 @@ interface PreferencesFormProps {
 
 export function PreferencesForm({ onClose }: PreferencesFormProps = {}) {
   const router = useRouter();
-  const { data: session } = authClient.useSession();
+  const { data: session } = authClient.useSession() as { data: ClientSessionData | null };
   const [allCategories, setAllCategories] = useState(true);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);

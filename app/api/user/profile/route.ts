@@ -1,16 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
 import { db } from "@/database/db";
 import { user } from "@/database/schema";
 import { eq } from "drizzle-orm";
-import { headers } from "next/headers";
+import { getSession } from "@/lib/auth-helpers";
 
 // Update user profile
 export async function PATCH(request: NextRequest) {
   try {
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    });
+    const session = await getSession();
 
     if (!session?.user) {
       return NextResponse.json(
@@ -67,9 +64,7 @@ export async function PATCH(request: NextRequest) {
 // Delete user account
 export async function DELETE(request: NextRequest) {
   try {
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    });
+    const session = await getSession();
 
     if (!session?.user) {
       return NextResponse.json(

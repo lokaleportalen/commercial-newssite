@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 import { useUserRole } from "@/hooks/use-user-role";
 import { Loader2 } from "lucide-react";
+import type { ClientSessionData } from "@/types/auth";
 
 interface AdminRouteProps {
   children: React.ReactNode;
@@ -12,7 +13,7 @@ interface AdminRouteProps {
 
 export function AdminRoute({ children }: AdminRouteProps) {
   const router = useRouter();
-  const { data: session, isPending: sessionPending } = authClient.useSession();
+  const { data: session, isPending: sessionPending } = authClient.useSession() as { data: ClientSessionData | null; isPending: boolean };
   const { isAdmin, isLoading: roleLoading } = useUserRole();
 
   const isLoading = sessionPending || roleLoading;

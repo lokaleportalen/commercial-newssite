@@ -1,16 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
 import { db } from "@/database/db";
 import { userPreferences, userPreferenceCategory } from "@/database/schema";
 import { eq } from "drizzle-orm";
-import { headers } from "next/headers";
+import { getSession } from "@/lib/auth-helpers";
 
 // Get user preferences
 export async function GET(request: NextRequest) {
   try {
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    });
+    const session = await getSession();
 
     if (!session?.user) {
       return NextResponse.json(
@@ -60,9 +57,7 @@ export async function GET(request: NextRequest) {
 // Create or update user preferences
 export async function POST(request: NextRequest) {
   try {
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    });
+    const session = await getSession();
 
     if (!session?.user) {
       return NextResponse.json(

@@ -22,10 +22,11 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { PreferencesForm } from "./preferences-form";
+import type { ClientSessionData } from "@/types/auth";
 
 export function ProfileForm() {
   const router = useRouter();
-  const { data: session } = authClient.useSession();
+  const { data: session } = authClient.useSession() as { data: ClientSessionData | null };
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);

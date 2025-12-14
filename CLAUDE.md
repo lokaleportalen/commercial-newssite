@@ -189,6 +189,14 @@ npx trigger.dev@latest deploy  # Deploy to Trigger.dev
 
 ## Recent Changes
 
+**2025-12-13:**
+- **Session-based role storage** - Migrated from API-based role checking to Better-Auth `customSession` plugin for improved performance
+- **Eliminated /api/user/role endpoint** - Removed unnecessary API endpoint and database queries for role checks
+- **Updated useUserRole hook** - Now uses session data directly instead of making API calls, eliminating loading states and improving UX
+- **Type-safe session handling** - Added `ExtendedSession` and `ClientSessionData` types to handle Better-Auth's customSession type inference limitations
+- **Centralized session helpers** - Updated all API routes to use `getSession()` from `lib/auth-helpers.ts` for consistent session handling
+- **Performance improvement** - Role data now instantly available from session, no additional network requests or database queries needed
+
 **2025-12-11:**
 - **Password reset pages** - Created `/glemt-adgangskode` and `/nulstil-adgangskode` pages with Better-Auth integration for complete password reset flow
 - **Image regeneration feature** - Admin can regenerate article images with optional custom descriptions via "Generer nyt billede" button

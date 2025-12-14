@@ -1,31 +1,18 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { authClient } from "@/lib/auth-client";
+import type { ClientSessionData } from "@/types/auth";
 
+/**
+ * Hook to get the current user's role from the session
+ * Role is automatically included in the session via Better-Auth customSession plugin
+ */
 export function useUserRole() {
-  const [role, setRole] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const { data: session, isPending } = authClient.useSession() as { data: ClientSessionData | null; isPending: boolean };
 
-  useEffect(() => {
-    async function fetchRole() {
-      try {
-        const response = await fetch("/api/user/role");
-        if (response.ok) {
-          const data = await response.json();
-          setRole(data.role);
-        } else {
-          setRole(null);
-        }
-      } catch (error) {
-        console.error("Error fetching user role:", error);
-        setRole(null);
-      } finally {
-        setIsLoading(false);
-      }
-    }
-
-    fetchRole();
-  }, []);
-
-  return { role, isLoading, isAdmin: role === "admin" };
+  return {
+    role: session?.role ?? "user",
+    isLoading: isPending,
+    isAdmin: session?.role === "admin",
+  };
 }

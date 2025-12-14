@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 import { Loader2 } from "lucide-react";
+import type { ClientSessionData } from "@/types/auth";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -11,7 +12,7 @@ interface ProtectedRouteProps {
 
 export function ProtectedRoute({ children }: ProtectedRouteProps) {
   const router = useRouter();
-  const { data: session, isPending } = authClient.useSession();
+  const { data: session, isPending } = authClient.useSession() as { data: ClientSessionData | null; isPending: boolean };
 
   useEffect(() => {
     // Only redirect if we're done loading and there's no session

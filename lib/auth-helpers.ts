@@ -1,18 +1,17 @@
 import { auth } from "./auth";
-import { db } from "@/database/db";
-import { role } from "@/database/schema";
-import { eq } from "drizzle-orm";
 import { headers } from "next/headers";
+import type { ExtendedSession } from "@/types/auth";
 
 /**
  * Get the current user's session from the request
+ * Includes custom fields like role
  */
 export async function getSession() {
   try {
     const session = await auth.api.getSession({
       headers: await headers(),
     });
-    return session;
+    return session as ExtendedSession | null;
   } catch (error) {
     return null;
   }
@@ -27,31 +26,22 @@ export async function getCurrentUser() {
 }
 
 /**
+ * Get the current user's role from the session
+ */
+export async function getUserRole(): Promise<string> {
+  const session = await getSession();
+  return session?.role ?? "user";
+}
+
+/**
  * Check if the current user has a specific role
  */
 export async function hasRole(roleToCheck: string): Promise<boolean> {
-  const user = await getCurrentUser();
-
-  if (!user) {
+  const session = await getSession();
+  if (!session) {
     return false;
   }
-
-  try {
-    const userRole = await db
-      .select()
-      .from(role)
-      .where(eq(role.userId, user.id))
-      .limit(1);
-
-    if (!userRole || userRole.length === 0) {
-      return false;
-    }
-
-    return userRole[0].role === roleToCheck;
-  } catch (error) {
-    console.error("Error checking user role:", error);
-    return false;
-  }
+  return session.role === roleToCheck;
 }
 
 /**

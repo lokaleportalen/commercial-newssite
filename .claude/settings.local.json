@@ -30,7 +30,8 @@
       "Bash(dir /s /b \"C:\\Users\\emilc\\Desktop\\commercial-newssite\\database\")",
       "Bash(npm test:*)",
       "WebSearch",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "Bash(dir /s /b \"C:\\Users\\emilc\\Desktop\\commercial-newssite\\app\\api\\user\")"
     ],
     "deny": [],
     "ask": []
