@@ -2,7 +2,7 @@
 
 import ReactMarkdown from "react-markdown";
 import { ArticlePaywall } from "./article-paywall";
-import { getContentPreview, normalizeArticleHeadings } from "@/lib/content-helpers";
+import { getContentPreview, getExtendedPreview, normalizeArticleHeadings } from "@/lib/content-helpers";
 
 interface ArticleContentProps {
   content: string;
@@ -20,7 +20,9 @@ export function ArticleContent({ content, isAuthenticated }: ArticleContentProps
     );
   }
 
-  // Only pass preview content to paywall - never send full content to client
+  // Pass preview (clear) and extended content (blurred) for SEO and user engagement
   const previewContent = getContentPreview(content, 400);
-  return <ArticlePaywall previewContent={previewContent} />;
+  const extendedContent = getExtendedPreview(content, 0.4);
+
+  return <ArticlePaywall previewContent={previewContent} extendedContent={extendedContent} />;
 }

@@ -48,3 +48,45 @@ export function getContentPreview(content: string, maxChars: number = 400): stri
   // Ultimate fallback
   return processedContent.substring(0, maxChars) + '...';
 }
+
+/**
+ * Get extended content for paywall blur effect (40% of full article)
+ * This shows enough content for SEO while keeping 60% exclusive for authenticated users.
+ */
+export function getExtendedPreview(content: string, maxPercentage: number = 0.4): string {
+  const processedContent = normalizeArticleHeadings(content.trim());
+  const targetLength = Math.floor(processedContent.length * maxPercentage);
+
+  if (processedContent.length <= targetLength) {
+    return processedContent;
+  }
+
+  // Try to find a paragraph break near the target length
+  const paragraphBreak = processedContent.indexOf('\n\n', targetLength * 0.9);
+  if (paragraphBreak !== -1 && paragraphBreak <= targetLength * 1.1) {
+    return processedContent.substring(0, paragraphBreak);
+  }
+
+  // Try to find a sentence ending
+  const sentenceEndings = ['. ', '! ', '? '];
+  let lastSentenceEnd = -1;
+
+  for (const ending of sentenceEndings) {
+    const pos = processedContent.lastIndexOf(ending, targetLength);
+    if (pos > lastSentenceEnd) {
+      lastSentenceEnd = pos;
+    }
+  }
+
+  if (lastSentenceEnd !== -1) {
+    return processedContent.substring(0, lastSentenceEnd + 1);
+  }
+
+  // Fallback: truncate at last space
+  const lastSpace = processedContent.lastIndexOf(' ', targetLength);
+  if (lastSpace !== -1) {
+    return processedContent.substring(0, lastSpace);
+  }
+
+  return processedContent.substring(0, targetLength);
+}

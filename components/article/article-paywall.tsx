@@ -6,18 +6,28 @@ import Link from "next/link";
 
 interface ArticlePaywallProps {
   previewContent: string;
+  extendedContent: string;
 }
 
-export function ArticlePaywall({ previewContent }: ArticlePaywallProps) {
+export function ArticlePaywall({
+  previewContent,
+  extendedContent,
+}: ArticlePaywallProps) {
   return (
-    <div className="relative">
-      {/* Preview Content with Fade-Out Effect */}
-      <div className="prose max-w-none pb-32 [mask-image:linear-gradient(to_bottom,black_70%,transparent_100%)] [-webkit-mask-image:linear-gradient(to_bottom,black_70%,transparent_100%)]">
-        <ReactMarkdown>{previewContent}</ReactMarkdown>
+    <div className="relative pb-24 px-4 sm:px-0">
+      {/* Content with linear fade from 0-40% */}
+      <div
+        className="prose max-w-none select-none"
+        style={{
+          maskImage: 'linear-gradient(to bottom, black 0%, transparent 40%)',
+          WebkitMaskImage: 'linear-gradient(to bottom, black 0%, transparent 40%)',
+        }}
+      >
+        <ReactMarkdown>{extendedContent}</ReactMarkdown>
       </div>
 
-      {/* CTA Overlay */}
-      <div className="absolute bottom-0 left-0 right-0 flex items-end justify-center pb-8 pt-24 bg-gradient-to-b from-transparent to-background">
+      {/* CTA Overlay - positioned higher in the content */}
+      <div className="absolute left-0 right-0 top-[25%] flex items-center justify-center px-4">
         <div className="text-center max-w-md mx-auto px-4 py-8 bg-background/95 backdrop-blur-sm rounded-lg border shadow-lg">
           <h3 className="text-2xl font-bold mb-2">Fortsæt med at læse</h3>
           <p className="text-muted-foreground mb-6">
