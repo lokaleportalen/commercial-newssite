@@ -11,7 +11,7 @@ import { Metadata } from "next";
 const ARTICLES_PER_PAGE = 20;
 
 export const metadata: Metadata = {
-  title: "Alle Nyheder | Estate News",
+  title: "Alle Nyheder | Estatenews.dk",
   description:
     "Gennemse alle artikler om erhvervsejendomme i Danmark. Filtrer efter kategori og sorter efter dato eller titel.",
 };

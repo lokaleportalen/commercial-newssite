@@ -25,14 +25,14 @@ export const PasswordReset = ({
   expirationMinutes = 60,
   heading = "Nulstil din adgangskode",
   greeting = "Hej {userName},",
-  requestParagraph = "Vi har modtaget en anmodning om at nulstille adgangskoden til din Estate News konto.",
+  requestParagraph = "Vi har modtaget en anmodning om at nulstille adgangskoden til din Estatenews.dk konto.",
   instructionsParagraph = "Klik på knappen nedenfor for at nulstille din adgangskode. Dette link er kun gyldigt i {expirationMinutes} minutter af sikkerhedsmæssige årsager.",
   primaryCtaText = "Nulstil adgangskode",
   warningHeading = "Har du ikke anmodet om dette?",
   warningText = "Hvis du ikke har anmodet om at nulstille din adgangskode, kan du trygt ignorere denne email. Din adgangskode vil forblive uændret.",
   linkFallbackText = "Hvis knappen ikke virker, kan du kopiere og indsætte følgende link i din browser:",
   closingText = "Med venlig hilsen,",
-  signatureText = "Estate News teamet",
+  signatureText = "Estatenews.dk teamet",
 }: PasswordResetProps) => {
   // Replace template variables in text
   const replaceVariables = (text: string) => {
@@ -41,7 +41,7 @@ export const PasswordReset = ({
       .replace(/{expirationMinutes}/g, expirationMinutes.toString());
   };
   return (
-    <EmailLayout preview="Nulstil din adgangskode til Estate News">
+    <EmailLayout preview="Nulstil din adgangskode til Estatenews.dk">
       <Heading className="text-3xl font-bold text-gray-900 mt-8 mb-6 leading-tight">
         {heading}
       </Heading>

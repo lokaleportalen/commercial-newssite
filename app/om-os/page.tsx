@@ -2,9 +2,9 @@ import { Metadata } from "next";
 import Image from "next/image";
 
 export const metadata: Metadata = {
-  title: "Om os | Estate News",
+  title: "Om os | Estatenews.dk",
   description:
-    "Læs mere om Estate News - din kilde til nyheder om erhvervsejendomme i Danmark",
+    "Læs mere om Estatenews.dk - din kilde til nyheder om erhvervsejendomme i Danmark",
 };
 
 export default function AboutPage() {
@@ -27,7 +27,7 @@ export default function AboutPage() {
           {/* Title */}
           <div className="text-center space-y-4">
             <h1 className="text-4xl md:text-5xl font-bold text-foreground">
-              Om Estate News
+              Om Estatenews.dk
             </h1>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
               Din daglige kilde til indsigt og nyheder om det danske marked for
@@ -48,7 +48,7 @@ export default function AboutPage() {
           </h2>
           <div className="space-y-4 text-lg text-muted-foreground leading-relaxed">
             <p>
-              Estate News leverer daglige nyheder, analyser og indsigt om det
+              Estatenews.dk leverer daglige nyheder, analyser og indsigt om det
               danske erhvervsejendomsmarked. Vi dækker alt fra kontorer og
               butikker til logistikcentre og industriejendomme.
             </p>
@@ -60,7 +60,7 @@ export default function AboutPage() {
               træffe informerede beslutninger.
             </p>
             <p>
-              Estate News er en del af{" "}
+              Estatenews.dk er en del af{" "}
               <a
                 href="https://www.lokaleportalen.dk"
                 target="_blank"

@@ -47,7 +47,7 @@ export const EmailLayout = ({
             {/* Header */}
             <Section className="bg-primary p-4 sm:p-8 rounded-t-lg">
               <Text className="text-2xl sm:text-3xl font-bold text-white text-center m-0 tracking-tight">
-                Estate News
+                Estatenews.dk
               </Text>
             </Section>
 
@@ -81,7 +81,7 @@ export const EmailLayout = ({
                     )}
                   </Text>
                   <Text className="text-[11px] text-gray-400 text-center mt-4 mb-0">
-                    © {new Date().getFullYear()} Estate News. Alle rettigheder
+                    © {new Date().getFullYear()} Estatenews.dk. Alle rettigheder
                     forbeholdes.
                   </Text>
                 </Section>

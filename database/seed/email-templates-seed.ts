@@ -14,15 +14,15 @@ export async function seedEmailTemplates() {
     {
       key: "welcome",
       name: "Welcome Email",
-      description: "Sent to new users when they sign up for Estate News",
-      subject: "Velkommen til Estate News",
+      description: "Sent to new users when they sign up for Estatenews.dk",
+      subject: "Velkommen til Estatenews.dk",
       previewText:
-        "Velkommen til Estate News - Din kilde til erhvervsejendomsnyheder",
+        "Velkommen til Estatenews.dk - Din kilde til erhvervsejendomsnyheder",
       content: JSON.stringify({
-        heading: "Velkommen til Estate News!",
+        heading: "Velkommen til Estatenews.dk!",
         greeting: "Hej {userName},",
         introParagraph:
-          "Tak fordi du tilmeldte dig Estate News. Vi er glade for at have dig med i vores fællesskab af erhvervsejendomsinteresserede.",
+          "Tak fordi du tilmeldte dig Estatenews.dk. Vi er glade for at have dig med i vores fællesskab af erhvervsejendomsinteresserede.",
         descriptionParagraph:
           "Du vil modtage ugentlige nyheder om den danske erhvervsejendomsbranche - alt fra nye projekter og transaktioner til markedstendenser og analyser.",
         primaryCtaText: "Læs de nyeste artikler",
@@ -30,7 +30,7 @@ export async function seedEmailTemplates() {
           "Du kan til enhver tid tilpasse dine præferencer og vælge hvilke kategorier du ønsker at modtage nyheder om.",
         secondaryCtaText: "Administrer præferencer",
         closingText: "Vi glæder os til at holde dig opdateret!",
-        signatureText: "Estate News teamet",
+        signatureText: "Estatenews.dk teamet",
       } as WelcomeEmailContent),
       isActive: true,
     },
@@ -65,7 +65,7 @@ export async function seedEmailTemplates() {
         articleCtaText: "Læs mere",
         footerText:
           "Du modtager denne ugentlige oversigt baseret på dine præferencer. Du kan til enhver tid ændre dine indstillinger eller afmelde dig.",
-        finalCtaText: "Se alle artikler på Estate News",
+        finalCtaText: "Se alle artikler på Estatenews.dk",
       } as WeeklyDigestContent),
       isActive: true,
     },
@@ -73,13 +73,13 @@ export async function seedEmailTemplates() {
       key: "password_reset",
       name: "Password Reset",
       description: "Sent when a user requests to reset their password",
-      subject: "Nulstil din adgangskode til Estate News",
-      previewText: "Nulstil din adgangskode til Estate News",
+      subject: "Nulstil din adgangskode til Estatenews.dk",
+      previewText: "Nulstil din adgangskode til Estatenews.dk",
       content: JSON.stringify({
         heading: "Nulstil din adgangskode",
         greeting: "Hej {userName},",
         requestParagraph:
-          "Vi har modtaget en anmodning om at nulstille adgangskoden til din Estate News konto.",
+          "Vi har modtaget en anmodning om at nulstille adgangskoden til din Estatenews.dk konto.",
         instructionsParagraph:
           "Klik på knappen nedenfor for at nulstille din adgangskode. Dette link er kun gyldigt i {expirationMinutes} minutter af sikkerhedsmæssige årsager.",
         primaryCtaText: "Nulstil adgangskode",
@@ -89,7 +89,7 @@ export async function seedEmailTemplates() {
         linkFallbackText:
           "Hvis knappen ikke virker, kan du kopiere og indsætte følgende link i din browser:",
         closingText: "Med venlig hilsen,",
-        signatureText: "Estate News teamet",
+        signatureText: "Estatenews.dk teamet",
       } as PasswordResetContent),
       isActive: true,
     },

@@ -24,15 +24,15 @@ export const WelcomeEmail = ({
   preferencesUrl,
   articlesUrl,
   unsubscribeUrl,
-  heading = "Velkommen til Estate News!",
+  heading = "Velkommen til Estatenews.dk!",
   greeting = "Hej {userName},",
-  introParagraph = "Tak fordi du tilmeldte dig Estate News. Vi er glade for at have dig med i vores fællesskab af erhvervsejendomsinteresserede.",
+  introParagraph = "Tak fordi du tilmeldte dig Estatenews.dk. Vi er glade for at have dig med i vores fællesskab af erhvervsejendomsinteresserede.",
   descriptionParagraph = "Du vil modtage ugentlige nyheder om den danske erhvervsejendomsbranche - alt fra nye projekter og transaktioner til markedstendenser og analyser.",
   primaryCtaText = "Læs de nyeste artikler",
   preferencesInfoParagraph = "Du kan til enhver tid tilpasse dine præferencer og vælge hvilke kategorier du ønsker at modtage nyheder om.",
   secondaryCtaText = "Administrer præferencer",
   closingText = "Vi glæder os til at holde dig opdateret!",
-  signatureText = "Estate News teamet",
+  signatureText = "Estatenews.dk teamet",
 }: WelcomeEmailProps) => {
   // Replace template variables in text
   const replaceVariables = (text: string) => {
@@ -41,7 +41,7 @@ export const WelcomeEmail = ({
 
   return (
     <EmailLayout
-      preview="Velkommen til Estate News - Din kilde til erhvervsejendomsnyheder"
+      preview="Velkommen til Estatenews.dk - Din kilde til erhvervsejendomsnyheder"
       preferencesUrl={preferencesUrl}
       unsubscribeUrl={unsubscribeUrl}
     >

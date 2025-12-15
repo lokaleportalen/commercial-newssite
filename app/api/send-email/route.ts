@@ -16,7 +16,7 @@ export async function POST(request: Request) {
 
     await sendEmail({
       to: email,
-      subject: subject || "New Message from Estate News",
+      subject: subject || "New Message from Estatenews.dk",
       text: message,
       html: `<p>${message}</p>`, // Simple HTML wrapper
     });

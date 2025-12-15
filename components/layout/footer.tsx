@@ -113,7 +113,7 @@ export async function Footer() {
         {/* Bottom Bar */}
         <div className="mt-8 pt-8 border-t">
           <p className="text-center text-sm text-muted-foreground">
-            © {new Date().getFullYear()} Estate News - En del af{" "}
+            © {new Date().getFullYear()} Estatenews.dk - En del af{" "}
             <a
               href="https://www.lokaleportalen.dk"
               target="_blank"

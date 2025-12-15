@@ -77,7 +77,7 @@ export async function GET(request: NextRequest) {
         <head>
           <meta charset="UTF-8">
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <title>Afmeldt - Estate News</title>
+          <title>Afmeldt - Estatenews.dk</title>
           <style>
             body {
               font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
@@ -135,7 +135,7 @@ export async function GET(request: NextRequest) {
             <div class="icon">✓</div>
             <h1>Du er nu afmeldt</h1>
             <p>
-              Du vil ikke længere modtage emails fra Estate News.
+              Du vil ikke længere modtage emails fra Estatenews.dk.
               Dine email-præferencer er blevet fjernet.
             </p>
             <p>
@@ -143,7 +143,7 @@ export async function GET(request: NextRequest) {
               ved at logge ind og opdatere dine præferencer.
             </p>
             <a href="${process.env.NEXT_PUBLIC_BASE_URL}" class="button">
-              Gå til Estate News
+              Gå til Estatenews.dk
             </a>
             <a href="${process.env.NEXT_PUBLIC_BASE_URL}/profile/preferences" class="button button-secondary">
               Administrer præferencer

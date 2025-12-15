@@ -94,7 +94,7 @@ export function Navigation() {
               href="/"
               className="text-xl font-bold flex items-center gap-2 text-primary"
             >
-              Estate News
+              Estatenews.dk
             </Link>
 
             {/* Desktop Navigation */}

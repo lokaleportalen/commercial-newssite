@@ -168,7 +168,7 @@ Formatér dine research-resultater tydeligt med overskrifter og punkter.`;
     logger.debug(`Sources: ${JSON.stringify(uniqueSources.slice(0, 5))}...`);
 
     // Validate minimum source requirement BEFORE writing article
-    const MIN_SOURCES_REQUIRED = 3;
+    const MIN_SOURCES_REQUIRED = 2;
     if (uniqueSources.length < MIN_SOURCES_REQUIRED) {
       logger.warn(
         `❌ Insufficient sources for article "${newsItem.title}": found ${uniqueSources.length}, required ${MIN_SOURCES_REQUIRED}. Skipping article processing to save compute time.`
@@ -417,7 +417,15 @@ Svar KUN med valid JSON i denne præcise struktur:
             const isLastRetry = retryCount >= maxRetries - 1;
 
             // Type guard for error object
-            const err = error as { status?: number; error?: { code?: number; details?: Array<{ "@type"?: string; retryDelay?: string }> }; message?: string; code?: string };
+            const err = error as {
+              status?: number;
+              error?: {
+                code?: number;
+                details?: Array<{ "@type"?: string; retryDelay?: string }>;
+              };
+              message?: string;
+              code?: string;
+            };
 
             // Check error type
             const isRateLimit = err?.status === 429;

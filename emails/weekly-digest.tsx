@@ -51,7 +51,7 @@ export const WeeklyDigest = ({
   noArticlesMessage = "Der er ingen nye artikler i denne uge, der matcher dine præferencer.",
   articleCtaText = "Læs mere",
   footerText = "Du modtager denne ugentlige oversigt baseret på dine præferencer. Du kan til enhver tid ændre dine indstillinger eller afmelde dig.",
-  finalCtaText = "Se alle artikler på Estate News",
+  finalCtaText = "Se alle artikler på Estatenews.dk",
 }: WeeklyDigestProps) => {
   // Replace template variables in text
   const replaceVariables = (text: string) => {

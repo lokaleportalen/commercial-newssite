@@ -49,7 +49,7 @@ export async function sendEmail(options: SendEmailOptions) {
 
   try {
     const result = await mg.messages.create(domain, {
-      from: from || `Estate News <noreply@${domain}>`,
+      from: from || `Estatenews.dk <noreply@${domain}>`,
       to: [to],
       subject,
       text,
@@ -173,7 +173,7 @@ export async function sendWelcomeEmail({
   return sendEmail({
     to,
     subject,
-    text: `Hej ${userName}, velkommen til Estate News! Besøg ${urls.articlesUrl} for at læse de nyeste artikler.`,
+    text: `Hej ${userName}, velkommen til Estatenews.dk! Besøg ${urls.articlesUrl} for at læse de nyeste artikler.`,
     html,
   });
 }
@@ -284,7 +284,7 @@ export async function sendWeeklyDigest({
   return sendEmail({
     to,
     subject,
-    text: `Hej ${userName}, her er ugens nyheder fra Estate News (${weekStart} - ${weekEnd}). Besøg ${urls.baseUrl} for at læse artiklerne.`,
+    text: `Hej ${userName}, her er ugens nyheder fra Estatenews.dk (${weekStart} - ${weekEnd}). Besøg ${urls.baseUrl} for at læse artiklerne.`,
     html,
   });
 }
