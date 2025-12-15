@@ -53,21 +53,18 @@ export function UserEditModal({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  // Load categories and user preferences on mount
   useEffect(() => {
     const loadData = async () => {
       if (!user) return;
 
       setIsLoading(true);
       try {
-        // Load categories
         const categoriesResponse = await fetch("/api/categories");
         if (!categoriesResponse.ok)
           throw new Error("Failed to fetch categories");
         const categoriesData = await categoriesResponse.json();
         setCategories(categoriesData.categories);
 
-        // Load user preferences
         const prefsResponse = await fetch(
           `/api/profile/preferences?userId=${user.id}`
         );

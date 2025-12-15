@@ -11,16 +11,10 @@ import {
 import { eq, and, gte, inArray } from "drizzle-orm";
 import { sendWeeklyDigest } from "@/lib/email";
 
-/**
- * Weekly digest scheduled task - Sends email digest of past week's articles
- * Runs every Saturday at 10:00 AM Copenhagen time
- * Filters articles based on user category preferences
- */
 export const weeklyDigestTask = schedules.task({
   id: "weekly-digest-email",
-  // Run every Saturday at 10:00 AM Copenhagen time
   cron: { pattern: "0 10 * * 6", timezone: "Europe/Copenhagen" },
-  maxDuration: 3600, // 1 hour max
+  maxDuration: 3600,
   run: async (payload) => {
     logger.info("Starting weekly digest email task", {
       timestamp: payload.timestamp,
@@ -75,7 +69,6 @@ export const weeklyDigestTask = schedules.task({
       .innerJoin(category, eq(articleCategory.categoryId, category.id))
       .where(inArray(articleCategory.articleId, articleIds));
 
-    // Map articles to their categories
     const articleCategoriesMap = new Map<
       string,
       Array<{ categoryId: string; categoryName: string }>
@@ -124,12 +117,9 @@ export const weeklyDigestTask = schedules.task({
 
     for (const weeklyUser of weeklyUsers) {
       try {
-        // Filter articles based on user preferences
         let userArticles = recentArticles;
 
-        // If user doesn't want all categories, filter by their preferences
         if (!weeklyUser.allCategories) {
-          // Get user's selected categories
           const userCategories = await db
             .select({
               categoryId: userPreferenceCategory.categoryId,
@@ -144,7 +134,6 @@ export const weeklyDigestTask = schedules.task({
 
           const userCategoryIds = userCategories.map((uc) => uc.categoryId);
 
-          // If user has no category preferences, skip email (don't send empty digest)
           if (userCategoryIds.length === 0) {
             logger.info(
               `User ${weeklyUser.userName} has no category preferences, skipping email`
@@ -152,19 +141,16 @@ export const weeklyDigestTask = schedules.task({
             continue;
           }
 
-          // Filter articles that match user's categories
           userArticles = recentArticles.filter((article) => {
             const articleCats = articleCategoriesMap.get(article.id) || [];
             const articleCategoryIds = articleCats.map((c) => c.categoryId);
 
-            // Include article if it has at least one matching category
             return articleCategoryIds.some((catId) =>
               userCategoryIds.includes(catId)
             );
           });
         }
 
-        // Skip users with no matching articles (don't send empty digest)
         if (userArticles.length === 0) {
           logger.info(
             `User ${weeklyUser.userName} has no matching articles, skipping email`
@@ -176,7 +162,6 @@ export const weeklyDigestTask = schedules.task({
           `Sending digest to ${weeklyUser.userName} with ${userArticles.length} articles`
         );
 
-        // Format articles for email template
         const formattedArticles = userArticles.map((article) => {
           const articleCats = articleCategoriesMap.get(article.id) || [];
           return {
@@ -189,7 +174,6 @@ export const weeklyDigestTask = schedules.task({
           };
         });
 
-        // Format date range for email
         const weekStart = oneWeekAgo.toLocaleDateString("da-DK", {
           day: "numeric",
           month: "long",
@@ -199,7 +183,6 @@ export const weeklyDigestTask = schedules.task({
           month: "long",
         });
 
-        // Send email
         await sendWeeklyDigest({
           to: weeklyUser.userEmail,
           userName: weeklyUser.userName,

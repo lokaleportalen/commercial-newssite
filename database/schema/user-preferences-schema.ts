@@ -9,13 +9,10 @@ export const userPreferences = pgTable("user_preferences", {
     .unique()
     .references(() => user.id, { onDelete: "cascade" }),
 
-  // News category preferences - if true, user wants all categories
   allCategories: boolean("all_categories").notNull().default(true),
 
-  // Email frequency (hyppighed for nyheder)
-  emailFrequency: text("email_frequency").notNull().default("weekly"), // weekly, immediate, none
+  emailFrequency: text("email_frequency").notNull().default("weekly"),
 
-  // Timestamps
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at")
     .defaultNow()
@@ -25,7 +22,6 @@ export const userPreferences = pgTable("user_preferences", {
   userIdIdx: index("idx_user_preferences_user_id").on(table.userId),
 }));
 
-// Junction table for user-selected categories (when allCategories is false)
 export const userPreferenceCategory = pgTable(
   "user_preference_category",
   {

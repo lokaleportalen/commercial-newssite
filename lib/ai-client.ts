@@ -24,9 +24,6 @@ const getClaudeClient = () => {
   });
 };
 
-/**
- * Get the currently configured AI provider from database
- */
 export async function getAIProvider(): Promise<AIProvider> {
   try {
     const settings = await db
@@ -51,9 +48,6 @@ export async function getAIProvider(): Promise<AIProvider> {
   }
 }
 
-/**
- * Update the AI provider setting in database
- */
 export async function setAIProvider(provider: AIProvider): Promise<void> {
   await db
     .update(systemSettings)
@@ -73,9 +67,6 @@ export interface GenerateTextResponse {
   provider: AIProvider;
 }
 
-/**
- * Determine provider from model name
- */
 function getProviderFromModel(model: string): AIProvider {
   if (model.startsWith("gpt-")) return "openai";
   if (model.startsWith("gemini-")) return "gemini";
@@ -83,10 +74,6 @@ function getProviderFromModel(model: string): AIProvider {
   return "openai"; // Default fallback
 }
 
-/**
- * Generate text using the configured AI provider
- * Provides a unified interface for OpenAI, Gemini, and Claude
- */
 export async function generateText(
   options: GenerateTextOptions
 ): Promise<GenerateTextResponse> {
@@ -182,10 +169,6 @@ export async function generateText(
   }
 }
 
-/**
- * Generate text with JSON response format
- * Attempts to extract valid JSON from the response
- */
 export async function generateJSON<T = unknown>(
   options: GenerateTextOptions
 ): Promise<{ data: T; provider: AIProvider }> {

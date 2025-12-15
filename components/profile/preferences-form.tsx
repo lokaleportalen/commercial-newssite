@@ -30,14 +30,12 @@ export function PreferencesForm({ onClose }: PreferencesFormProps = {}) {
       if (!session?.user) return;
 
       try {
-        // Load categories
         const categoriesResponse = await fetch("/api/categories");
         if (categoriesResponse.ok) {
           const categoriesData = await categoriesResponse.json();
           setCategories(categoriesData.categories || []);
         }
 
-        // Load preferences
         const preferencesResponse = await fetch("/api/user/preferences");
         if (preferencesResponse.ok) {
           const data = await preferencesResponse.json();
@@ -88,7 +86,6 @@ export function PreferencesForm({ onClose }: PreferencesFormProps = {}) {
       }
 
       setSuccess("Dine præferencer er blevet gemt");
-      // If onClose is provided (dialog mode), close after a short delay
       if (onClose) {
         setTimeout(() => {
           onClose();
@@ -122,7 +119,6 @@ export function PreferencesForm({ onClose }: PreferencesFormProps = {}) {
       }
 
       setSuccess("Du er nu afmeldt alle nyhedsmails");
-      // If onClose is provided (dialog mode), close after a short delay
       if (onClose) {
         setTimeout(() => {
           onClose();
@@ -137,7 +133,6 @@ export function PreferencesForm({ onClose }: PreferencesFormProps = {}) {
     }
   };
 
-  // Show loading state while preferences are loading
   if (isLoading) {
     return (
       <div className="py-8 text-center">
@@ -161,7 +156,6 @@ export function PreferencesForm({ onClose }: PreferencesFormProps = {}) {
             </div>
           )}
 
-          {/* News Categories */}
           <div className="space-y-3">
             <Label className="text-sm font-medium flex flex-col items-start">
               Nyhedskategorier
@@ -170,7 +164,6 @@ export function PreferencesForm({ onClose }: PreferencesFormProps = {}) {
               </span>
             </Label>
             <div className="space-y-4">
-              {/* All Categories Option */}
               <label className="flex cursor-pointer items-center space-x-3 rounded-lg border p-3 hover:bg-accent/50">
                 <input
                   type="radio"
@@ -182,7 +175,6 @@ export function PreferencesForm({ onClose }: PreferencesFormProps = {}) {
                 <span className="text-sm font-medium">Alle Nyheder</span>
               </label>
 
-              {/* Specific Categories Option */}
               <div className="space-y-3">
                 <label className="flex cursor-pointer items-center space-x-3 rounded-lg border p-3 hover:bg-accent/50">
                   <input
@@ -197,7 +189,6 @@ export function PreferencesForm({ onClose }: PreferencesFormProps = {}) {
                   </span>
                 </label>
 
-                {/* Category Checkboxes Grid */}
                 {!allCategories && (
                   <div className="ml-7 grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
                     {categories.map((category) => (
@@ -221,7 +212,6 @@ export function PreferencesForm({ onClose }: PreferencesFormProps = {}) {
             </div>
           </div>
 
-          {/* Email Frequency */}
           <div className="space-y-3">
             <Label className="text-sm font-medium">Hyppighed for nyheder</Label>
             <div className="space-y-2">
@@ -269,12 +259,10 @@ export function PreferencesForm({ onClose }: PreferencesFormProps = {}) {
             </div>
           </div>
 
-          {/* Submit Button */}
           <Button type="submit" disabled={isSaving} className="w-full">
             {isSaving ? "Gemmer..." : "Bekræft"}
           </Button>
 
-          {/* Unsubscribe link */}
           <button
             type="button"
             onClick={handleUnsubscribe}

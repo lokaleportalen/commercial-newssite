@@ -3,15 +3,12 @@ import OpenAI from "openai";
 import { processArticle } from "./article-processor";
 import { getCachedAiPrompt } from "@/lib/ai-prompts";
 
-// Initialize OpenAI client lazily (fallback for build phase)
 const getOpenAIClient = () => {
   return new OpenAI({
     apiKey: process.env.OPENAI_API_KEY || "",
   });
 };
 
-// Fallback prompt for fetching commercial real estate news in Denmark
-// This is used if the database prompt is not available
 const FALLBACK_NEWS_PROMPT = `Find 10 nyheder fra ejendomsbranchen i Danmark, eller med relevans for Danmark, som har fået meget omtale de seneste 24 timer - rank med de mest spændende, unikke og aktuelle først. Det skal være relevant for ejere af erhvervsejendomme (målgruppen er udlejere som bruger Lokaleportalen).
 
 KRITISK: Du SKAL returnere dit svar som RENT JSON uden nogen ekstra tekst, forklaringer eller kommentarer.
@@ -42,22 +39,16 @@ interface NewsItem {
   date?: string;
 }
 
-/**
- * Daily scheduled task to fetch and process commercial real estate news
- * Runs every day at 6:00 AM Copenhagen time (CET/CEST)
- */
 export const dailyNewsTask = schedules.task({
   id: "daily-news-fetch",
-  // Run every day at 6:00 AM Copenhagen time
   cron: { pattern: "0 6 * * *", timezone: "Europe/Copenhagen" },
-  maxDuration: 3600, // 1 hour max (overrides global config if needed)
+  maxDuration: 3600,
   run: async (payload) => {
     logger.info("Starting daily news fetch", {
       timestamp: payload.timestamp,
       lastRun: payload.lastTimestamp,
     });
 
-    // Check if OpenAI API key is configured
     if (!process.env.OPENAI_API_KEY) {
       throw new Error("OpenAI API key not configured");
     }
@@ -65,7 +56,6 @@ export const dailyNewsTask = schedules.task({
     // Step 1: Fetch news list from OpenAI
     logger.info("Fetching daily commercial real estate news from OpenAI...");
 
-    // Get the prompt from database, fallback to hardcoded if not found
     const newsPrompt =
       (await getCachedAiPrompt("news_fetch")) || FALLBACK_NEWS_PROMPT;
 
@@ -90,14 +80,10 @@ export const dailyNewsTask = schedules.task({
 
     logger.info("Received news list from OpenAI");
 
-    // Parse the JSON response into individual news items
     let newsItems: NewsItem[] = [];
 
     try {
-      // Try to extract JSON if it's wrapped in markdown code blocks
       let jsonText = newsListJson.trim();
-
-      // Remove markdown code blocks if present
       if (jsonText.startsWith("```")) {
         const match = jsonText.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
         if (match) {
@@ -105,7 +91,6 @@ export const dailyNewsTask = schedules.task({
         }
       }
 
-      // Try to find JSON object if there's extra text
       const jsonMatch = jsonText.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
         jsonText = jsonMatch[0];
@@ -123,7 +108,7 @@ export const dailyNewsTask = schedules.task({
 
     logger.info(`Parsed ${newsItems.length} news items`);
 
-    // Step 2: Process each news item into a full article
+    // Step 2: Process each news item
     const processedArticles: Array<{
       success: boolean;
       title: string;
@@ -133,7 +118,6 @@ export const dailyNewsTask = schedules.task({
       insufficientSources?: boolean;
     }> = [];
 
-    // Delay between articles to avoid rate limiting (60 seconds)
     const ARTICLE_PROCESSING_DELAY = 60;
 
     for (let i = 0; i < newsItems.length; i++) {
@@ -178,8 +162,6 @@ export const dailyNewsTask = schedules.task({
         });
       }
 
-      // Add delay between articles (except after the last one)
-      // Using wait.for() instead of setTimeout - doesn't count toward compute time!
       if (i < newsItems.length - 1) {
         logger.info(
           `Waiting ${ARTICLE_PROCESSING_DELAY}s before processing next article...`
@@ -188,7 +170,6 @@ export const dailyNewsTask = schedules.task({
       }
     }
 
-    // Summary
     const successCount = processedArticles.filter((a) => a.success).length;
     const duplicateCount = processedArticles.filter((a) => a.duplicate).length;
     const insufficientSourcesCount = processedArticles.filter(

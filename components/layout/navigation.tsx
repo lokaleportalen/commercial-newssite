@@ -43,7 +43,6 @@ export function Navigation() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [isScrolled, setIsScrolled] = useState(false);
 
-  // Fetch categories on mount
   useEffect(() => {
     async function fetchCategories() {
       try {
@@ -59,7 +58,6 @@ export function Navigation() {
     fetchCategories();
   }, []);
 
-  // Handle scroll for sticky navigation shadow
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 10);
@@ -97,7 +95,6 @@ export function Navigation() {
               Estatenews.dk
             </Link>
 
-            {/* Desktop Navigation */}
             <div className="hidden md:flex items-center gap-1">
               <Link
                 href="/"
@@ -119,7 +116,6 @@ export function Navigation() {
                 Nyheder
               </Link>
 
-              {/* Kategorier Dropdown */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild suppressHydrationWarning>
                   <Button
@@ -127,7 +123,6 @@ export function Navigation() {
                     className="hover:bg-transparent h-9 px-4 py-2 text-sm font-medium"
                     suppressHydrationWarning
                     onMouseEnter={(e) => {
-                      // Trigger dropdown on hover
                       const trigger = e.currentTarget;
                       trigger.click();
                     }}
@@ -140,7 +135,6 @@ export function Navigation() {
                   align="start"
                   className="w-[300px]"
                   onMouseLeave={(e) => {
-                    // Close dropdown when mouse leaves
                     const content = e.currentTarget;
                     const trigger =
                       content.previousElementSibling as HTMLElement;
@@ -176,7 +170,6 @@ export function Navigation() {
             </div>
           </div>
 
-          {/* Desktop Search and Auth Buttons */}
           <div className="hidden md:flex items-center gap-4">
             <Button
               variant="ghost"
@@ -188,7 +181,6 @@ export function Navigation() {
             </Button>
             <Separator orientation="vertical" className="h-6" />
             {isPending ? (
-              // Loading skeleton - reserve space to prevent layout shift
               <div className="flex items-center gap-4">
                 <div className="h-9 w-24 animate-pulse rounded-md bg-muted" />
                 <div className="h-9 w-28 animate-pulse rounded-md bg-muted" />
@@ -214,7 +206,6 @@ export function Navigation() {
             )}
           </div>
 
-          {/* Mobile Burger Menu */}
           <Drawer
             open={drawerOpen}
             onOpenChange={setDrawerOpen}
@@ -245,7 +236,6 @@ export function Navigation() {
                 </DrawerClose>
               </DrawerHeader>
               <div className="flex flex-col gap-2 p-4 h-full overflow-y-auto">
-                {/* Forside Link */}
                 <Link
                   href="/"
                   onClick={() => setDrawerOpen(false)}
@@ -259,7 +249,6 @@ export function Navigation() {
                   Forside
                 </Link>
 
-                {/* Nyheder Link */}
                 <Link
                   href="/nyheder"
                   onClick={() => setDrawerOpen(false)}
@@ -275,7 +264,6 @@ export function Navigation() {
 
                 <Separator className="my-2" />
 
-                {/* Categories Section */}
                 <div className="px-4 py-2">
                   <p className="text-xs font-semibold uppercase text-muted-foreground mb-2">
                     Kategorier
@@ -304,7 +292,6 @@ export function Navigation() {
 
                 <Separator className="my-2" />
 
-                {/* Om os Link */}
                 <Link
                   href="/om-os"
                   onClick={() => setDrawerOpen(false)}
@@ -320,7 +307,6 @@ export function Navigation() {
 
                 <Separator className="my-2" />
 
-                {/* Search Button */}
                 <Button
                   variant="ghost"
                   className="justify-start"
@@ -335,7 +321,6 @@ export function Navigation() {
 
                 <Separator className="my-2" />
 
-                {/* Auth Buttons */}
                 <div className="mt-auto flex flex-col">
                   {isPending ? (
                     <div className="flex flex-col gap-2">
@@ -387,7 +372,6 @@ export function Navigation() {
         </div>
       </div>
 
-      {/* Search Dialog */}
       <SearchDialog open={searchOpen} onOpenChange={setSearchOpen} />
     </nav>
   );

@@ -63,26 +63,17 @@ export async function sendEmail(options: SendEmailOptions) {
   }
 }
 
-/**
- * Render a React Email component to HTML string
- */
 export async function renderEmail(
   component: React.ReactElement
 ): Promise<string> {
   return await render(component);
 }
 
-/**
- * Generate unsubscribe token for a user
- */
 export function generateUnsubscribeToken(userId: string): string {
   const payload = JSON.stringify({ userId, timestamp: Date.now() });
   return Buffer.from(payload).toString("base64url");
 }
 
-/**
- * Verify and decode unsubscribe token
- */
 export function verifyUnsubscribeToken(
   token: string
 ): { userId: string } | null {
@@ -97,9 +88,6 @@ export function verifyUnsubscribeToken(
   }
 }
 
-/**
- * Generate email URLs for a user
- */
 export function generateEmailUrls(userId: string) {
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
   const unsubscribeToken = generateUnsubscribeToken(userId);
@@ -112,9 +100,6 @@ export function generateEmailUrls(userId: string) {
   };
 }
 
-/**
- * Fetch an email template from the database by key
- */
 async function getEmailTemplate(key: string) {
   const templates = await db
     .select()
@@ -135,10 +120,6 @@ async function getEmailTemplate(key: string) {
   };
 }
 
-// ============================================================================
-// Email Sender Functions
-// ============================================================================
-
 interface SendWelcomeEmailParams {
   to: string;
   userName: string;
@@ -152,7 +133,6 @@ export async function sendWelcomeEmail({
 }: SendWelcomeEmailParams) {
   const urls = generateEmailUrls(userId);
 
-  // Fetch template content from database
   const { template, content } = await getEmailTemplate("welcome");
   const welcomeContent = content as WelcomeEmailContent;
 
@@ -167,7 +147,6 @@ export async function sendWelcomeEmail({
     })
   );
 
-  // Replace variables in subject
   const subject = template.subject.replace(/{userName}/g, userName);
 
   return sendEmail({
@@ -200,7 +179,6 @@ export async function sendArticleNotification({
   const urls = generateEmailUrls(userId);
   const articleUrl = `${urls.baseUrl}/artikler/${articleSlug}`;
 
-  // Fetch template content from database
   const { template, content } = await getEmailTemplate("article_notification");
   const articleContent = content as ArticleNotificationContent;
 
@@ -218,7 +196,6 @@ export async function sendArticleNotification({
     })
   );
 
-  // Replace variables in subject
   const subject = template.subject.replace(/{articleTitle}/g, articleTitle);
 
   return sendEmail({
@@ -229,7 +206,6 @@ export async function sendArticleNotification({
   });
 }
 
-// Email-specific Article type (different from main Article type)
 interface EmailArticle {
   id: string;
   title: string;
@@ -258,7 +234,6 @@ export async function sendWeeklyDigest({
 }: SendWeeklyDigestParams) {
   const urls = generateEmailUrls(userId);
 
-  // Fetch template content from database
   const { template, content } = await getEmailTemplate("weekly_digest");
   const digestContent = content as WeeklyDigestContent;
 
@@ -276,7 +251,6 @@ export async function sendWeeklyDigest({
     })
   );
 
-  // Replace variables in subject
   const subject = template.subject
     .replace(/{weekStart}/g, weekStart)
     .replace(/{weekEnd}/g, weekEnd);
@@ -302,7 +276,6 @@ export async function sendPasswordReset({
   resetUrl,
   expirationMinutes = 60,
 }: SendPasswordResetParams) {
-  // Fetch template content from database
   const { template, content } = await getEmailTemplate("password_reset");
   const resetContent = content as PasswordResetContent;
 
@@ -316,7 +289,6 @@ export async function sendPasswordReset({
     })
   );
 
-  // Replace variables in subject
   const subject = template.subject.replace(/{userName}/g, userName);
 
   return sendEmail({

@@ -1,9 +1,5 @@
 import { del } from "@vercel/blob";
 
-/**
- * Delete a blob image from Vercel Blob storage
- * Only deletes if the URL is a vercel-storage.com URL
- */
 export async function deleteBlobImage(imageUrl: string | null): Promise<void> {
   if (!imageUrl) {
     return;
@@ -25,10 +21,6 @@ export async function deleteBlobImage(imageUrl: string | null): Promise<void> {
   }
 }
 
-/**
- * Delete a blob image (non-throwing version)
- * Logs errors but doesn't throw - useful for cleanup operations
- */
 export async function deleteBlobImageSafe(
   imageUrl: string | null
 ): Promise<boolean> {

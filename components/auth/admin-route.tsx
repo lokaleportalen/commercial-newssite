@@ -19,7 +19,6 @@ export function AdminRoute({ children }: AdminRouteProps) {
   const isLoading = sessionPending || roleLoading;
 
   useEffect(() => {
-    // Only redirect if we're done loading
     if (!isLoading) {
       if (!session || !isAdmin) {
         router.push("/");
@@ -27,7 +26,6 @@ export function AdminRoute({ children }: AdminRouteProps) {
     }
   }, [isLoading, session, isAdmin, router]);
 
-  // Show loading spinner while checking session and role
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
@@ -36,7 +34,6 @@ export function AdminRoute({ children }: AdminRouteProps) {
     );
   }
 
-  // Don't render children if not admin (will redirect)
   if (!session || !isAdmin) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
@@ -45,6 +42,5 @@ export function AdminRoute({ children }: AdminRouteProps) {
     );
   }
 
-  // User is admin, render children
   return <>{children}</>;
 }

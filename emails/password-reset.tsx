@@ -6,7 +6,6 @@ interface PasswordResetProps {
   userName: string;
   resetUrl: string;
   expirationMinutes?: number;
-  // Optional content overrides from database
   heading?: string;
   greeting?: string;
   requestParagraph?: string;
@@ -34,7 +33,6 @@ export const PasswordReset = ({
   closingText = "Med venlig hilsen,",
   signatureText = "Estatenews.dk teamet",
 }: PasswordResetProps) => {
-  // Replace template variables in text
   const replaceVariables = (text: string) => {
     return text
       .replace(/{userName}/g, userName)

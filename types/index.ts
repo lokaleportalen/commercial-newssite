@@ -1,24 +1,11 @@
-/**
- * Centralized type definitions for the newssite
- * Import these types instead of duplicating them across files
- */
-
-// ============================================
-// CATEGORY TYPES
-// ============================================
-
 export interface Category {
   id: string;
   name: string;
   slug: string;
   description?: string | null;
   heroImage?: string | null;
-  articleCount?: number; // Optional - populated for category listings
+  articleCount?: number;
 }
-
-// ============================================
-// ARTICLE TYPES
-// ============================================
 
 export interface Article {
   id: string;
@@ -30,7 +17,7 @@ export interface Article {
   image: string | null;
   sourceUrl?: string | null;
   sources?: string[] | null;
-  categories?: Category[]; // Optional - not always populated
+  categories?: Category[];
   status: string;
   publishedDate: Date;
   createdAt: Date;
@@ -39,21 +26,15 @@ export interface Article {
 }
 
 export interface ArticleWithCategories extends Article {
-  categories: Category[]; // Required in this variant
+  categories: Category[];
 }
 
-// Article preview type (for listings)
 export type ArticlePreview = Pick<
   Article,
   "id" | "title" | "slug" | "summary" | "image" | "publishedDate"
 >;
 
-// Article creation type (omits auto-generated fields)
 export type ArticleCreate = Omit<Article, "id" | "createdAt" | "updatedAt">;
-
-// ============================================
-// USER TYPES
-// ============================================
 
 export interface User {
   id: string;
@@ -75,15 +56,7 @@ export interface UserWithPreferences extends User {
   preferences: UserPreferences;
 }
 
-// ============================================
-// EMAIL TYPES
-// ============================================
-
 export type EmailFrequency = "immediate" | "weekly" | "none";
-
-// ============================================
-// API RESPONSE TYPES
-// ============================================
 
 export interface ApiResponse<T> {
   data?: T;

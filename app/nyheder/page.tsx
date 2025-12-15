@@ -30,10 +30,8 @@ export default async function NyhederPage({ searchParams }: NyhederProps) {
   const selectedCategory = params.category || "all";
   const selectedSort = params.sort || "newest";
 
-  // Build WHERE conditions
   const whereConditions = [eq(article.status, "published")];
 
-  // Determine sort order
   let orderByClause;
   switch (selectedSort) {
     case "oldest":
@@ -67,24 +65,20 @@ export default async function NyhederPage({ searchParams }: NyhederProps) {
       .where(and(...whereConditions)),
   ]);
 
-  // Fetch categories for all articles
   const articleIds = articles.map((a) => a.id);
   const categoriesMap = await getArticleCategoriesBulk(articleIds);
 
-  // Merge categories into articles
   let articlesWithCategories = articles.map((art) => ({
     ...art,
     categories: categoriesMap.get(art.id) || [],
   }));
 
-  // Filter by category if selected
   if (selectedCategory !== "all") {
     articlesWithCategories = articlesWithCategories.filter((art) =>
       art.categories.some((cat) => cat.slug === selectedCategory)
     );
   }
 
-  // Limit to page size after filtering
   articlesWithCategories = articlesWithCategories.slice(0, ARTICLES_PER_PAGE);
 
   const totalCount = Number(totalCountResult[0]?.count || 0);
@@ -92,7 +86,6 @@ export default async function NyhederPage({ searchParams }: NyhederProps) {
 
   return (
     <div className="flex-1">
-      {/* Header */}
       <header className="border-b bg-muted/30">
         <div className="container mx-auto px-4 py-8 max-w-6xl">
           <h1 className="text-3xl font-bold mb-2">Alle Nyheder</h1>
@@ -109,7 +102,6 @@ export default async function NyhederPage({ searchParams }: NyhederProps) {
       />
 
       <main className="container mx-auto px-4 py-12 max-w-6xl">
-        {/* Results Count */}
         <header className="mb-6">
           <p className="text-muted-foreground">
             {articlesWithCategories.length} af {totalCount}{" "}
@@ -118,7 +110,6 @@ export default async function NyhederPage({ searchParams }: NyhederProps) {
           </p>
         </header>
 
-        {/* Articles Grid */}
         {articlesWithCategories.length > 0 ? (
           <>
             <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

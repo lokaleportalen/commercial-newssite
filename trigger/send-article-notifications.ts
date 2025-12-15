@@ -16,12 +16,6 @@ const ArticleNotificationPayload = z.object({
   articleId: z.string(),
 });
 
-/**
- * Task to send immediate article notifications to users with "immediate" email frequency
- * Filters users by their category preferences
- *
- * Triggered when: A new article is published
- */
 export const sendArticleNotificationsTask = task({
   id: "send-article-notifications",
   retry: {
@@ -56,7 +50,6 @@ export const sendArticleNotificationsTask = task({
 
     const articleData = articles[0];
 
-    // Only send notifications for published articles
     if (articleData.status !== "published") {
       logger.info(
         `Article ${articleId} is not published, skipping notifications`
@@ -68,7 +61,6 @@ export const sendArticleNotificationsTask = task({
       };
     }
 
-    // Get article categories
     const articleCategories = await db
       .select({
         categoryId: articleCategory.categoryId,
@@ -110,7 +102,7 @@ export const sendArticleNotificationsTask = task({
       };
     }
 
-    // Step 3: Filter users by category preferences
+    // Step 3: Filter users
     const usersToNotify: Array<{
       userId: string;
       userName: string;
@@ -118,7 +110,6 @@ export const sendArticleNotificationsTask = task({
     }> = [];
 
     for (const immediateUser of immediateUsers) {
-      // If user wants all categories, add them
       if (immediateUser.allCategories) {
         usersToNotify.push({
           userId: immediateUser.userId,
@@ -128,12 +119,10 @@ export const sendArticleNotificationsTask = task({
         continue;
       }
 
-      // If article has no categories, skip (user has specific preferences but article has none)
       if (articleCategoryIds.length === 0) {
         continue;
       }
 
-      // Check if user has any matching category preferences
       const userCategories = await db
         .select({
           categoryId: userPreferenceCategory.categoryId,
@@ -148,7 +137,6 @@ export const sendArticleNotificationsTask = task({
 
       const userCategoryIds = userCategories.map((uc) => uc.categoryId);
 
-      // Check if there's any overlap between article categories and user categories
       const hasMatchingCategory = articleCategoryIds.some((catId) =>
         userCategoryIds.includes(catId)
       );

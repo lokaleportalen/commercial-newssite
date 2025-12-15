@@ -11,7 +11,6 @@ interface ArticleContentProps {
 
 export function ArticleContent({ content, isAuthenticated }: ArticleContentProps) {
   if (isAuthenticated) {
-    // Normalize h1 to h2 for proper heading hierarchy (page title is the only h1)
     const normalizedContent = normalizeArticleHeadings(content);
     return (
       <div className="prose max-w-none">
@@ -20,7 +19,6 @@ export function ArticleContent({ content, isAuthenticated }: ArticleContentProps
     );
   }
 
-  // Pass preview (clear) and extended content (blurred) for SEO and user engagement
   const previewContent = getContentPreview(content, 400);
   const extendedContent = getExtendedPreview(content, 0.4);
 

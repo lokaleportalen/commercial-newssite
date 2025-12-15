@@ -1,15 +1,7 @@
-/**
- * Converts h1 markdown headings (#) to h2 (##) to maintain proper heading hierarchy.
- * Articles should only have one h1 (the page title), so all content headings should be h2 or lower.
- */
 export function normalizeArticleHeadings(content: string): string {
   return content.replace(/^# /gm, '## ');
 }
 
-/**
- * Truncate content at a natural boundary (sentence or paragraph)
- * to provide a preview for non-authenticated users.
- */
 export function getContentPreview(content: string, maxChars: number = 400): string {
   // First normalize headings to ensure proper hierarchy
   let processedContent = normalizeArticleHeadings(content.trim());
@@ -49,10 +41,6 @@ export function getContentPreview(content: string, maxChars: number = 400): stri
   return processedContent.substring(0, maxChars) + '...';
 }
 
-/**
- * Get extended content for paywall blur effect (40% of full article)
- * This shows enough content for SEO while keeping 60% exclusive for authenticated users.
- */
 export function getExtendedPreview(content: string, maxPercentage: number = 0.4): string {
   const processedContent = normalizeArticleHeadings(content.trim());
   const targetLength = Math.floor(processedContent.length * maxPercentage);
