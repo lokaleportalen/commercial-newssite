@@ -40,7 +40,7 @@ export function UserEditModal({
 }: UserEditModalProps) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [emailFrequency, setEmailFrequency] = useState<"immediate" | "weekly">(
+  const [emailFrequency, setEmailFrequency] = useState<"immediate" | "weekly" | "none">(
     "weekly"
   );
   const [allCategories, setAllCategories] = useState(true);
@@ -232,7 +232,7 @@ export function UserEditModal({
               <Select
                 value={emailFrequency}
                 onValueChange={(value) =>
-                  setEmailFrequency(value as "immediate" | "weekly")
+                  setEmailFrequency(value as "immediate" | "weekly" | "none")
                 }
               >
                 <SelectTrigger id="emailFrequency">
@@ -241,6 +241,7 @@ export function UserEditModal({
                 <SelectContent>
                   <SelectItem value="immediate">Straks</SelectItem>
                   <SelectItem value="weekly">Ugentlig</SelectItem>
+                  <SelectItem value="none">Ingen emails</SelectItem>
                 </SelectContent>
               </Select>
             </div>

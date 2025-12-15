@@ -39,34 +39,23 @@ export async function GET(request: NextRequest) {
       .limit(1);
 
     if (existingPrefs.length === 0) {
-      // Create preferences with weekly frequency to unsubscribe
+      // Create preferences with "none" frequency to unsubscribe
       await db.insert(userPreferences).values({
         id: `pref_${userId}`,
         userId,
-        allCategories: false,
-        emailFrequency: "weekly", // This will effectively unsubscribe them from immediate emails
+        allCategories: true,
+        emailFrequency: "none",
       });
-
-      // Delete all category preferences (if any)
-      await db
-        .delete(userPreferenceCategory)
-        .where(eq(userPreferenceCategory.userPreferencesId, `pref_${userId}`));
     } else {
       const prefId = existingPrefs[0].id;
 
-      // Update preferences to unsubscribe
+      // Update preferences to unsubscribe (set frequency to "none")
       await db
         .update(userPreferences)
         .set({
-          allCategories: false,
-          emailFrequency: "weekly", // Remove immediate notifications
+          emailFrequency: "none",
         })
         .where(eq(userPreferences.id, prefId));
-
-      // Delete all category preferences
-      await db
-        .delete(userPreferenceCategory)
-        .where(eq(userPreferenceCategory.userPreferencesId, prefId));
     }
 
     // Return HTML page confirming unsubscribe

@@ -13,7 +13,7 @@ export const userPreferences = pgTable("user_preferences", {
   allCategories: boolean("all_categories").notNull().default(true),
 
   // Email frequency (hyppighed for nyheder)
-  emailFrequency: text("email_frequency").notNull().default("weekly"), // weekly, immediate
+  emailFrequency: text("email_frequency").notNull().default("weekly"), // weekly, immediate, none
 
   // Timestamps
   createdAt: timestamp("created_at").defaultNow().notNull(),

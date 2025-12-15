@@ -252,6 +252,20 @@ export function PreferencesForm({ onClose }: PreferencesFormProps = {}) {
                   Send mig relevante nyheder 1 gang om ugen
                 </span>
               </label>
+
+              <label className="flex cursor-pointer items-center space-x-3 rounded-lg border p-3 hover:bg-accent/50">
+                <input
+                  type="radio"
+                  name="emailFrequency"
+                  value="none"
+                  checked={emailFrequency === "none"}
+                  onChange={(e) => setEmailFrequency(e.target.value)}
+                  className="h-4 w-4 border-gray-300 text-primary focus:ring-2 focus:ring-primary"
+                />
+                <span className="text-sm">
+                  Ingen emails (afmeldt)
+                </span>
+              </label>
             </div>
           </div>
 

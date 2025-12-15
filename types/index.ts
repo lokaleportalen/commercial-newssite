@@ -66,7 +66,7 @@ export interface User {
 }
 
 export interface UserPreferences {
-  emailFrequency: "immediate" | "weekly";
+  emailFrequency: "immediate" | "weekly" | "none";
   allCategories: boolean;
   categories: Category[];
 }
@@ -79,7 +79,7 @@ export interface UserWithPreferences extends User {
 // EMAIL TYPES
 // ============================================
 
-export type EmailFrequency = "immediate" | "weekly";
+export type EmailFrequency = "immediate" | "weekly" | "none";
 
 // ============================================
 // API RESPONSE TYPES

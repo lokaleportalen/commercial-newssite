@@ -43,12 +43,12 @@ export async function PATCH(
 
     // Update user preferences
     const prefsUpdates: {
-      emailFrequency?: "immediate" | "weekly";
+      emailFrequency?: "immediate" | "weekly" | "none";
       allCategories?: boolean;
     } = {};
 
     if (emailFrequency !== undefined) {
-      if (!["immediate", "weekly"].includes(emailFrequency)) {
+      if (!["immediate", "weekly", "none"].includes(emailFrequency)) {
         return NextResponse.json(
           { error: "Invalid email frequency" },
           { status: 400 }
