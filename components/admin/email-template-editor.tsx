@@ -9,9 +9,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Eye, Save, RotateCcw } from "lucide-react";
+import { Eye, Save, RotateCcw, Mail } from "lucide-react";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { SendTestEmailDialog } from "@/components/admin/send-test-email-dialog";
 
 type EmailTemplate = {
   id: string;
@@ -46,6 +47,8 @@ export function EmailTemplateEditor({
   const [showPreview, setShowPreview] = useState(false);
   const [previewHtml, setPreviewHtml] = useState("");
   const [isLoadingPreview, setIsLoadingPreview] = useState(false);
+  const [showTestEmailDialog, setShowTestEmailDialog] = useState(false);
+  const [isSendingTest, setIsSendingTest] = useState(false);
 
   // Fetch template data
   useEffect(() => {
@@ -182,6 +185,34 @@ export function EmailTemplateEditor({
     }
   };
 
+  const handleSendTestEmail = async (recipientEmail: string) => {
+    try {
+      setIsSendingTest(true);
+
+      const response = await fetch(
+        `/api/admin/email-templates/${templateId}/send-test`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ recipientEmail }),
+        }
+      );
+
+      if (response.ok) {
+        toast.success(`Test email sendt til ${recipientEmail}`);
+        setShowTestEmailDialog(false);
+      } else {
+        const error = await response.json();
+        toast.error(error.error || "Kunne ikke sende test email");
+      }
+    } catch (error) {
+      console.error("Error sending test email:", error);
+      toast.error("Fejl ved afsendelse af test email");
+    } finally {
+      setIsSendingTest(false);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="p-6 space-y-6">
@@ -223,6 +254,14 @@ export function EmailTemplateEditor({
                 >
                   <Eye className="mr-2 h-4 w-4" />
                   {showPreview ? "Skjul" : "Vis"} Preview
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowTestEmailDialog(true)}
+                >
+                  <Mail className="mr-2 h-4 w-4" />
+                  Send test
                 </Button>
                 <Button
                   variant="outline"
@@ -365,6 +404,14 @@ export function EmailTemplateEditor({
           </div>
         </div>
       )}
+
+      {/* Send Test Email Dialog */}
+      <SendTestEmailDialog
+        open={showTestEmailDialog}
+        onOpenChange={setShowTestEmailDialog}
+        onSend={handleSendTestEmail}
+        isSending={isSendingTest}
+      />
     </div>
   );
 }
