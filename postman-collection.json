@@ -1,10 +1,10 @@
 {
   "info": {
     "name": "Commercial Newssite API",
-    "description": "Complete API collection for Lokaleportalen.dk commercial newssite. Includes authentication, article management, user preferences, admin operations, and email functionality.",
+    "description": "Complete API collection for Lokaleportalen.dk commercial newssite.\n\n⚠️ **PRODUCTION WARNING** ⚠️\nMany endpoints in this collection will affect PRODUCTION data:\n- Database writes (articles, users, categories)\n- Vercel Blob storage (shared prod/dev)\n- Real email sending via Mailgun\n- Trigger.dev tasks (AI costs, creates prod articles)\n\n🔴 HIGH RISK ENDPOINTS (marked with ⚠️):\n- Trigger weekly news (AI costs + creates articles)\n- Upload endpoints (prod blob storage)\n- Email sending (real emails to users)\n- Delete operations (permanent)\n- Article publishing (triggers notifications)\n\n✅ SAFE for testing:\n- GET requests (read-only)\n- Auth endpoints (session only)\n- Draft article creation (if not published)\n\nRecommendation: Use a separate test environment or be very careful with write operations!",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
     "_postman_id": "commercial-newssite-api",
-    "version": "1.0.0"
+    "version": "1.0.1"
   },
   "variable": [
     {
@@ -269,7 +269,7 @@
       "description": "Public image upload endpoint",
       "item": [
         {
-          "name": "Upload Image",
+          "name": "⚠️ Upload Image",
           "request": {
             "method": "POST",
             "header": [],
@@ -288,7 +288,8 @@
             "body": {
               "mode": "file",
               "file": {}
-            }
+            },
+            "description": "⚠️ **WARNING:** Uploads to PRODUCTION Vercel Blob storage (no separate dev/prod storage). Files cannot be easily deleted."
           }
         }
       ]
@@ -407,7 +408,7 @@
           }
         },
         {
-          "name": "Send Test Email",
+          "name": "⚠️ Send Test Email",
           "request": {
             "method": "POST",
             "header": [
@@ -423,8 +424,9 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"to\": \"test@example.com\",\n  \"subject\": \"Test Email\",\n  \"html\": \"<p>Test email content</p>\"\n}"
-            }
+              "raw": "{\n  \"email\": \"test@example.com\",\n  \"subject\": \"Test Email\",\n  \"message\": \"Test email content\"\n}"
+            },
+            "description": "⚠️ **WARNING:** Sends REAL emails via Mailgun to the specified email address."
           }
         }
       ]
@@ -505,7 +507,7 @@
           }
         },
         {
-          "name": "Update Article",
+          "name": "⚠️ Update Article",
           "request": {
             "method": "PUT",
             "header": [
@@ -528,8 +530,9 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"title\": \"Updated Article Title\",\n  \"slug\": \"updated-article-slug\",\n  \"content\": \"Updated article content...\",\n  \"summary\": \"Updated summary\",\n  \"metaDescription\": \"Updated meta description\",\n  \"image\": \"https://example.com/new-image.jpg\",\n  \"sources\": [\"https://source1.com\"],\n  \"categories\": [\"category-id-1\"],\n  \"status\": \"published\"\n}"
-            }
+              "raw": "{\n  \"title\": \"Updated Article Title\",\n  \"slug\": \"updated-article-slug\",\n  \"content\": \"Updated article content...\",\n  \"summary\": \"Updated summary\",\n  \"metaDescription\": \"Updated meta description\",\n  \"image\": \"https://example.com/new-image.jpg\",\n  \"sources\": [\"https://source1.com\"],\n  \"categories\": [\"category-id-1\"],\n  \"status\": \"draft\"\n}"
+            },
+            "description": "⚠️ **WARNING:** \n- Updates PRODUCTION database\n- If changing status to 'published', will automatically trigger REAL email notifications to users\n- Use status='draft' for safe testing"
           }
         },
         {
@@ -552,7 +555,7 @@
           }
         },
         {
-          "name": "Regenerate Article Image",
+          "name": "⚠️ Regenerate Article Image",
           "request": {
             "method": "POST",
             "header": [
@@ -576,11 +579,12 @@
             "body": {
               "mode": "raw",
               "raw": "{\n  \"customDescription\": \"Optional custom image description\"\n}"
-            }
+            },
+            "description": "⚠️ **WARNING:** This will:\n- Call Gemini API (costs money)\n- Upload new image to PRODUCTION Vercel Blob\n- Image stored permanently even if not selected"
           }
         },
         {
-          "name": "Manually Trigger Article Notifications",
+          "name": "⚠️ Manually Trigger Article Notifications",
           "request": {
             "method": "POST",
             "header": [
@@ -597,7 +601,8 @@
             "body": {
               "mode": "raw",
               "raw": "{\n  \"articleId\": \"article-id-here\"\n}"
-            }
+            },
+            "description": "🔴 **PRODUCTION WARNING** 🔴\n\nThis will send REAL EMAILS to ALL users with 'immediate' email frequency whose preferences match the article categories.\n\n⚠️ DO NOT USE in production unless you want to actually notify users!"
           }
         }
       ]
@@ -619,7 +624,7 @@
           }
         },
         {
-          "name": "Upload Category Image",
+          "name": "⚠️ Upload Category Image",
           "request": {
             "method": "POST",
             "header": [],
@@ -638,7 +643,8 @@
             "body": {
               "mode": "file",
               "file": {}
-            }
+            },
+            "description": "⚠️ **WARNING:** Uploads to PRODUCTION Vercel Blob storage."
           }
         }
       ]
@@ -857,7 +863,7 @@
           }
         },
         {
-          "name": "Send Test Email",
+          "name": "⚠️ Send Test Email (Template)",
           "request": {
             "method": "POST",
             "header": [
@@ -881,7 +887,8 @@
             "body": {
               "mode": "raw",
               "raw": "{\n  \"email\": \"test@example.com\"\n}"
-            }
+            },
+            "description": "⚠️ **WARNING:** Sends REAL email via Mailgun using the specified template."
           }
         }
       ]
@@ -1034,7 +1041,7 @@
       "description": "Admin endpoints for triggering automated tasks",
       "item": [
         {
-          "name": "Manually Trigger Weekly News",
+          "name": "⚠️ Manually Trigger Weekly News",
           "request": {
             "method": "POST",
             "header": [],
@@ -1042,7 +1049,8 @@
               "raw": "{{baseUrl}}/api/admin/trigger-cron",
               "host": ["{{baseUrl}}"],
               "path": ["api", "admin", "trigger-cron"]
-            }
+            },
+            "description": "🔴 **PRODUCTION WARNING** 🔴\n\nThis endpoint will:\n- Trigger Trigger.dev AI task (costs money)\n- Use OpenAI GPT-4o API (costs money)\n- Use Gemini API for images (costs money)\n- Create NEW articles in your DATABASE\n- Upload images to PRODUCTION Vercel Blob\n- Articles created as DRAFTS but still in prod DB\n\n⚠️ Only use this in a test environment or when you actually want to generate news articles!"
           }
         }
       ]
