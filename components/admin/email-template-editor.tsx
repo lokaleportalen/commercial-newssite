@@ -114,7 +114,10 @@ export function EmailTemplateEditor({
     }
   };
 
-  const handleFieldChange = (field: keyof EmailTemplate, value: string | boolean) => {
+  const handleFieldChange = (
+    field: keyof EmailTemplate,
+    value: string | boolean
+  ) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
     setHasChanges(true);
   };
@@ -136,17 +139,14 @@ export function EmailTemplateEditor({
       // Build updated content JSON
       const updatedContent = JSON.stringify(contentFields);
 
-      const response = await fetch(
-        `/api/admin/email-templates/${templateId}`,
-        {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            ...formData,
-            content: updatedContent,
-          }),
-        }
-      );
+      const response = await fetch(`/api/admin/email-templates/${templateId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...formData,
+          content: updatedContent,
+        }),
+      });
 
       if (response.ok) {
         const data = await response.json();
@@ -239,7 +239,7 @@ export function EmailTemplateEditor({
         <ScrollArea className="h-full">
           <div className="p-6 space-y-6">
             {/* Header */}
-            <div className="flex justify-between items-start">
+            <div className="flex flex-col gap-4 justify-between items-start">
               <div>
                 <h2 className="text-2xl font-bold">{template.name}</h2>
                 <p className="text-sm text-muted-foreground mt-1">
@@ -366,7 +366,8 @@ export function EmailTemplateEditor({
                     <p className="text-xs text-muted-foreground">
                       {key.includes("Cta") && "Tekst på knappen"}
                       {key.includes("heading") && "Overskrift"}
-                      {key.includes("greeting") && "Hilsen (brug {userName} for brugernavn)"}
+                      {key.includes("greeting") &&
+                        "Hilsen (brug {userName} for brugernavn)"}
                       {key.includes("Paragraph") && "Brødtekst"}
                     </p>
                   </div>

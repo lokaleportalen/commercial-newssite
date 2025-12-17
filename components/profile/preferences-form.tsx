@@ -6,6 +6,14 @@ import { authClient } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import type { Category } from "@/types";
 import type { ClientSessionData } from "@/types/auth";
 
@@ -24,6 +32,7 @@ export function PreferencesForm({ onClose }: PreferencesFormProps = {}) {
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [showUnsubscribeDialog, setShowUnsubscribeDialog] = useState(false);
 
   useEffect(() => {
     const loadData = async () => {
@@ -103,10 +112,7 @@ export function PreferencesForm({ onClose }: PreferencesFormProps = {}) {
   };
 
   const handleUnsubscribe = async () => {
-    if (!confirm("Er du sikker på, at du vil afmelde alle nyhedsmails?")) {
-      return;
-    }
-
+    setShowUnsubscribeDialog(false);
     setIsSaving(true);
 
     try {
@@ -214,6 +220,16 @@ export function PreferencesForm({ onClose }: PreferencesFormProps = {}) {
 
           <div className="space-y-3">
             <Label className="text-sm font-medium">Hyppighed for nyheder</Label>
+
+            {emailFrequency === "none" && (
+              <div className="rounded-md bg-yellow-50 border border-yellow-200 p-3 text-sm text-yellow-800">
+                <p className="font-medium">Du er i øjeblikket afmeldt</p>
+                <p className="mt-1 text-xs">
+                  Vælg en hyppighed nedenfor for at tilmelde dig nyhedsbreve igen.
+                </p>
+              </div>
+            )}
+
             <div className="space-y-2">
               <label className="flex cursor-pointer items-center space-x-3 rounded-lg border p-3 hover:bg-accent/50">
                 <input
@@ -242,20 +258,6 @@ export function PreferencesForm({ onClose }: PreferencesFormProps = {}) {
                   Send mig relevante nyheder 1 gang om ugen
                 </span>
               </label>
-
-              <label className="flex cursor-pointer items-center space-x-3 rounded-lg border p-3 hover:bg-accent/50">
-                <input
-                  type="radio"
-                  name="emailFrequency"
-                  value="none"
-                  checked={emailFrequency === "none"}
-                  onChange={(e) => setEmailFrequency(e.target.value)}
-                  className="h-4 w-4 border-gray-300 text-primary focus:ring-2 focus:ring-primary"
-                />
-                <span className="text-sm">
-                  Ingen emails (afmeldt)
-                </span>
-              </label>
             </div>
           </div>
 
@@ -265,7 +267,7 @@ export function PreferencesForm({ onClose }: PreferencesFormProps = {}) {
 
           <button
             type="button"
-            onClick={handleUnsubscribe}
+            onClick={() => setShowUnsubscribeDialog(true)}
             disabled={isSaving}
             className="w-full text-center text-sm text-muted-foreground flex justify-self-center max-w-fit cursor-pointer hover:underline"
           >
@@ -273,6 +275,33 @@ export function PreferencesForm({ onClose }: PreferencesFormProps = {}) {
           </button>
         </div>
       </form>
+
+      <Dialog open={showUnsubscribeDialog} onOpenChange={setShowUnsubscribeDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Afmeld alle mails</DialogTitle>
+            <DialogDescription>
+              Er du sikker på, at du vil afmelde alle nyhedsmails? Du kan altid tilmelde dig igen senere.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowUnsubscribeDialog(false)}
+              disabled={isSaving}
+            >
+              Annuller
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleUnsubscribe}
+              disabled={isSaving}
+            >
+              {isSaving ? "Afmelder..." : "Afmeld"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

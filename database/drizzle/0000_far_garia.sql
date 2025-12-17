@@ -140,6 +140,30 @@ CREATE TABLE "ai_prompt_version" (
 	CONSTRAINT "uq_ai_prompt_version_prompt_version" UNIQUE("prompt_id","version_number")
 );
 --> statement-breakpoint
+CREATE TABLE "email_template" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"key" text NOT NULL,
+	"name" text NOT NULL,
+	"description" text,
+	"subject" text NOT NULL,
+	"preview_text" text NOT NULL,
+	"content" text NOT NULL,
+	"is_active" boolean DEFAULT true NOT NULL,
+	"created_at" timestamp DEFAULT now() NOT NULL,
+	"updated_at" timestamp DEFAULT now() NOT NULL,
+	CONSTRAINT "email_template_key_unique" UNIQUE("key")
+);
+--> statement-breakpoint
+CREATE TABLE "system_settings" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"key" text NOT NULL,
+	"value" text NOT NULL,
+	"description" text,
+	"created_at" timestamp DEFAULT now() NOT NULL,
+	"updated_at" timestamp DEFAULT now() NOT NULL,
+	CONSTRAINT "system_settings_key_unique" UNIQUE("key")
+);
+--> statement-breakpoint
 ALTER TABLE "account" ADD CONSTRAINT "account_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "session" ADD CONSTRAINT "session_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "article" ADD CONSTRAINT "article_prompt_id_ai_prompt_id_fk" FOREIGN KEY ("prompt_id") REFERENCES "public"."ai_prompt"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
