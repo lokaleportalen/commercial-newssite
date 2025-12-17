@@ -6,8 +6,8 @@ import { ArticleNotification } from "@/emails/article-notification";
 import { WeeklyDigest } from "@/emails/weekly-digest";
 import { PasswordReset } from "@/emails/password-reset";
 import { db } from "@/database/db";
-import { emailTemplate } from "@/database/schema";
-import { eq } from "drizzle-orm";
+import { emailTemplate, emailLog } from "@/database/schema";
+import { eq, and, gte } from "drizzle-orm";
 import type {
   WelcomeEmailContent,
   ArticleNotificationContent,
@@ -100,6 +100,75 @@ export function generateEmailUrls(userId: string) {
   };
 }
 
+/**
+ * Log an email to the database
+ */
+export async function logEmail(params: {
+  userId: string;
+  emailType: "welcome" | "article_notification" | "weekly_digest" | "password_reset";
+  articleId?: string;
+  status: "success" | "failed";
+}): Promise<void> {
+  try {
+    await db.insert(emailLog).values({
+      userId: params.userId,
+      emailType: params.emailType,
+      articleId: params.articleId || null,
+      status: params.status,
+    });
+  } catch (error) {
+    console.error("Failed to log email:", error);
+    // Don't throw - logging failure shouldn't break email sending
+  }
+}
+
+/**
+ * Check if a user has exceeded their daily email limit (10 emails/day)
+ * Returns true if the user can receive more emails, false if limit exceeded
+ */
+export async function checkEmailRateLimit(userId: string): Promise<{
+  allowed: boolean;
+  currentCount: number;
+  limit: number;
+}> {
+  const DAILY_LIMIT = 10;
+
+  // Calculate 24 hours ago
+  const oneDayAgo = new Date();
+  oneDayAgo.setHours(oneDayAgo.getHours() - 24);
+
+  try {
+    // Count emails sent to this user in the last 24 hours
+    const recentEmails = await db
+      .select()
+      .from(emailLog)
+      .where(
+        and(
+          eq(emailLog.userId, userId),
+          gte(emailLog.sentAt, oneDayAgo),
+          eq(emailLog.status, "success")
+        )
+      );
+
+    const currentCount = recentEmails.length;
+    const allowed = currentCount < DAILY_LIMIT;
+
+    return {
+      allowed,
+      currentCount,
+      limit: DAILY_LIMIT,
+    };
+  } catch (error) {
+    console.error("Failed to check email rate limit:", error);
+    // On error, allow email to be sent (fail open to avoid blocking all emails)
+    return {
+      allowed: true,
+      currentCount: 0,
+      limit: DAILY_LIMIT,
+    };
+  }
+}
+
 async function getEmailTemplate(key: string) {
   const templates = await db
     .select()
@@ -149,17 +218,37 @@ export async function sendWelcomeEmail({
 
   const subject = template.subject.replace(/{userName}/g, userName);
 
-  return sendEmail({
-    to,
-    subject,
-    text: `Hej ${userName}, velkommen til Estatenews.dk! Besøg ${urls.articlesUrl} for at læse de nyeste artikler.`,
-    html,
-  });
+  try {
+    const result = await sendEmail({
+      to,
+      subject,
+      text: `Hej ${userName}, velkommen til Estatenews.dk! Besøg ${urls.articlesUrl} for at læse de nyeste artikler.`,
+      html,
+    });
+
+    // Log successful email
+    await logEmail({
+      userId,
+      emailType: "welcome",
+      status: "success",
+    });
+
+    return result;
+  } catch (error) {
+    // Log failed email
+    await logEmail({
+      userId,
+      emailType: "welcome",
+      status: "failed",
+    });
+    throw error;
+  }
 }
 
 interface SendArticleNotificationParams {
   to: string;
   userId: string;
+  articleId: string;
   articleTitle: string;
   articleSummary: string;
   articleSlug: string;
@@ -170,6 +259,7 @@ interface SendArticleNotificationParams {
 export async function sendArticleNotification({
   to,
   userId,
+  articleId,
   articleTitle,
   articleSummary,
   articleSlug,
@@ -198,12 +288,33 @@ export async function sendArticleNotification({
 
   const subject = template.subject.replace(/{articleTitle}/g, articleTitle);
 
-  return sendEmail({
-    to,
-    subject,
-    text: `${articleTitle}\n\n${articleSummary}\n\nLæs mere: ${articleUrl}`,
-    html,
-  });
+  try {
+    const result = await sendEmail({
+      to,
+      subject,
+      text: `${articleTitle}\n\n${articleSummary}\n\nLæs mere: ${articleUrl}`,
+      html,
+    });
+
+    // Log successful email
+    await logEmail({
+      userId,
+      emailType: "article_notification",
+      articleId,
+      status: "success",
+    });
+
+    return result;
+  } catch (error) {
+    // Log failed email
+    await logEmail({
+      userId,
+      emailType: "article_notification",
+      articleId,
+      status: "failed",
+    });
+    throw error;
+  }
 }
 
 interface EmailArticle {
@@ -255,16 +366,36 @@ export async function sendWeeklyDigest({
     .replace(/{weekStart}/g, weekStart)
     .replace(/{weekEnd}/g, weekEnd);
 
-  return sendEmail({
-    to,
-    subject,
-    text: `Hej ${userName}, her er ugens nyheder fra Estatenews.dk (${weekStart} - ${weekEnd}). Besøg ${urls.baseUrl} for at læse artiklerne.`,
-    html,
-  });
+  try {
+    const result = await sendEmail({
+      to,
+      subject,
+      text: `Hej ${userName}, her er ugens nyheder fra Estatenews.dk (${weekStart} - ${weekEnd}). Besøg ${urls.baseUrl} for at læse artiklerne.`,
+      html,
+    });
+
+    // Log successful email
+    await logEmail({
+      userId,
+      emailType: "weekly_digest",
+      status: "success",
+    });
+
+    return result;
+  } catch (error) {
+    // Log failed email
+    await logEmail({
+      userId,
+      emailType: "weekly_digest",
+      status: "failed",
+    });
+    throw error;
+  }
 }
 
 interface SendPasswordResetParams {
   to: string;
+  userId: string;
   userName: string;
   resetUrl: string;
   expirationMinutes?: number;
@@ -272,6 +403,7 @@ interface SendPasswordResetParams {
 
 export async function sendPasswordReset({
   to,
+  userId,
   userName,
   resetUrl,
   expirationMinutes = 60,
@@ -291,10 +423,29 @@ export async function sendPasswordReset({
 
   const subject = template.subject.replace(/{userName}/g, userName);
 
-  return sendEmail({
-    to,
-    subject,
-    text: `Hej ${userName}, klik på dette link for at nulstille din adgangskode: ${resetUrl} (Gyldigt i ${expirationMinutes} minutter)`,
-    html,
-  });
+  try {
+    const result = await sendEmail({
+      to,
+      subject,
+      text: `Hej ${userName}, klik på dette link for at nulstille din adgangskode: ${resetUrl} (Gyldigt i ${expirationMinutes} minutter)`,
+      html,
+    });
+
+    // Log successful email
+    await logEmail({
+      userId,
+      emailType: "password_reset",
+      status: "success",
+    });
+
+    return result;
+  } catch (error) {
+    // Log failed email
+    await logEmail({
+      userId,
+      emailType: "password_reset",
+      status: "failed",
+    });
+    throw error;
+  }
 }

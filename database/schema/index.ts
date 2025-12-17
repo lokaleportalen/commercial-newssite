@@ -7,3 +7,4 @@ export * from "./ai-prompts-schema";
 export * from "./ai-prompt-versions-schema";
 export * from "./email-templates-schema";
 export * from "./system-settings-schema";
+export * from "./email-logs-schema";

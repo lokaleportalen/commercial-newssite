@@ -9,7 +9,7 @@ import {
   category,
 } from "@/database/schema";
 import { eq, and, gte, inArray } from "drizzle-orm";
-import { sendWeeklyDigest } from "@/lib/email";
+import { sendWeeklyDigest, checkEmailRateLimit } from "@/lib/email";
 
 export const weeklyDigestTask = schedules.task({
   id: "weekly-digest-email",
@@ -113,10 +113,28 @@ export const weeklyDigestTask = schedules.task({
       success: boolean;
       articleCount: number;
       error?: string;
+      rateLimited?: boolean;
     }> = [];
 
     for (const weeklyUser of weeklyUsers) {
       try {
+        // Check rate limit before processing
+        const rateLimit = await checkEmailRateLimit(weeklyUser.userId);
+
+        if (!rateLimit.allowed) {
+          logger.warn(
+            `Rate limit exceeded for ${weeklyUser.userName} (${weeklyUser.userEmail}): ${rateLimit.currentCount}/${rateLimit.limit} emails in last 24h`
+          );
+          results.push({
+            userId: weeklyUser.userId,
+            success: false,
+            articleCount: 0,
+            rateLimited: true,
+            error: `Rate limit exceeded: ${rateLimit.currentCount}/${rateLimit.limit} emails`,
+          });
+          continue;
+        }
+
         let userArticles = recentArticles;
 
         if (!weeklyUser.allCategories) {
@@ -159,7 +177,7 @@ export const weeklyDigestTask = schedules.task({
         }
 
         logger.info(
-          `Sending digest to ${weeklyUser.userName} with ${userArticles.length} articles`
+          `Sending digest to ${weeklyUser.userName} with ${userArticles.length} articles [${rateLimit.currentCount}/${rateLimit.limit} emails]`
         );
 
         const formattedArticles = userArticles.map((article) => {
@@ -215,7 +233,8 @@ export const weeklyDigestTask = schedules.task({
     }
 
     const successCount = results.filter((r) => r.success).length;
-    const failureCount = results.filter((r) => !r.success).length;
+    const failureCount = results.filter((r) => !r.success && !r.rateLimited).length;
+    const rateLimitedCount = results.filter((r) => r.rateLimited).length;
     const totalArticlesSent = results
       .filter((r) => r.success)
       .reduce((sum, r) => sum + r.articleCount, 0);
@@ -224,6 +243,7 @@ export const weeklyDigestTask = schedules.task({
       totalUsers: weeklyUsers.length,
       successful: successCount,
       failed: failureCount,
+      rateLimited: rateLimitedCount,
       totalArticles: recentArticles.length,
       totalArticlesSent,
     });
@@ -233,6 +253,7 @@ export const weeklyDigestTask = schedules.task({
       message: "Weekly digest emails sent",
       digestsSent: successCount,
       digestsFailed: failureCount,
+      digestsRateLimited: rateLimitedCount,
       totalArticles: recentArticles.length,
       totalArticlesSent,
       results,

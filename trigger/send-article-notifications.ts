@@ -10,7 +10,7 @@ import {
   category,
 } from "@/database/schema";
 import { eq, and, inArray } from "drizzle-orm";
-import { sendArticleNotification } from "@/lib/email";
+import { sendArticleNotification, checkEmailRateLimit } from "@/lib/email";
 
 const ArticleNotificationPayload = z.object({
   articleId: z.string(),
@@ -163,18 +163,39 @@ export const sendArticleNotificationsTask = task({
     }
 
     // Step 4: Send notifications to all matching users
-    const results: Array<{ userId: string; success: boolean; error?: string }> =
-      [];
+    const results: Array<{
+      userId: string;
+      success: boolean;
+      error?: string;
+      rateLimited?: boolean;
+    }> = [];
 
     for (const notifyUser of usersToNotify) {
       try {
+        // Check rate limit before sending
+        const rateLimit = await checkEmailRateLimit(notifyUser.userId);
+
+        if (!rateLimit.allowed) {
+          logger.warn(
+            `Rate limit exceeded for ${notifyUser.userName} (${notifyUser.userEmail}): ${rateLimit.currentCount}/${rateLimit.limit} emails in last 24h`
+          );
+          results.push({
+            userId: notifyUser.userId,
+            success: false,
+            rateLimited: true,
+            error: `Rate limit exceeded: ${rateLimit.currentCount}/${rateLimit.limit} emails`,
+          });
+          continue;
+        }
+
         logger.info(
-          `Sending notification to ${notifyUser.userName} (${notifyUser.userEmail})`
+          `Sending notification to ${notifyUser.userName} (${notifyUser.userEmail}) [${rateLimit.currentCount}/${rateLimit.limit} emails]`
         );
 
         await sendArticleNotification({
           to: notifyUser.userEmail,
           userId: notifyUser.userId,
+          articleId: articleId,
           articleTitle: articleData.title,
           articleSummary: articleData.summary || "",
           articleSlug: articleData.slug,
@@ -202,13 +223,15 @@ export const sendArticleNotificationsTask = task({
     }
 
     const successCount = results.filter((r) => r.success).length;
-    const failureCount = results.filter((r) => !r.success).length;
+    const failureCount = results.filter((r) => !r.success && !r.rateLimited).length;
+    const rateLimitedCount = results.filter((r) => r.rateLimited).length;
 
     logger.info("Article notification task completed", {
       articleId,
       totalUsers: usersToNotify.length,
       successful: successCount,
       failed: failureCount,
+      rateLimited: rateLimitedCount,
     });
 
     return {
@@ -216,6 +239,7 @@ export const sendArticleNotificationsTask = task({
       message: "Article notifications sent",
       notificationsSent: successCount,
       notificationsFailed: failureCount,
+      notificationsRateLimited: rateLimitedCount,
       results,
     };
   },
