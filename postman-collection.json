@@ -1,0 +1,1054 @@
+{
+  "info": {
+    "name": "Commercial Newssite API",
+    "description": "Complete API collection for Lokaleportalen.dk commercial newssite. Includes authentication, article management, user preferences, admin operations, and email functionality.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_postman_id": "commercial-newssite-api",
+    "version": "1.0.0"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "adminEmail",
+      "value": "admin@example.com",
+      "type": "string"
+    },
+    {
+      "key": "adminPassword",
+      "value": "admin123",
+      "type": "string"
+    },
+    {
+      "key": "testEmail",
+      "value": "test@example.com",
+      "type": "string"
+    },
+    {
+      "key": "testPassword",
+      "value": "password123",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "description": "Better-Auth authentication endpoints",
+      "item": [
+        {
+          "name": "Sign Up",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/sign-up",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "sign-up"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"newuser@example.com\",\n  \"password\": \"password123\",\n  \"name\": \"New User\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Sign In",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/sign-in",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "sign-in"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{testEmail}}\",\n  \"password\": \"{{testPassword}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Sign Out",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/sign-out",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "sign-out"]
+            }
+          }
+        },
+        {
+          "name": "Get Session",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/session",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "session"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Public - Articles",
+      "description": "Public endpoints for viewing articles",
+      "item": [
+        {
+          "name": "List Published Articles",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/articles?page=1&limit=15&sort=date-desc",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "articles"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Page number (default: 1)"
+                },
+                {
+                  "key": "limit",
+                  "value": "15",
+                  "description": "Items per page (default: 15)"
+                },
+                {
+                  "key": "sort",
+                  "value": "date-desc",
+                  "description": "Sort order: date-desc, date-asc, title-asc, title-desc"
+                },
+                {
+                  "key": "search",
+                  "value": "",
+                  "description": "Search term",
+                  "disabled": true
+                },
+                {
+                  "key": "category",
+                  "value": "",
+                  "description": "Filter by category slug or name",
+                  "disabled": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Search Articles",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/articles?search=commercial real estate",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "articles"],
+              "query": [
+                {
+                  "key": "search",
+                  "value": "commercial real estate"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Filter Articles by Category",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/articles?category=market-trends",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "articles"],
+              "query": [
+                {
+                  "key": "category",
+                  "value": "market-trends"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Article by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/articles/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "articles", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": "Article ID"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Article by Slug",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/articles/slug/:slug",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "articles", "slug", ":slug"],
+              "variable": [
+                {
+                  "key": "slug",
+                  "value": "",
+                  "description": "Article slug"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Related Articles",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/articles/:id/related",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "articles", ":id", "related"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": "Article ID"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Public - Categories",
+      "description": "Public endpoints for viewing categories",
+      "item": [
+        {
+          "name": "List All Categories",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/categories",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "categories"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Public - Upload",
+      "description": "Public image upload endpoint",
+      "item": [
+        {
+          "name": "Upload Image",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/upload?filename=image.jpg",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "upload"],
+              "query": [
+                {
+                  "key": "filename",
+                  "value": "image.jpg",
+                  "description": "Filename for the uploaded file"
+                }
+              ]
+            },
+            "body": {
+              "mode": "file",
+              "file": {}
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "User - Profile",
+      "description": "User profile management endpoints",
+      "item": [
+        {
+          "name": "Get User Profile",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/user/profile",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "user", "profile"]
+            }
+          }
+        },
+        {
+          "name": "Update User Profile",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/user/profile",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "user", "profile"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated Name\",\n  \"email\": \"updated@example.com\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "User - Preferences",
+      "description": "User email preferences and category subscriptions",
+      "item": [
+        {
+          "name": "Get User Preferences",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/user/preferences",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "user", "preferences"]
+            }
+          }
+        },
+        {
+          "name": "Update User Preferences",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/user/preferences",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "user", "preferences"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"allCategories\": false,\n  \"selectedCategories\": [\"category-id-1\", \"category-id-2\"],\n  \"emailFrequency\": \"immediate\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Unsubscribe from All",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/user/preferences/unsubscribe",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "user", "preferences", "unsubscribe"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Email",
+      "description": "Email-related endpoints",
+      "item": [
+        {
+          "name": "Unsubscribe via Token",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/email/unsubscribe?token=user-token-here",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "email", "unsubscribe"],
+              "query": [
+                {
+                  "key": "token",
+                  "value": "user-token-here",
+                  "description": "Unsubscribe token (user ID)"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Send Test Email",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/send-email",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "send-email"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"to\": \"test@example.com\",\n  \"subject\": \"Test Email\",\n  \"html\": \"<p>Test email content</p>\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin - Articles",
+      "description": "Admin endpoints for article management (requires admin role)",
+      "item": [
+        {
+          "name": "List All Articles (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/articles",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "articles"]
+            }
+          }
+        },
+        {
+          "name": "Search Articles (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/articles?search=commercial",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "articles"],
+              "query": [
+                {
+                  "key": "search",
+                  "value": "commercial",
+                  "description": "Search term for full-text search"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Article",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/articles",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "articles"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"New Article Title\",\n  \"slug\": \"new-article-slug\",\n  \"content\": \"Article content here...\",\n  \"summary\": \"Article summary\",\n  \"metaDescription\": \"SEO meta description\",\n  \"image\": \"https://example.com/image.jpg\",\n  \"sources\": [\"https://source1.com\", \"https://source2.com\"],\n  \"categories\": [\"category-id-1\", \"category-id-2\"],\n  \"status\": \"draft\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Get Article by ID (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/articles/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "articles", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": "Article ID"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Article",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/articles/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "articles", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": "Article ID"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Updated Article Title\",\n  \"slug\": \"updated-article-slug\",\n  \"content\": \"Updated article content...\",\n  \"summary\": \"Updated summary\",\n  \"metaDescription\": \"Updated meta description\",\n  \"image\": \"https://example.com/new-image.jpg\",\n  \"sources\": [\"https://source1.com\"],\n  \"categories\": [\"category-id-1\"],\n  \"status\": \"published\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Delete Article",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/articles/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "articles", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": "Article ID"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Regenerate Article Image",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/articles/:id/regenerate-image",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "articles", ":id", "regenerate-image"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": "Article ID"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customDescription\": \"Optional custom image description\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Manually Trigger Article Notifications",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/articles/notify",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "articles", "notify"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"articleId\": \"article-id-here\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin - Categories",
+      "description": "Admin endpoints for category management",
+      "item": [
+        {
+          "name": "List All Categories (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/categories",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "categories"]
+            }
+          }
+        },
+        {
+          "name": "Upload Category Image",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/upload-category-image?categoryId=category-id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "upload-category-image"],
+              "query": [
+                {
+                  "key": "categoryId",
+                  "value": "category-id",
+                  "description": "Category ID"
+                }
+              ]
+            },
+            "body": {
+              "mode": "file",
+              "file": {}
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin - Users",
+      "description": "Admin endpoints for user management",
+      "item": [
+        {
+          "name": "Search Users",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/users/search?q=user@example.com",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "users", "search"],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "user@example.com",
+                  "description": "Search query (email or name)"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get User by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/users/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "users", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": "User ID"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update User",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/users/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "users", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": "User ID"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated Name\",\n  \"email\": \"updated@example.com\",\n  \"role\": \"admin\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Delete User",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/users/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "users", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": "User ID"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin - Email Templates",
+      "description": "Admin endpoints for email template management",
+      "item": [
+        {
+          "name": "List Email Templates",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/email-templates",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "email-templates"]
+            }
+          }
+        },
+        {
+          "name": "Create Email Template",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/email-templates",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "email-templates"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"key\": \"custom-template\",\n  \"name\": \"Custom Template\",\n  \"description\": \"Template description\",\n  \"subject\": \"Email Subject\",\n  \"previewText\": \"Preview text shown in email client\",\n  \"content\": \"{\\\"blocks\\\":[{\\\"type\\\":\\\"text\\\",\\\"content\\\":\\\"Email content\\\"}]}\",\n  \"isActive\": true\n}"
+            }
+          }
+        },
+        {
+          "name": "Get Email Template by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/email-templates/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "email-templates", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": "Template ID"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Email Template",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/email-templates/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "email-templates", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": "Template ID"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated Template Name\",\n  \"subject\": \"Updated Subject\",\n  \"previewText\": \"Updated preview text\",\n  \"content\": \"{\\\"blocks\\\":[{\\\"type\\\":\\\"text\\\",\\\"content\\\":\\\"Updated content\\\"}]}\",\n  \"isActive\": true\n}"
+            }
+          }
+        },
+        {
+          "name": "Delete Email Template",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/email-templates/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "email-templates", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": "Template ID"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Preview Email Template",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/email-templates/:id/preview",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "email-templates", ":id", "preview"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": "Template ID"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Send Test Email",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/email-templates/:id/send-test",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "email-templates", ":id", "send-test"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": "Template ID"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"test@example.com\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin - AI Prompts",
+      "description": "Admin endpoints for AI prompt version management",
+      "item": [
+        {
+          "name": "List AI Prompts",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/ai-prompts",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "ai-prompts"]
+            }
+          }
+        },
+        {
+          "name": "Create AI Prompt",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/ai-prompts",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "ai-prompts"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Article Generation Prompt\",\n  \"description\": \"Prompt for generating news articles\",\n  \"systemPrompt\": \"You are a professional journalist...\",\n  \"userPrompt\": \"Write an article about {{topic}}\",\n  \"version\": \"1.0.0\",\n  \"isActive\": true\n}"
+            }
+          }
+        },
+        {
+          "name": "Get AI Prompt by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/ai-prompts/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "ai-prompts", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": "Prompt ID"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update AI Prompt",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/ai-prompts/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "ai-prompts", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": "Prompt ID"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated Prompt Name\",\n  \"systemPrompt\": \"Updated system prompt...\",\n  \"userPrompt\": \"Updated user prompt...\",\n  \"version\": \"1.1.0\",\n  \"isActive\": true\n}"
+            }
+          }
+        },
+        {
+          "name": "Delete AI Prompt",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/ai-prompts/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "ai-prompts", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": "Prompt ID"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get AI Prompt Versions",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/ai-prompts/:id/versions",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "ai-prompts", ":id", "versions"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": "Prompt ID"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Restore AI Prompt Version",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/ai-prompts/:id/restore",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "ai-prompts", ":id", "restore"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": "Prompt ID to restore"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin - Automation",
+      "description": "Admin endpoints for triggering automated tasks",
+      "item": [
+        {
+          "name": "Manually Trigger Weekly News",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/trigger-cron",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "trigger-cron"]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "auth": {
+    "type": "noauth"
+  }
+}
