@@ -27,7 +27,8 @@ interface NyhederProps {
 export default async function NyhederPage({ searchParams }: NyhederProps) {
   const params = await searchParams;
   const currentPage = Number(params.page) || 1;
-  const selectedCategory = params.category || "all";
+  const categoryParam = params.category || "";
+  const selectedCategories = categoryParam ? categoryParam.split(",") : [];
   const selectedSort = params.sort || "newest";
 
   const whereConditions = [eq(article.status, "published")];
@@ -73,9 +74,10 @@ export default async function NyhederPage({ searchParams }: NyhederProps) {
     categories: categoriesMap.get(art.id) || [],
   }));
 
-  if (selectedCategory !== "all") {
+  // Filter by multiple categories (OR logic - article must match at least one selected category)
+  if (selectedCategories.length > 0) {
     articlesWithCategories = articlesWithCategories.filter((art) =>
-      art.categories.some((cat) => cat.slug === selectedCategory)
+      art.categories.some((cat) => selectedCategories.includes(cat.slug))
     );
   }
 
@@ -96,7 +98,7 @@ export default async function NyhederPage({ searchParams }: NyhederProps) {
       </header>
 
       <CategoryFilterWrapper
-        selectedCategory={selectedCategory}
+        selectedCategories={selectedCategories}
         currentSort={selectedSort as SortOption}
         basePath="/nyheder"
       />
@@ -106,7 +108,12 @@ export default async function NyhederPage({ searchParams }: NyhederProps) {
           <p className="text-muted-foreground">
             {articlesWithCategories.length} af {totalCount}{" "}
             {totalCount === 1 ? "artikel" : "artikler"}
-            {selectedCategory !== "all" && " i denne kategori"}
+            {selectedCategories.length > 0 && (
+              <span>
+                {" "}
+                i {selectedCategories.length === 1 ? "valgt kategori" : "valgte kategorier"}
+              </span>
+            )}
           </p>
         </header>
 
@@ -134,7 +141,7 @@ export default async function NyhederPage({ searchParams }: NyhederProps) {
           <article className="text-center py-16">
             <p className="text-muted-foreground text-lg">
               Ingen artikler fundet
-              {selectedCategory !== "all" && " i denne kategori"}
+              {selectedCategories.length > 0 && " i valgte kategorier"}
             </p>
           </article>
         )}

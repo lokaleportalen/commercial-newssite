@@ -5,23 +5,23 @@ import { CategoryFilterTabs } from "./category-filter-tabs";
 import { ArticleSort, SortOption } from "./article-sort";
 
 interface CategoryFilterWrapperProps {
-  selectedCategory: string;
+  selectedCategories: string[];
   basePath?: string;
   currentSort?: SortOption;
 }
 
 export function CategoryFilterWrapper({
-  selectedCategory,
+  selectedCategories,
   basePath = "/",
   currentSort = "newest",
 }: CategoryFilterWrapperProps) {
   const router = useRouter();
 
-  const handleCategoryChange = (category: string) => {
+  const handleCategoryChange = (categories: string[]) => {
     const params = new URLSearchParams();
 
-    if (category !== "all") {
-      params.set("category", category);
+    if (categories.length > 0) {
+      params.set("category", categories.join(","));
     }
 
     if (currentSort !== "newest") {
@@ -36,12 +36,10 @@ export function CategoryFilterWrapper({
     <div className="border-b bg-background">
       <div className="container mx-auto px-4 max-w-6xl">
         <div className="flex items-center justify-between py-4 gap-4">
-          <div className="flex-1 overflow-x-auto">
-            <CategoryFilterTabs
-              selectedCategory={selectedCategory}
-              onCategoryChange={handleCategoryChange}
-            />
-          </div>
+          <CategoryFilterTabs
+            selectedCategories={selectedCategories}
+            onCategoryChange={handleCategoryChange}
+          />
           <ArticleSort currentSort={currentSort} />
         </div>
       </div>
