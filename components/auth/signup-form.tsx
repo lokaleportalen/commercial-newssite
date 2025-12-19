@@ -123,7 +123,7 @@ export function SignupForm({ ...props }: React.ComponentProps<typeof Card>) {
     }
 
     if (data) {
-      router.push("/profile/preferences");
+      router.push("/?showPreferences=true");
       router.refresh();
     }
   };
