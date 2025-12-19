@@ -43,7 +43,9 @@ export function CategoryFilterTabs({
   const handleToggleCategory = (categorySlug: string) => {
     if (selectedCategories.includes(categorySlug)) {
       // Remove category
-      const newCategories = selectedCategories.filter((c) => c !== categorySlug);
+      const newCategories = selectedCategories.filter(
+        (c) => c !== categorySlug
+      );
       onCategoryChange(newCategories.length > 0 ? newCategories : []);
     } else {
       // Add category
@@ -68,7 +70,9 @@ export function CategoryFilterTabs({
       return "Alle kategorier";
     }
     if (selectedCategories.length === 1) {
-      const category = categories.find((cat) => cat.slug === selectedCategories[0]);
+      const category = categories.find(
+        (cat) => cat.slug === selectedCategories[0]
+      );
       return category?.name || "1 kategori";
     }
     return `${selectedCategories.length} kategorier`;
@@ -104,7 +108,6 @@ export function CategoryFilterTabs({
               <Checkbox
                 checked={selectedCategories.includes(category.slug)}
                 onCheckedChange={() => handleToggleCategory(category.slug)}
-                className="rounded-[2px]"
               />
               <span className="text-sm flex-1">{category.name}</span>
             </label>

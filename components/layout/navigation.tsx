@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
-import { Menu, X, Search, ChevronDown } from "lucide-react";
+import { Menu, X, Search, ChevronDown, ChevronRight } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
 import type { ClientSessionData } from "@/types/auth";
@@ -37,8 +37,12 @@ import type { Category } from "@/types";
 export function Navigation() {
   const router = useRouter();
   const pathname = usePathname();
-  const { data: session, isPending } = authClient.useSession() as { data: ClientSessionData | null; isPending: boolean };
+  const { data: session, isPending } = authClient.useSession() as {
+    data: ClientSessionData | null;
+    isPending: boolean;
+  };
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [categoriesDrawerOpen, setCategoriesDrawerOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
   const [isScrolled, setIsScrolled] = useState(false);
@@ -236,6 +240,22 @@ export function Navigation() {
                 </DrawerClose>
               </DrawerHeader>
               <div className="flex flex-col gap-2 p-4 h-full overflow-y-auto">
+                {/* Search at the top */}
+                <Button
+                  variant="ghost"
+                  className="justify-start"
+                  onClick={() => {
+                    setDrawerOpen(false);
+                    setSearchOpen(true);
+                  }}
+                >
+                  <Search className="mr-2 h-5 w-5" />
+                  Søg
+                </Button>
+
+                <Separator className="my-2" />
+
+                {/* Main navigation */}
                 <Link
                   href="/"
                   onClick={() => setDrawerOpen(false)}
@@ -262,35 +282,58 @@ export function Navigation() {
                   Nyheder
                 </Link>
 
-                <Separator className="my-2" />
-
-                <div className="px-4 py-2">
-                  <p className="text-xs font-semibold uppercase text-muted-foreground mb-2">
-                    Kategorier
-                  </p>
-                </div>
-                {categories.map((category) => (
-                  <Link
-                    key={category.id}
-                    href={`/${category.slug}`}
-                    onClick={() => setDrawerOpen(false)}
-                    className={cn(
-                      "rounded-md px-4 py-3 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground",
-                      pathname === `/${category.slug}`
-                        ? "bg-accent text-accent-foreground"
-                        : "text-foreground"
-                    )}
-                  >
-                    <div className="flex justify-between items-center">
-                      <span>{category.name}</span>
-                      <span className="text-xs text-muted-foreground">
-                        {category.articleCount}
-                      </span>
+                {/* Nested Categories Drawer */}
+                <Drawer
+                  open={categoriesDrawerOpen}
+                  onOpenChange={setCategoriesDrawerOpen}
+                  direction="right"
+                  nested
+                >
+                  <DrawerTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      className="justify-start rounded-md px-4 py-3 text-sm font-medium"
+                    >
+                      Kategorier
+                      <ChevronRight className="ml-auto h-4 w-4" />
+                    </Button>
+                  </DrawerTrigger>
+                  <DrawerContent className="flex flex-col">
+                    <DrawerHeader className="relative">
+                      <DrawerTitle>Kategorier</DrawerTitle>
+                      <DrawerClose asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="absolute right-4 top-4"
+                          aria-label="Luk kategorier"
+                        >
+                          <X className="h-5 w-5" />
+                        </Button>
+                      </DrawerClose>
+                    </DrawerHeader>
+                    <div className="flex flex-col gap-2 p-4 h-full overflow-y-auto">
+                      {categories.map((category) => (
+                        <Link
+                          key={category.id}
+                          href={`/${category.slug}`}
+                          onClick={() => {
+                            setCategoriesDrawerOpen(false);
+                            setDrawerOpen(false);
+                          }}
+                          className={cn(
+                            "rounded-md px-4 py-3 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground",
+                            pathname === `/${category.slug}`
+                              ? "bg-accent text-accent-foreground"
+                              : "text-foreground"
+                          )}
+                        >
+                          {category.name}
+                        </Link>
+                      ))}
                     </div>
-                  </Link>
-                ))}
-
-                <Separator className="my-2" />
+                  </DrawerContent>
+                </Drawer>
 
                 <Link
                   href="/om-os"
@@ -304,20 +347,6 @@ export function Navigation() {
                 >
                   Om os
                 </Link>
-
-                <Separator className="my-2" />
-
-                <Button
-                  variant="ghost"
-                  className="justify-start"
-                  onClick={() => {
-                    setDrawerOpen(false);
-                    setSearchOpen(true);
-                  }}
-                >
-                  <Search className="mr-2 h-5 w-5" />
-                  Søg
-                </Button>
 
                 <Separator className="my-2" />
 
