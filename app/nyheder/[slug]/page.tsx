@@ -13,6 +13,7 @@ import { Breadcrumbs } from "@/components/layout/breadcrumbs";
 import { getCurrentUser } from "@/lib/auth-helpers";
 import { getArticleCategories } from "@/lib/category-helpers";
 import type { Metadata } from "next";
+import { HeroBanner } from "@/components/article/hero-banner";
 
 interface ArticlePageProps {
   params: Promise<{ slug: string }>;
@@ -92,6 +93,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
 
   return (
     <main className="mb-16">
+      <HeroBanner />
       <article className="min-h-screen">
         <header className="bg-muted/50 border-b">
           <div className="container mx-auto px-4 py-12 max-w-4xl">
