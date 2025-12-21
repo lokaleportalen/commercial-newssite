@@ -13,7 +13,8 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
     sendResetPassword: async ({ user, url }) => {
-      await sendPasswordReset({
+      // Use void to prevent timing attacks (as per Better-Auth docs)
+      void sendPasswordReset({
         to: user.email,
         userId: user.id,
         userName: user.name,

@@ -36,10 +36,8 @@ export function ForgotPasswordForm({
     setIsLoading(true);
 
     try {
-      // Better Auth forgetPassword method - types may not be fully exported
-      const { error: resetError } = await (authClient as typeof authClient & {
-        forgetPassword: (params: { email: string; redirectTo: string }) => Promise<{ error: Error | null }>;
-      }).forgetPassword({
+      // Use the correct Better Auth method: requestPasswordReset
+      const { error: resetError } = await authClient.requestPasswordReset({
         email,
         redirectTo: "/nulstil-adgangskode",
       });

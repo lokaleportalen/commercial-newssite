@@ -260,7 +260,7 @@ export function Navigation() {
                   href="/"
                   onClick={() => setDrawerOpen(false)}
                   className={cn(
-                    "rounded-md px-4 py-3 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground",
+                    "rounded-md px-3 py-3 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground",
                     pathname === "/"
                       ? "bg-accent text-accent-foreground"
                       : "text-foreground"
@@ -273,7 +273,7 @@ export function Navigation() {
                   href="/nyheder"
                   onClick={() => setDrawerOpen(false)}
                   className={cn(
-                    "rounded-md px-4 py-3 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground",
+                    "rounded-md px-3 py-3 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground",
                     pathname === "/nyheder"
                       ? "bg-accent text-accent-foreground"
                       : "text-foreground"
@@ -292,7 +292,7 @@ export function Navigation() {
                   <DrawerTrigger asChild>
                     <Button
                       variant="ghost"
-                      className="justify-start rounded-md px-4 py-3 text-sm font-medium"
+                      className="justify-start rounded-md p-0 px-4 py-3 text-sm font-medium"
                     >
                       Kategorier
                       <ChevronRight className="ml-auto h-4 w-4" />
@@ -339,7 +339,7 @@ export function Navigation() {
                   href="/om-os"
                   onClick={() => setDrawerOpen(false)}
                   className={cn(
-                    "rounded-md px-4 py-3 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground",
+                    "rounded-md px-3 py-3 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground",
                     pathname === "/om-os"
                       ? "bg-accent text-accent-foreground"
                       : "text-foreground"
