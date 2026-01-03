@@ -139,12 +139,6 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
               <time dateTime={articleData.publishedDate.toISOString()}>
                 {formattedDate}
               </time>
-              {promptData && (
-                <>
-                  <span>•</span>
-                  <span>Prompt ID: {promptData.id}</span>
-                </>
-              )}
             </div>
           </div>
         </header>
