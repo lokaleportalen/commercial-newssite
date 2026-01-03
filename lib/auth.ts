@@ -42,6 +42,19 @@ export const auth = betterAuth({
     user: {
       create: {
         after: async (user) => {
+          // Create role entry for new user
+          try {
+            await db.insert(role).values({
+              id: `role_${user.id}`,
+              userId: user.id,
+              role: "user",
+            });
+            console.log(`Role entry created for user ${user.id}`);
+          } catch (error) {
+            console.error("Failed to create role entry:", error);
+          }
+
+          // Send welcome email
           try {
             await sendWelcomeEmail({
               to: user.email,

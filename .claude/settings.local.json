@@ -33,7 +33,8 @@
       "Bash(npx tsc:*)",
       "Bash(dir /s /b \"C:\\Users\\emilc\\Desktop\\commercial-newssite\\app\\api\\user\")",
       "Bash(ls:*)",
-      "Bash(dir /s /b \"C:\\\\Users\\\\emilc\\\\Desktop\\\\commercial-newssite\\\\components\\\\layout\")"
+      "Bash(dir /s /b \"C:\\\\Users\\\\emilc\\\\Desktop\\\\commercial-newssite\\\\components\\\\layout\")",
+      "Bash(dir /s /b \"C:\\\\Users\\\\emilc\\\\Desktop\\\\commercial-newssite\\\\app\\\\api\")"
     ],
     "deny": [],
     "ask": []
