@@ -5,6 +5,11 @@ import { article } from "@/database/schema/articles-schema";
 import { asc, eq } from "drizzle-orm";
 import { requireAdmin } from "@/lib/auth-helpers";
 import { del } from "@vercel/blob";
+import {
+  createCategorySchema,
+  updateCategorySchema,
+  validateSchema,
+} from "@/lib/validation";
 
 /**
  * GET /api/admin/categories
@@ -52,14 +57,17 @@ export async function POST(request: NextRequest) {
     await requireAdmin();
 
     const body = await request.json();
-    const { name, slug, description, heroImage } = body;
 
-    if (!name || !slug) {
+    // Validate input with Zod schema
+    const validation = validateSchema(createCategorySchema, body);
+    if (!validation.success) {
       return NextResponse.json(
-        { error: "Name and slug are required" },
+        { error: "Validation failed", errors: validation.errors },
         { status: 400 }
       );
     }
+
+    const { name, slug, description, heroImage } = validation.data;
 
     // Check if slug already exists
     const existing = await db
@@ -111,7 +119,7 @@ export async function PATCH(request: NextRequest) {
     await requireAdmin();
 
     const body = await request.json();
-    const { id, name, slug, description, heroImage } = body;
+    const { id, ...updateFields } = body;
 
     if (!id) {
       return NextResponse.json(
@@ -120,12 +128,23 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
+    // Validate update fields with Zod schema
+    const validation = validateSchema(updateCategorySchema, updateFields);
+    if (!validation.success) {
+      return NextResponse.json(
+        { error: "Validation failed", errors: validation.errors },
+        { status: 400 }
+      );
+    }
+
+    const { name, slug, description, heroImage } = validation.data;
+
     // Build update object with only provided fields
     const updateData: {
       name?: string;
       slug?: string;
-      description?: string;
-      heroImage?: string;
+      description?: string | null;
+      heroImage?: string | null;
       updatedAt: Date;
     } = {
       updatedAt: new Date(),

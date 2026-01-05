@@ -11,6 +11,7 @@ import {
 import { tasks } from "@trigger.dev/sdk";
 import { sendArticleNotificationsTask } from "@/trigger/send-article-notifications";
 import { del } from "@vercel/blob";
+import { updateArticleSchema, validateSchema } from "@/lib/validation";
 
 type RouteContext = {
   params: Promise<{ id: string }>;
@@ -89,6 +90,15 @@ export async function PUT(
     const { id } = await context.params;
     const body = await request.json();
 
+    // Validate input with Zod schema
+    const validation = validateSchema(updateArticleSchema, body);
+    if (!validation.success) {
+      return NextResponse.json(
+        { error: "Validation failed", errors: validation.errors },
+        { status: 400 }
+      );
+    }
+
     const {
       title,
       slug,
@@ -99,15 +109,7 @@ export async function PUT(
       sources,
       categories,
       status,
-    } = body;
-
-    // Validate required fields
-    if (!title || !content) {
-      return NextResponse.json(
-        { error: "Title and content are required" },
-        { status: 400 }
-      );
-    }
+    } = validation.data;
 
     // Fetch the current article to check if status is changing to "published"
     const existingArticles = await db

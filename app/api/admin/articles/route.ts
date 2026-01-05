@@ -1,17 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth-helpers";
 import { db } from "@/database/db";
-import { article, aiPrompt, category, articleCategory } from "@/database/schema";
+import {
+  article,
+  aiPrompt,
+  category,
+  articleCategory,
+} from "@/database/schema";
 import { or, desc, eq, inArray, sql } from "drizzle-orm";
 import { getArticleCategoriesBulk } from "@/lib/category-helpers";
+import { createArticleSchema, validateSchema } from "@/lib/validation";
 
 /**
  * GET /api/admin/articles
  * List all articles with optional search
  */
+
 export async function GET(request: NextRequest) {
   try {
-    // Check if user is admin
     await requireAdmin();
 
     const searchParams = request.nextUrl.searchParams;
@@ -20,15 +26,15 @@ export async function GET(request: NextRequest) {
     let articlesData;
 
     if (search) {
-      // Prepare search query for PostgreSQL full-text search
-      const searchQuery = search.trim().split(/\s+/).join(' & ');
+      const searchQuery = search.trim().split(/\s+/).join(" & ");
 
-      // Subquery to find articles that have a category matching the search (using FTS)
       const categoryMatchingArticles = db
         .select({ articleId: articleCategory.articleId })
         .from(articleCategory)
         .innerJoin(category, eq(articleCategory.categoryId, category.id))
-        .where(sql`to_tsvector('danish', ${category.name} || ' ' || COALESCE(${category.description}, '')) @@ to_tsquery('danish', ${searchQuery})`);
+        .where(
+          sql`to_tsvector('danish', ${category.name} || ' ' || COALESCE(${category.description}, '')) @@ to_tsquery('danish', ${searchQuery})`
+        );
 
       // Search articles using full-text search with relevance ranking
       articlesData = await db
@@ -40,19 +46,15 @@ export async function GET(request: NextRequest) {
         .leftJoin(aiPrompt, eq(article.promptId, aiPrompt.id))
         .where(
           or(
-            // Full-text search on article content
             sql`to_tsvector('danish', ${article.title} || ' ' || COALESCE(${article.summary}, '') || ' ' || COALESCE(${article.content}, '')) @@ to_tsquery('danish', ${searchQuery})`,
-            // Also include articles with matching categories
             inArray(article.id, categoryMatchingArticles)
           )
         )
-        // Order by relevance (rank) then by created date
         .orderBy(
           sql`ts_rank(to_tsvector('danish', ${article.title} || ' ' || COALESCE(${article.summary}, '') || ' ' || COALESCE(${article.content}, '')), to_tsquery('danish', ${searchQuery})) DESC`,
           desc(article.createdAt)
         );
     } else {
-      // Get all articles
       articlesData = await db
         .select({
           article: article,
@@ -63,17 +65,14 @@ export async function GET(request: NextRequest) {
         .orderBy(desc(article.createdAt));
     }
 
-    // Transform the data to include prompt info
     const articles = articlesData.map((row) => ({
       ...row.article,
       prompt: row.prompt,
     }));
 
-    // Fetch categories for all articles in bulk
     const articleIds = articles.map((a) => a.id);
     const categoriesMap = await getArticleCategoriesBulk(articleIds);
 
-    // Merge categories into articles
     const articlesWithCategories = articles.map((art) => ({
       ...art,
       categories: categoriesMap.get(art.id) || [],
@@ -112,27 +111,41 @@ export async function POST(request: NextRequest) {
     await requireAdmin();
 
     const body = await request.json();
-    const { title, slug, content, summary, metaDescription, image, sources, categories, status } = body;
 
-    // Validate required fields (allow empty for draft creation)
-    if (title === undefined || slug === undefined || content === undefined) {
+    // Validate input with Zod schema
+    const validation = validateSchema(createArticleSchema, body);
+    if (!validation.success) {
       return NextResponse.json(
-        { error: "Title, slug, and content fields are required" },
+        { error: "Validation failed", errors: validation.errors },
         { status: 400 }
       );
     }
+
+    const {
+      title,
+      slug,
+      content,
+      summary,
+      metaDescription,
+      image,
+      sources,
+      categories,
+      status,
+    } = validation.data;
 
     // Process sources - ensure it's an array
     let sourcesArray: string[] = [];
     if (sources) {
       if (Array.isArray(sources)) {
-        sourcesArray = sources.filter(s => typeof s === 'string' && s.trim().length > 0);
-      } else if (typeof sources === 'string') {
-        sourcesArray = sources.split('\n').map(s => s.trim()).filter(s => s.length > 0);
+        sourcesArray = sources;
+      } else if (typeof sources === "string") {
+        sourcesArray = sources
+          .split("\n")
+          .map((s) => s.trim())
+          .filter((s) => s.length > 0);
       }
     }
 
-    // Create the article
     const articleStatus = status || "draft";
     const [newArticle] = await db
       .insert(article)
@@ -149,9 +162,7 @@ export async function POST(request: NextRequest) {
       })
       .returning();
 
-    // Handle categories if provided (expecting array of category IDs)
     if (categories && Array.isArray(categories) && categories.length > 0) {
-      // Link article to categories
       for (const categoryId of categories) {
         await db.insert(articleCategory).values({
           articleId: newArticle.id,
@@ -160,7 +171,6 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Fetch the created article with categories
     const [articleData] = await db
       .select({
         article: article,
@@ -191,8 +201,10 @@ export async function POST(request: NextRequest) {
       if (error.message.includes("Forbidden")) {
         return NextResponse.json({ error: "Forbidden" }, { status: 403 });
       }
-      // Check for unique constraint violation (duplicate slug)
-      if (error.message.includes("unique") || error.message.includes("duplicate")) {
+      if (
+        error.message.includes("unique") ||
+        error.message.includes("duplicate")
+      ) {
         return NextResponse.json(
           { error: "An article with this slug already exists" },
           { status: 409 }
