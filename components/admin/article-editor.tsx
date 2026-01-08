@@ -260,7 +260,12 @@ export function ArticleEditor({
         }
       } else {
         const error = await response.json();
-        toast.error(error.error || "Kunne ikke gemme artikel");
+        console.error("Validation error:", error);
+        if (error.errors && Array.isArray(error.errors)) {
+          error.errors.forEach((err: string) => toast.error(err));
+        } else {
+          toast.error(error.error || "Kunne ikke gemme artikel");
+        }
       }
     } catch (error) {
       console.error("Error saving article:", error);
