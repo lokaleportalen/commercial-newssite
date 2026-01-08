@@ -74,10 +74,6 @@ export const updateArticleSchema = z.object({
     .string()
     .min(1, "Slug is required")
     .max(200, "Slug must be 200 characters or less")
-    .regex(
-      /^[a-z0-9]+(?:-[a-z0-9]+)*$/,
-      "Slug must be lowercase alphanumeric with hyphens"
-    )
     .trim()
     .optional(),
   content: z
