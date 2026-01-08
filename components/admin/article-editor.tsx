@@ -277,7 +277,6 @@ export function ArticleEditor({
 
   const handleCancel = () => {
     if (articleId === "new") {
-      // Close the editor for new unsaved articles
       onClose();
       toast.info("Artikeloprettelse annulleret");
     } else if (article) {
