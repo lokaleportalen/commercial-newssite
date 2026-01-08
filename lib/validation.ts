@@ -46,10 +46,13 @@ export const createArticleSchema = z.object({
     .max(160, "Meta description must be 160 characters or less")
     .optional()
     .nullable(),
-  image: z.string().url("Image must be a valid URL").optional().nullable(),
+  image: z
+    .union([z.string().url("Image must be a valid URL"), z.literal("")])
+    .optional()
+    .nullable(),
   sources: z
     .union([
-      z.array(z.string().url("Each source must be a valid URL")),
+      z.array(z.union([z.string().url(), z.literal("")])), // Allow empty strings in sources
       z.string(), // Allow string that will be split into array
     ])
     .optional(),
@@ -92,10 +95,13 @@ export const updateArticleSchema = z.object({
     .max(160, "Meta description must be 160 characters or less")
     .optional()
     .nullable(),
-  image: z.string().url("Image must be a valid URL").optional().nullable(),
+  image: z
+    .union([z.string().url("Image must be a valid URL"), z.literal("")])
+    .optional()
+    .nullable(),
   sources: z
     .union([
-      z.array(z.string().url("Each source must be a valid URL")),
+      z.array(z.union([z.string().url(), z.literal("")])), // Allow empty strings in sources
       z.string(), // Allow string that will be split into array
     ])
     .optional()
