@@ -43,7 +43,7 @@ export const createArticleSchema = z.object({
     .nullable(),
   metaDescription: z
     .string()
-    .max(160, "Meta description must be 160 characters or less")
+    .max(250, "Meta description must be 250 characters or less")
     .optional()
     .nullable(),
   image: z
@@ -92,7 +92,7 @@ export const updateArticleSchema = z.object({
     .nullable(),
   metaDescription: z
     .string()
-    .max(160, "Meta description must be 160 characters or less")
+    .max(250, "Meta description must be 250 characters or less")
     .optional()
     .nullable(),
   image: z
